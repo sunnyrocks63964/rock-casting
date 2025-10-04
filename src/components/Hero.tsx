@@ -138,7 +138,7 @@ const Hero = () => {
           </div>
 
           {/* 右側の画像グリッド */}
-          <div style={{ display: window.innerWidth >= 1024 ? 'block' : 'none' }}>
+          <div style={{ display: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'block' : 'none' }}>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
