@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { RocknRoll_One } from 'next/font/google'
+import heroBackground from './images/hero_top_background_1.png'
 
 const rocknrollOne = RocknRoll_One({ 
   weight: '400',
@@ -11,18 +12,31 @@ const rocknrollOne = RocknRoll_One({
 
 const Hero = () => {
   return (
-    <section className="rock-gradient" style={{
+    <section style={{
       position: 'relative',
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      backgroundImage: `url(${heroBackground.src})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
     }}>
+      {/* 背景オーバーレイ */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        zIndex: 1
+      }}></div>
+
       {/* 背景のアクセント */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        zIndex: 2
       }}>
         <div style={{
           position: 'absolute',
@@ -51,7 +65,7 @@ const Hero = () => {
         margin: '0 auto',
         padding: '0 1rem',
         position: 'relative',
-        zIndex: 10
+        zIndex: 3
       }}>
         <div style={{
           display: 'grid',
