@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RocknRoll_One } from 'next/font/google'
-import heroBackground from './images/hero_top_background_1.png'
+// @ts-ignore
+import heroBackground from './images/hero_top_background_1.png' 
 
 const rocknrollOne = RocknRoll_One({ 
   weight: '400',
@@ -152,7 +153,7 @@ const Hero = () => {
           </div>
 
           {/* 右側の画像グリッド */}
-          <div style={{ display: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'block' : 'none' }}>
+          <div>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
