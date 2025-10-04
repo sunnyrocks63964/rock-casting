@@ -1,97 +1,172 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
+import { RocknRoll_One } from 'next/font/google'
+
+const rocknrollOne = RocknRoll_One({ 
+  weight: '400',
+  subsets: ['latin'] 
+})
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* ロゴ */}
-          <Link href="/" className="text-2xl font-bold text-white hover:text-gray-300 transition-colors">
-            ROCK CASTING
-          </Link>
+    <header style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 50,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      backdropFilter: 'blur(8px)',
+      borderBottom: '1px solid #374151'
+    }}>
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 1rem',
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        {/* ロゴ */}
+        <Link 
+          href="/" 
+          className={rocknrollOne.className}
+          style={{
+            fontSize: '1.5rem',
+            color: 'white',
+            textDecoration: 'none',
+            transition: 'color 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.color = '#d1d5db';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}
+        >
+          ROCK CASTING
+        </Link>
 
-          {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#about" className="text-white hover:text-gray-300 transition-colors">
+        {/* 右側のナビゲーションとログインボタン */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2rem'
+        }}>
+          {/* ナビゲーションリンク */}
+          <nav style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem'
+          }}>
+            <Link 
+              href="#pricing" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = 'white';
+              }}
+            >
               料金
             </Link>
-            <Link href="#casts" className="text-white hover:text-gray-300 transition-colors">
+            <Link 
+              href="#casts" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = 'white';
+              }}
+            >
               キャスト一覧
             </Link>
-            <Link href="#contact" className="text-white hover:text-gray-300 transition-colors">
-              お問い合わせ
-            </Link>
-          </nav>
-
-          {/* ログイン・登録ボタン */}
-          <div className="hidden md:flex items-center space-x-4">
             <Link 
-              href="/login" 
-              className="text-white hover:text-gray-300 transition-colors"
-            >
-              ログイン
-            </Link>
-            <Link 
-              href="/register/cast" 
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+              href="#receive-work" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = 'white';
+              }}
             >
               仕事を受ける
             </Link>
             <Link 
-              href="/register/company" 
-              className="bg-white hover:bg-gray-200 text-black px-4 py-2 rounded-md transition-colors"
+              href="#order-work" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.color = 'white';
+              }}
             >
-              仕事を依頼する
+              仕事を発注する
             </Link>
-          </div>
+          </nav>
 
-          {/* モバイルメニューボタン */}
-          <button
-            className="md:hidden text-white hover:text-gray-300"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          {/* ログインボタン */}
+          <Link 
+            href="/login" 
+            style={{
+              backgroundColor: 'white',
+              color: 'black',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.375rem',
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              transition: 'background-color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.backgroundColor = '#e5e7eb';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.backgroundColor = 'white';
+            }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+            ログインはこちら
+          </Link>
         </div>
-
-        {/* モバイルメニュー */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-gray-800">
-            <nav className="flex flex-col space-y-4">
-              <Link href="#about" className="text-white hover:text-gray-300 transition-colors">
-                料金
-              </Link>
-              <Link href="#casts" className="text-white hover:text-gray-300 transition-colors">
-                キャスト一覧
-              </Link>
-              <Link href="#contact" className="text-white hover:text-gray-300 transition-colors">
-                お問い合わせ
-              </Link>
-              <Link href="/login" className="text-white hover:text-gray-300 transition-colors">
-                ログイン
-              </Link>
-              <Link 
-                href="/register/cast" 
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors text-center"
-              >
-                仕事を受ける
-              </Link>
-              <Link 
-                href="/register/company" 
-                className="bg-white hover:bg-gray-200 text-black px-4 py-2 rounded-md transition-colors text-center"
-              >
-                仕事を依頼する
-              </Link>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   )

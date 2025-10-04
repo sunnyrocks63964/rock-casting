@@ -1,8 +1,20 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RocknRoll_One } from 'next/font/google'
+// @ts-ignore
+import heroBackground from './images/hero_top_background_1.png'
+// @ts-ignore
+import redBorder from './images/red_border.png'
+// @ts-ignore
+import kvSlide01 from './images/kv_slide_01.png' 
+// @ts-ignore
+import kvSlide02 from './images/kv_slide_02.png' 
+// @ts-ignore
+import kvSlide03 from './images/kv_slide_03.png' 
+// @ts-ignore
+import kvSlide08 from './images/kv_slide_08.png' 
 
 const rocknrollOne = RocknRoll_One({ 
   weight: '400',
@@ -10,19 +22,65 @@ const rocknrollOne = RocknRoll_One({
 })
 
 const Hero = () => {
+  const slides = [
+    {
+      src: kvSlide01.src,
+      alt: "KV Slide 1"
+    },
+    {
+      src: kvSlide02.src,
+      alt: "KV Slide 2"
+    },
+    {
+      src: kvSlide03.src,
+      alt: "KV Slide 3"
+    },
+    {
+      src: kvSlide08.src,
+      alt: "KV Slide 4"
+    }
+  ];
+
+  // ループ用に画像を2セット作成
+  const duplicatedSlides = [...slides, ...slides];
+
   return (
-    <section className="rock-gradient" style={{
-      position: 'relative',
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
+    <>
+      <style jsx>{`
+        @keyframes scrollUp {
+          0% {
+            transform: translateY(0);
+          }
+          100% {
+            transform: translateY(-50%);
+          }
+        }
+      `}</style>
+      <section style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundImage: `url(${heroBackground.src})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+      {/* 背景オーバーレイ */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        zIndex: 1
+      }}></div>
+
       {/* 背景のアクセント */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        zIndex: 2
       }}>
         <div style={{
           position: 'absolute',
@@ -51,7 +109,7 @@ const Hero = () => {
         margin: '0 auto',
         padding: '0 1rem',
         position: 'relative',
-        zIndex: 10
+        zIndex: 3
       }}>
         <div style={{
           display: 'grid',
@@ -93,15 +151,18 @@ const Hero = () => {
                 fontSize: '40px',
                 fontWeight: 'bold',
                 color: 'white',
-                marginBottom: '0.5rem'
               }}>
                 ROCK CASTING
               </div>
-              <div style={{
-                width: '8rem',
-                height: '0.25rem',
-                backgroundColor: '#dc2626'
-              }}></div>
+              <img 
+                src={redBorder.src} 
+                alt="red border" 
+                style={{
+                  width: '20rem',
+                  height: 'auto',
+                  marginTop: '-0.35px'
+                }}
+              />
             </div>
 
             {/* CTAボタン */}
@@ -137,91 +198,50 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* 右側の画像グリッド */}
-          <div style={{ display: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'block' : 'none' }}>
+          {/* 右側の自動スクロール画像コンテナ */}
+          <div>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '1rem',
               maxWidth: '32rem',
-              marginLeft: 'auto'
+              marginLeft: 'auto',
+              height: '100vh',
+              overflow: 'hidden',
+              position: 'relative'
             }}>
-              {/* 画像 1 - 上左 */}
               <div style={{
-                aspectRatio: '4/3',
-                borderRadius: '0.75rem',
-                overflow: 'hidden',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+                animation: 'scrollUp 20s linear infinite'
               }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=300&fit=crop&crop=face" 
-                  alt="モデル" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-              
-              {/* 画像 2 - 上右 */}
-              <div style={{
-                aspectRatio: '4/3',
-                borderRadius: '0.75rem',
-                overflow: 'hidden',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-              }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop&crop=face" 
-                  alt="シンガー" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-              
-              {/* 画像 3 - 下左 */}
-              <div style={{
-                aspectRatio: '4/3',
-                borderRadius: '0.75rem',
-                overflow: 'hidden',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-              }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop&crop=face" 
-                  alt="モデル" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-              
-              {/* 画像 4 - 下右 */}
-              <div style={{
-                aspectRatio: '4/3',
-                borderRadius: '0.75rem',
-                overflow: 'hidden',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-              }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face" 
-                  alt="フォトグラファー" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
+                {duplicatedSlides.map((slide, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      aspectRatio: '4/3',
+                      borderRadius: '0.75rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                      flexShrink: 0
+                    }}
+                  >
+                    <img 
+                      src={slide.src}
+                      alt={slide.alt}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+    </>
   )
 }
 
