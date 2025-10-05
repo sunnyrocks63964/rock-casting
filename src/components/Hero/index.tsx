@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { RocknRoll_One } from 'next/font/google'
 // @ts-ignore
@@ -105,8 +105,8 @@ const Hero = () => {
       </div>
 
       <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
+        maxWidth: '1400px',
+        margin: '0',
         padding: '0 1rem',
         position: 'relative',
         zIndex: 3
@@ -201,11 +201,9 @@ const Hero = () => {
           {/* 右側の自動スクロール画像コンテナ */}
           <div>
             <div style={{
-              maxWidth: '32rem',
               marginLeft: 'auto',
               height: '100vh',
               overflow: 'hidden',
-              position: 'relative'
             }}>
               <div style={{
                 display: 'flex',
