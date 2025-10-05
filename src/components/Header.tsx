@@ -22,7 +22,7 @@ const Header = () => {
       borderBottom: '1px solid #374151'
     }}>
       <div style={{
-        maxWidth: '1200px',
+        maxWidth: '1400px',
         margin: '0 auto',
         padding: '0 1rem',
         height: '60px',
