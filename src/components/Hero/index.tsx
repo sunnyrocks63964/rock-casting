@@ -147,7 +147,8 @@ const Hero = () => {
             
             {/* ROCK CASTING with underline */}
             <div style={{ marginBottom: '3rem' }}>
-              <div className={rocknrollOne.className} style={{
+              <div style={{
+                fontFamily: rocknrollOne.style.fontFamily,
                 fontSize: '40px',
                 fontWeight: 'bold',
                 color: 'white',
