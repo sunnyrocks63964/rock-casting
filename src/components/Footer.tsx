@@ -11,6 +11,20 @@ const Footer = () => {
         <div
           style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1rem" }}
         >
+          {/* ROCK CASTING タイトル */}
+          <h2
+            style={{
+              fontSize: "24px",
+              fontWeight: "400",
+              color: "white",
+              textAlign: "center",
+              marginBottom: "3rem",
+              letterSpacing: "0.05em",
+            }}
+          >
+            ROCK CASTING
+          </h2>
+
           <div
             style={{
               display: "grid",
@@ -254,7 +268,7 @@ const Footer = () => {
               </div>
               <div>
                 <Link
-                  href="/help"
+                  href="/usage_guide"
                   style={{
                     backgroundColor: "#f97316",
                     color: "white",
