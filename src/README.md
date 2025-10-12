@@ -120,8 +120,12 @@ Next.js 13+ App Routerを使用したアプリケーションのルーティン�
 
 ```
 app/
-├── layout.tsx     # ルートレイアウト（全ページ共通）
-└── page.tsx       # ホームページ（/）
+├── layout.tsx          # ルートレイアウト（全ページ共通）
+├── page.tsx            # ホームページ（/）
+├── top/
+│   └── page.tsx        # トップページ（/top）
+└── usage_guide/
+    └── page.tsx        # 利用ガイドページ（/usage_guide）
 ```
 
 ### 主要ファイル
@@ -141,6 +145,21 @@ app/
 - **機能**:
   - 各セクションコンポーネントの統合
   - Figmaデザインに基づいたページ構成
+
+#### `top/page.tsx`
+
+- **役割**: トップページ（`/top`）
+- **機能**:
+  - Hero から CTA までのセクションを含む
+  - サービスの主要情報を表示
+
+#### `usage_guide/page.tsx`
+
+- **役割**: 利用ガイドページ（`/usage_guide`）
+- **機能**:
+  - サービスの利用料金と規約を説明
+  - キャンセルポリシーなどの詳細情報を提供
+  - フッターの「ヘルプ・ご利用ガイド」からアクセス可能
 
 ## 📂 `components/` ディレクトリ
 
@@ -197,6 +216,8 @@ components/
 │   ├── index.tsx
 │   └── images/
 │       └── lawsuit_bg_pc.png
+├── UsageGuide/           # 利用ガイドセクション
+│   └── index.tsx
 ├── Voice/                # お客様の声セクション
 │   ├── index.tsx
 │   └── images/
