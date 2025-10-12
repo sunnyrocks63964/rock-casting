@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 // @ts-ignore
 import castBg from "./images/cast_bg.png";
+// @ts-ignore
+import cast01 from "./images/cast_01.png";
 
 const Cast = () => {
   const [activeTab, setActiveTab] = useState("photographer");
@@ -19,7 +21,7 @@ const Cast = () => {
     name: `名前名前`,
     description:
       "モデル歴14年のフリーモデル。室内から外まで対応します。年間200本以上を撮影いたします。広告の仕事を上達継続していい、広告やポートレイト",
-    image: "/api/placeholder/200/200",
+    image: cast01.src,
   }));
 
   return (
@@ -48,6 +50,7 @@ const Cast = () => {
               fontSize: "2.5rem",
               fontWeight: "bold",
               color: "black",
+              fontFamily: "RocknRoll One",
               marginBottom: "1rem",
             }}
           >
@@ -63,6 +66,49 @@ const Cast = () => {
           </p>
         </div>
 
+        {/* タブナビゲーション */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            width: "80%",
+            margin: "0 auto",
+            gap: "20px",
+          }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "0.75rem 1rem",
+                fontWeight: "600",
+                transition: "all 0.3s ease",
+                borderRadius: "0.5rem 0.5rem 0 0",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: activeTab === tab.id ? "#000000" : "#808080",
+                color: "white",
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tab.id) {
+                  const target = e.target as HTMLElement;
+                  target.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== tab.id) {
+                  const target = e.target as HTMLElement;
+                  target.style.backgroundColor = "#808080";
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* キャストグリッド */}
         <div
           style={{
             backgroundImage: `url(${castBg.src})`,
@@ -70,55 +116,11 @@ const Cast = () => {
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             margin: "0 auto",
-            marginBottom: "3rem",
+            marginBottom: "0",
             width: "80%",
             padding: "2rem",
           }}
         >
-          {/* タブナビゲーション */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              marginBottom: "3rem",
-              borderBottom: "2px solid #3b82f6",
-            }}
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  margin: "0 0.5rem 0.5rem",
-                  fontWeight: "600",
-                  transition: "all 0.3s ease",
-                  borderRadius: "0.5rem",
-                  border: "none",
-                  cursor: "pointer",
-                  backgroundColor: activeTab === tab.id ? "#000000" : "#808080",
-                  color: "white",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab.id) {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab.id) {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = "#808080";
-                  }
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* キャストグリッド */}
           <div
             style={{
               display: "grid",
@@ -141,29 +143,12 @@ const Cast = () => {
                 <div
                   style={{
                     height: "12rem",
-                    background:
-                      "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    backgroundImage: `url(${cast.image})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
                   }}
-                >
-                  <svg
-                    style={{
-                      width: "4rem",
-                      height: "4rem",
-                      color: "white",
-                    }}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
+                ></div>
                 <div
                   style={{
                     padding: "1rem",
