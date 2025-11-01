@@ -19,7 +19,7 @@ const Header = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 770);
     };
-    
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -27,7 +27,6 @@ const Header = () => {
 
   return (
     <>
-      
       <header
         style={{
           position: "fixed",
@@ -127,10 +126,11 @@ const Header = () => {
       </header>
 
       {/* モバイルメニュー */}
-      {isMobile && <MobileNav isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />}
+      {isMobile && (
+        <MobileNav isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      )}
     </>
   );
 };
 
 export default Header;
-

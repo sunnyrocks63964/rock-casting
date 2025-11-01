@@ -67,5 +67,3 @@ const CastCountSection = () => {
 };
 
 export default CastCountSection;
-
-

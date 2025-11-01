@@ -8,10 +8,11 @@ import Footer from "../../components/Footer";
 import Voice from "../../components/Voice";
 import Cast from "../../components/Cast";
 
-
 export default function OrderWorkPage() {
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}>
+    <main
+      style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}
+    >
       <Header />
       <OrderWork />
       <Voice />
@@ -21,4 +22,3 @@ export default function OrderWorkPage() {
     </main>
   );
 }
-

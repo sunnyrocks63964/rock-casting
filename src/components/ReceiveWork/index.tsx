@@ -9,7 +9,13 @@ import Cast from "../Cast";
 
 const ReceiveWork = () => {
   return (
-    <div style={{ backgroundColor: "#060606", position: "relative", width: "100%" }}>
+    <div
+      style={{
+        backgroundColor: "#060606",
+        position: "relative",
+        width: "100%",
+      }}
+    >
       <HeroSection />
       <CastCountSection />
       <ReasonSection />
@@ -20,5 +26,3 @@ const ReceiveWork = () => {
 };
 
 export default ReceiveWork;
-
-
