@@ -4,9 +4,8 @@ import React from "react";
 import HeroSection from "./HeroSection";
 import CastCountSection from "./CastCountSection";
 import ReasonSection from "./ReasonSection";
-import JobCategoriesSection from "./JobCategoriesSection";
-import JobExamplesSection from "./JobExamplesSection";
-import CastGallerySection from "./CastGallerySection";
+import JobExamplesSection from "../JobExamplesSection";
+import Cast from "../Cast";
 
 const ReceiveWork = () => {
   return (
@@ -14,9 +13,8 @@ const ReceiveWork = () => {
       <HeroSection />
       <CastCountSection />
       <ReasonSection />
-      <JobCategoriesSection />
       <JobExamplesSection />
-      <CastGallerySection />
+      <Cast />
     </div>
   );
 };
