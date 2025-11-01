@@ -137,7 +137,7 @@ const JobExamplesSection = () => {
             >
                 <div
                     style={{
-                        maxWidth: "1360px",
+                        maxWidth: "1100px",
                         margin: "0 auto",
                     }}
                 >
@@ -198,6 +198,67 @@ const JobExamplesSection = () => {
                                     {example.category}
                                 </h3>
 
+                                {/* タイトルと説明の灰色ボックス */}
+                                <div
+                                    style={{
+                                        backgroundColor: "#e5e5e5",
+                                        borderRadius: "5px",
+                                        padding: "30px",
+                                        marginBottom: "30px",
+                                        display: "flex",
+                                        gap: "20px",
+                                        alignItems: "stretch",
+                                    }}
+                                >
+                                    {/* 左側 - タイトル */}
+                                    <div
+                                        style={{
+                                            flex: "0 0 auto",
+                                            minWidth: "280px",
+                                        }}
+                                    >
+                                        <h4
+                                            style={{
+                                                fontSize: "20px",
+                                                fontWeight: "700",
+                                                color: "black",
+                                                margin: 0,
+                                                lineHeight: "1.4",
+                                            }}
+                                        >
+                                            {example.title}
+                                        </h4>
+                                    </div>
+
+                                    {/* 縦の区切り線 */}
+                                    <div
+                                        style={{
+                                            width: "1px",
+                                            backgroundColor: "black",
+                                            flexShrink: 0,
+                                        }}
+                                    />
+
+                                    {/* 右側 - 説明文 */}
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                        }}
+                                    >
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "black",
+                                                lineHeight: "1.6",
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {example.description}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* 対応内容と報酬 */}
                                 <div
                                     style={{
                                         display: "grid",
@@ -206,80 +267,31 @@ const JobExamplesSection = () => {
                                         alignItems: "start",
                                     }}
                                 >
-                                    {/* 左側 - 案件概要 */}
+                                    {/* 左側 - 対応内容 */}
                                     <div>
-                                        <div
+                                        <h5
                                             style={{
-                                                backgroundColor: "#e5e5e5",
-                                                borderRadius: "5px",
-                                                padding: "30px",
-                                                marginBottom: "30px",
+                                                fontSize: "20px",
+                                                fontWeight: "700",
+                                                color: "black",
+                                                marginBottom: "10px",
                                             }}
                                         >
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "20px",
-                                                    marginBottom: "20px",
-                                                }}
-                                            >
-                                                <h4
-                                                    style={{
-                                                        fontSize: "20px",
-                                                        fontWeight: "700",
-                                                        color: "black",
-                                                        textAlign: "center",
-                                                        margin: 0,
-                                                        flex: 1,
-                                                    }}
-                                                >
-                                                    {example.title}
-                                                </h4>
-                                            </div>
-                                            <div
-                                                style={{
-                                                    width: "1px",
-                                                    height: "145px",
-                                                    backgroundColor: "black",
-                                                    margin: "0 auto 20px",
-                                                }}
-                                            />
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "black",
-                                                    lineHeight: "1.6",
-                                                }}
-                                            >
-                                                {example.description}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <h5
-                                                style={{
-                                                    fontSize: "20px",
-                                                    fontWeight: "700",
-                                                    color: "black",
-                                                    marginBottom: "10px",
-                                                }}
-                                            >
-                                                対応内容
-                                            </h5>
-                                            <ul
-                                                style={{
-                                                    fontSize: "20px",
-                                                    color: "black",
-                                                    lineHeight: "1.8",
-                                                    paddingLeft: "30px",
-                                                }}
-                                            >
-                                                {example.tasks.map((task, index) => (
-                                                    <li key={index}>{task}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                            対応内容
+                                        </h5>
+                                        <ul
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "black",
+                                                lineHeight: "1.8",
+                                                paddingLeft: "20px",
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {example.tasks.map((task, index) => (
+                                                <li key={index}>{task}</li>
+                                            ))}
+                                        </ul>
                                     </div>
 
                                     {/* 右側 - 報酬 */}
@@ -296,9 +308,10 @@ const JobExamplesSection = () => {
                                         </h5>
                                         <p
                                             style={{
-                                                fontSize: "20px",
+                                                fontSize: "16px",
                                                 color: "black",
                                                 lineHeight: "1.6",
+                                                margin: 0,
                                             }}
                                         >
                                             {example.payment}
