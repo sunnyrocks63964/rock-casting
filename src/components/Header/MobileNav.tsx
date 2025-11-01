@@ -129,7 +129,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
           仕事を受ける
         </Link>
         <Link
-          href="#order-work"
+          href="/order-work"
           onClick={onClose}
           style={{
             color: "white",
@@ -143,7 +143,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
             width: "100%",
           }}
         >
-          仕事を発注する
+          仕事を依頼する
         </Link>
 
         {/* 新規登録ボタン */}
