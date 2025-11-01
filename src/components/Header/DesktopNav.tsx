@@ -85,7 +85,7 @@ const DesktopNav = () => {
           仕事を受ける
         </Link>
         <Link
-          href="#order-work"
+          href="/order-work"
           style={{
             color: "white",
             textDecoration: "none",
@@ -104,7 +104,7 @@ const DesktopNav = () => {
             target.style.color = "white";
           }}
         >
-          仕事を発注する
+          仕事を依頼する
         </Link>
       </nav>
 
