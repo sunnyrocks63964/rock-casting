@@ -28,6 +28,6 @@ export default function TopPage() {
       <Faq />
       <CTA />
       <Footer />
-  </main>
+    </main>
   );
 }

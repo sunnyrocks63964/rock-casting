@@ -196,4 +196,3 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
 };
 
 export default MobileNav;
-

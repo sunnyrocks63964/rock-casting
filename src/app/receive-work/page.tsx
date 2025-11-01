@@ -8,7 +8,9 @@ import Footer from "../../components/Footer";
 
 export default function ReceiveWorkPage() {
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}>
+    <main
+      style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}
+    >
       <Header />
       <ReceiveWork />
       <CTA />
@@ -16,4 +18,3 @@ export default function ReceiveWorkPage() {
     </main>
   );
 }
-

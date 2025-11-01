@@ -113,5 +113,3 @@ const ReasonSection = () => {
 };
 
 export default ReasonSection;
-
-
