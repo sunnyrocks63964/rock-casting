@@ -3,13 +3,7 @@
 import React from "react";
 import Link from "next/link";
 // @ts-ignore
-import heroImage1 from "../Hero/images/kv_slide_01.png";
-// @ts-ignore
-import heroImage2 from "../Hero/images/kv_slide_02.png";
-// @ts-ignore
-import heroImage3 from "../Hero/images/kv_slide_03.png";
-// @ts-ignore
-import heroImage4 from "../Hero/images/kv_slide_08.png";
+import heroImage from "./images/request-a-job_kv.png";
 
 const HeroSection = () => {
   return (
@@ -21,7 +15,7 @@ const HeroSection = () => {
         backgroundColor: "#000",
       }}
     >
-      {/* 背景画像グループ */}
+      {/* 背景画像 */}
       <div
         style={{
           position: "absolute",
@@ -29,86 +23,17 @@ const HeroSection = () => {
           left: 0,
           width: "100%",
           height: "408px",
-          display: "flex",
         }}
       >
-        {/* 画像は実際のデザインでは4つの画像が重なっています */}
-        <div
+        <img
+          src={heroImage?.src || "/placeholder.jpg"}
+          alt=""
           style={{
-            position: "absolute",
-            left: 0,
-            width: "25%",
+            width: "100%",
             height: "100%",
-            overflow: "hidden",
+            objectFit: "cover",
           }}
-        >
-          <img
-            src={heroImage1?.src || "/placeholder.jpg"}
-            alt=""
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: "25%",
-            width: "25%",
-            height: "100%",
-            overflow: "hidden",
-          }}
-        >
-          <img
-            src={heroImage2?.src || "/placeholder.jpg"}
-            alt=""
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            width: "25%",
-            height: "100%",
-            overflow: "hidden",
-          }}
-        >
-          <img
-            src={heroImage3?.src || "/placeholder.jpg"}
-            alt=""
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: "75%",
-            width: "25%",
-            height: "100%",
-            overflow: "hidden",
-          }}
-        >
-          <img
-            src={heroImage4?.src || "/placeholder.jpg"}
-            alt=""
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </div>
+        />
       </div>
 
       {/* オーバーレイ */}
