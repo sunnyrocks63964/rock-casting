@@ -124,6 +124,10 @@ app/
 ├── page.tsx            # ホームページ（/）
 ├── top/
 │   └── page.tsx        # トップページ（/top）
+├── receive-work/
+│   └── page.tsx        # 仕事を受けるページ（/receive-work）
+├── order-work/
+│   └── page.tsx        # 仕事を依頼するページ（/order-work）
 └── usage_guide/
     └── page.tsx        # 利用ガイドページ（/usage_guide）
 ```
@@ -152,6 +156,24 @@ app/
 - **機能**:
   - Hero から CTA までのセクションを含む
   - サービスの主要情報を表示
+
+#### `receive-work/page.tsx`
+
+- **役割**: 仕事を受けるページ（`/receive-work`）
+- **機能**:
+  - クリエイター向けのキャスティング情報
+  - ヒーローセクション、理由セクション、登録人数表示
+  - Voice、Cast、CTAコンポーネントを統合
+  - ヘッダーの「仕事を受ける」ボタンからアクセス可能
+
+#### `order-work/page.tsx`
+
+- **役割**: 仕事を依頼するページ（`/order-work`）
+- **機能**:
+  - クライアント向けのキャスティング依頼情報
+  - ヒーローセクション、利用者タイプ、お悩み・メリット紹介
+  - Voice、Cast、CTAコンポーネントを統合
+  - ヘッダーの「仕事を依頼する」ボタンからアクセス可能
 
 #### `usage_guide/page.tsx`
 
@@ -205,6 +227,10 @@ components/
 │   └── images/
 │       ├── function_01.png ~ function_03.png
 │       └── function_bg.png
+├── Header/               # ナビゲーションヘッダー
+│   ├── index.tsx         # メインヘッダーコンポーネント
+│   ├── DesktopNav.tsx    # デスクトップナビゲーション
+│   └── MobileNav.tsx     # モバイルナビゲーション（ハンバーガーメニュー）
 ├── Hero/                 # ヒーローセクション
 │   ├── index.tsx
 │   └── images/
@@ -212,6 +238,23 @@ components/
 │       ├── kv_slide_01.png ~ kv_slide_03.png
 │       ├── kv_slide_08.png
 │       └── red_border.png
+├── JobExamplesSection/   # お仕事事例セクション
+│   ├── index.tsx
+│   └── images/
+│       ├── get-a-job_example-bg.png
+│       └── get-a-job_example.png
+├── OrderWork/            # 仕事を依頼するページコンポーネント
+│   ├── index.tsx
+│   └── images/
+│       ├── order-work_kv.png
+│       └── request-a-job_merit01.png ~ merit04.png
+├── ReceiveWork/          # 仕事を受けるページコンポーネント
+│   ├── index.tsx         # メインコンポーネント
+│   ├── HeroSection.tsx   # ヒーローセクション
+│   ├── CastCountSection.tsx  # 登録人数セクション
+│   ├── ReasonSection.tsx # 選ばれる理由セクション
+│   └── images/
+│       └── request-a-job_kv.png
 ├── Service/              # サービス・料金セクション
 │   ├── index.tsx
 │   └── images/
@@ -225,7 +268,6 @@ components/
 │       ├── voice_cover_pc.png
 │       ├── voice_cover_sp.png
 │       └── voice02.png
-├── Header.tsx            # ナビゲーションヘッダー
 ├── Footer.tsx            # フッター
 ├── Features.tsx          # 機能特徴（未使用）
 └── Testimonials.tsx      # 証言（未使用）
@@ -233,13 +275,15 @@ components/
 
 ### 各コンポーネントの詳細
 
-#### 🧭 `Header.tsx`
+#### 🧭 `Header/`
 
 - **機能**: サイト全体のナビゲーション
 - **特徴**:
-  - レスポンシブメニュー（ハンバーガーメニュー）
-  - ログイン・登録ボタン
+  - レスポンシブメニュー（デスクトップ/モバイル切り替え）
+  - `DesktopNav.tsx`: PC向けナビゲーション（仕事を受ける、仕事を依頼する、ログイン等）
+  - `MobileNav.tsx`: スマホ向けハンバーガーメニュー
   - 固定ヘッダー（`position: fixed`）
+  - `/receive-work` と `/order-work` への導線
 
 #### 🎯 `Hero/`
 
@@ -330,6 +374,45 @@ components/
   - Q&A形式での情報提示
   - 質問（Q）は黒、回答（A）は赤で表示
   - 常時展開表示（トグル不要）
+
+#### 💼 `ReceiveWork/`
+
+- **機能**: 仕事を受けるページの統合コンポーネント
+- **特徴**:
+  - `HeroSection.tsx`: キャッチコピーと登録CTAを含むヒーローエリア
+  - `ReasonSection.tsx`: 選ばれる3つの理由を紹介
+  - `CastCountSection.tsx`: 登録クリエイター数の表示
+  - レスポンシブ対応のレイアウト
+- **画像アセット**: request-a-job_kv.png（ヒーロー背景）
+- **特記事項**:
+  - `/receive-work` ルートでアクセス可能
+  - ヘッダーの「仕事を受ける」ボタンからリンク
+
+#### 📋 `OrderWork/`
+
+- **機能**: 仕事を依頼するページの統合コンポーネント
+- **特徴**:
+  - ヒーローセクション: 撮影・制作のクリエイター発見
+  - Various usersセクション: 個人・法人向け利用例
+  - お悩みセクション: 8つの課題提示
+  - メリットカード: 4つのメリット（費用削減、スピード対応、品質保証、エリアマッチング）を2x2グリッドで表示
+  - SVGアイコン（CheckIcon、ArrowDownIcon）を実装で提供
+- **画像アセット**:
+  - order-work_kv.png（ヒーロー背景）
+  - request-a-job_merit01.png ~ merit04.png（メリットカード画像）
+- **特記事項**:
+  - `/order-work` ルートでアクセス可能
+  - ヘッダーの「仕事を依頼する」ボタンからリンク
+
+#### 📸 `JobExamplesSection/`
+
+- **機能**: お仕事事例の紹介セクション
+- **特徴**:
+  - 実際の利用事例を視覚的に表示
+  - 背景画像とコンテンツ画像の組み合わせ
+- **画像アセット**:
+  - get-a-job_example-bg.png（背景画像）
+  - get-a-job_example.png（事例画像）
 
 #### 📄 `UsageGuide/`
 
@@ -435,5 +518,5 @@ components/
 ---
 
 **作成日**: 2025年9月30日  
-**最終更新**: 2025年10月12日  
-**バージョン**: 1.2.0
+**最終更新**: 2025年11月1日  
+**バージョン**: 1.3.0
