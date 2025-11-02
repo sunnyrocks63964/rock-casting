@@ -2,13 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-// @ts-ignore
 import aboutBg from "./images/about_bg.png";
-// @ts-ignore
 import about01 from "./images/about_01.png";
-// @ts-ignore
 import about02 from "./images/about_02.png";
-// @ts-ignore
 import about03 from "./images/about_03.png";
 
 const About = () => {

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-// @ts-ignore
 import bannerPc from "./images/banner_pc.png";
 
 const CTA = () => {

@@ -1,19 +1,12 @@
 "use client";
 
 import React from "react";
-// @ts-ignore
 import flowBg from "./images/flow_bg.png";
-// @ts-ignore
 import flow01 from "./images/flow_01.png";
-// @ts-ignore
 import flow02 from "./images/flow_02.png";
-// @ts-ignore
 import flow03 from "./images/flow_03.png";
-// @ts-ignore
 import flow04 from "./images/flow_04.png";
-// @ts-ignore
 import flow05 from "./images/flow_05.png";
-// @ts-ignore
 import flow06 from "./images/flow_06.png";
 
 const Flow = () => {

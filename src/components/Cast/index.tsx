@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-// @ts-ignore
 import castBg from "./images/cast_bg.png";
-// @ts-ignore
 import cast01 from "./images/cast_01.png";
 
 const Cast = () => {

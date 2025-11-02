@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-// @ts-ignore
+import Image from "next/image";
 import heroImage from "./images/request-a-job_kv.png";
 
 const HeroSection = () => {
@@ -25,14 +25,14 @@ const HeroSection = () => {
           height: "408px",
         }}
       >
-        <img
-          src={heroImage?.src || "/placeholder.jpg"}
+        <Image
+          src={heroImage}
           alt=""
+          fill
           style={{
-            width: "100%",
-            height: "100%",
             objectFit: "cover",
           }}
+          priority
         />
       </div>
 
