@@ -1,11 +1,15 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Inter, RocknRoll_One } from "next/font/google";
+import { Inter, RocknRoll_One, Noto_Sans_JP } from "next/font/google";
 import "../styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 const rocknrollOne = RocknRoll_One({
   weight: "400",
+  subsets: ["latin"],
+});
+const notoSansJP = Noto_Sans_JP({
+  weight: ["400", "700"],
   subsets: ["latin"],
 });
 
