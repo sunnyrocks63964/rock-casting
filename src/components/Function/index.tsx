@@ -1,13 +1,9 @@
 "use client";
 
 import React from "react";
-// @ts-ignore
 import functionBg from "./images/function_bg.png";
-// @ts-ignore
 import function01 from "./images/function_01.png";
-// @ts-ignore
 import function02 from "./images/function_02.png";
-// @ts-ignore
 import function03 from "./images/function_03.png";
 
 const Function = () => {

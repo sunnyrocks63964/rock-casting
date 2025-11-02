@@ -1,9 +1,7 @@
 "use client";
 
 import React from "react";
-// @ts-ignore
 import categoryImage from "./images/get-a-job_example.png";
-// @ts-ignore
 import exampleBgImage from "./images/get-a-job_example-bg.png";
 
 const JobExamplesSection = () => {

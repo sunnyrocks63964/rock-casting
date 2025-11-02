@@ -3,17 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { RocknRoll_One } from "next/font/google";
-// @ts-ignore
 import heroBackground from "./images/hero_top_background_1.png";
-// @ts-ignore
 import redBorder from "./images/red_border.png";
-// @ts-ignore
 import kvSlide01 from "./images/kv_slide_01.png";
-// @ts-ignore
 import kvSlide02 from "./images/kv_slide_02.png";
-// @ts-ignore
 import kvSlide03 from "./images/kv_slide_03.png";
-// @ts-ignore
 import kvSlide08 from "./images/kv_slide_08.png";
 
 const rocknrollOne = RocknRoll_One({

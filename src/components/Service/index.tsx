@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-// @ts-ignore
 import lawsuitBg from "./images/lawsuit_bg_pc.png";
 
 const Service = () => {
