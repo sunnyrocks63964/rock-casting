@@ -125,7 +125,7 @@ const Footer = () => {
                   料金
                 </Link>
                 <Link
-                  href="/password-reset"
+                  href="/reset-password"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",

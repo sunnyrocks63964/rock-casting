@@ -2,15 +2,14 @@
 
 import React, { useState } from "react";
 
-export default function Login() {
+export default function ResetPassword() {
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [isHoveringButton, setIsHoveringButton] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: ログイン処理を実装
-        console.log("Login attempt with:", { email, password });
+        // TODO: パスワードリセットメール送信処理を実装
+        console.log("Password reset request for:", email);
     };
 
     return (
@@ -35,7 +34,7 @@ export default function Login() {
                     marginBottom: "16px",
                 }}
             >
-                Login
+                Reset password
             </h1>
 
             <p
@@ -49,10 +48,10 @@ export default function Login() {
                     marginBottom: "48px",
                 }}
             >
-                ログイン
+                パスワードを再設定
             </p>
 
-            {/* ログインフォーム */}
+            {/* パスワードリセットフォーム */}
             <div
                 style={{
                     backgroundColor: "white",
@@ -62,6 +61,23 @@ export default function Login() {
                     maxWidth: "800px",
                 }}
             >
+                {/* 説明テキスト */}
+                <p
+                    style={{
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        fontSize: "16px",
+                        fontWeight: "400",
+                        color: "black",
+                        textAlign: "center",
+                        marginBottom: "32px",
+                        lineHeight: "1.6",
+                    }}
+                >
+                    ご登録メールアドレス宛てに、
+                    <br />
+                    新規パスワードを発行するためのリンクをメールでお送りします。
+                </p>
+
                 <form
                     onSubmit={handleSubmit}
                     style={{
@@ -105,84 +121,16 @@ export default function Login() {
                                 borderRadius: "30px",
                                 border: "1px solid black",
                                 fontFamily: "'Noto Sans JP', sans-serif",
-                                fontSize: "14px",
-                                fontWeight: "400",
-                                color: "black",
-                                outline: "none",
-                            }}
-                            required
-                        />
-                    </div>
-
-                    {/* パスワード */}
-                    <div
-                        style={{
-                            width: "100%",
-                            maxWidth: "600px",
-                            marginBottom: "8px",
-                        }}
-                    >
-                        <label
-                            htmlFor="password"
-                            style={{
-                                display: "block",
-                                fontFamily: "'Noto Sans JP', sans-serif",
                                 fontSize: "16px",
                                 fontWeight: "400",
                                 color: "black",
-                                textAlign: "left",
-                                marginBottom: "8px",
-                            }}
-                        >
-                            パスワード
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="パスワードを入力してください"
-                            style={{
-                                width: "100%",
-                                height: "36px",
-                                padding: "0 16px",
-                                borderRadius: "30px",
-                                border: "1px solid black",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                fontSize: "14px",
-                                fontWeight: "400",
-                                color: "black",
                                 outline: "none",
                             }}
                             required
                         />
                     </div>
 
-                    {/* パスワード忘れリンク */}
-                    <div
-                        style={{
-                            width: "100%",
-                            maxWidth: "600px",
-                            textAlign: "right",
-                            marginBottom: "64px",
-                        }}
-                    >
-                        <a
-                            href="/reset-password"
-                            style={{
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                fontSize: "14px",
-                                fontWeight: "400",
-                                color: "#0800f9",
-                                textDecoration: "none",
-                                display: "inline-block",
-                            }}
-                        >
-                            パスワードを忘れた方はこちら
-                        </a>
-                    </div>
-
-                    {/* ログインボタン */}
+                    {/* 送信ボタン */}
                     <button
                         type="submit"
                         onMouseEnter={() => setIsHoveringButton(true)}
@@ -203,7 +151,7 @@ export default function Login() {
                             transition: "background-color 0.3s ease",
                         }}
                     >
-                        ログイン
+                        再設定メールを送信
                     </button>
 
                     {/* 新規登録リンク */}
@@ -211,7 +159,7 @@ export default function Login() {
                         href="/register"
                         style={{
                             fontFamily: "'Noto Sans JP', sans-serif",
-                            fontSize: "14px",
+                            fontSize: "16px",
                             fontWeight: "400",
                             color: "#0800f9",
                             textDecoration: "none",
