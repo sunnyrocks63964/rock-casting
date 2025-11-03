@@ -80,7 +80,7 @@ const MobileJobExamplesSection = () => {
   return (
     <section
       style={{
-        backgroundColor: "white",
+        backgroundColor: "black",
         paddingTop: "40px",
         paddingBottom: "40px",
       }}
