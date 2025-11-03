@@ -2,8 +2,12 @@
 
 import React from "react";
 import Header from "../../components/Header";
-import ReceiveWork from "../../components/ReceiveWork/index";
+import ReceiveWorkHero from "../../components/ReceiveWork/HeroSection";
+import CastCountSection from "../../components/ReceiveWork/CastCountSection";
+import ReasonSection from "../../components/ReceiveWork/ReasonSection";
+import JobExamplesSection from "../../components/JobExamplesSection";
 import CTA from "../../components/CTA";
+import Cast from "../../components/Cast";
 import Footer from "../../components/Footer";
 
 export default function ReceiveWorkPage() {
@@ -12,7 +16,11 @@ export default function ReceiveWorkPage() {
       style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}
     >
       <Header />
-      <ReceiveWork />
+      <ReceiveWorkHero />
+      <CastCountSection />
+      <ReasonSection />
+      <JobExamplesSection />
+      <Cast />
       <CTA />
       <Footer />
     </main>
