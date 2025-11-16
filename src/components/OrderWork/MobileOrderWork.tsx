@@ -124,7 +124,7 @@ const MobileOrderWork = () => {
             クリエイターが、すぐに見つかる。
           </h1>
           <a
-            href="/register"
+            href="/user_register"
             style={{
               display: "inline-block",
               backgroundColor: "#d70202",

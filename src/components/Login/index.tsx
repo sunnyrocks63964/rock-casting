@@ -208,7 +208,7 @@ export default function Login() {
 
                     {/* 新規登録リンク */}
                     <a
-                        href="/register"
+                        href="/user_register"
                         style={{
                             fontFamily: "'Noto Sans JP', sans-serif",
                             fontSize: "14px",
