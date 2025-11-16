@@ -152,7 +152,7 @@ const About = () => {
           }}
         >
           <Link
-            href="/register"
+            href="/user_register"
             style={{
               backgroundColor: "#dc2626",
               color: "white",

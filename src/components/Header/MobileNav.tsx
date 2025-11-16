@@ -148,7 +148,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
 
         {/* 新規登録ボタン */}
         <Link
-          href="/register"
+          href="/user_register"
           onClick={onClose}
           style={{
             marginTop: "30px",

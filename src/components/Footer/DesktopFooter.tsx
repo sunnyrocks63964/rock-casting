@@ -85,7 +85,7 @@ const DesktopFooter = () => {
                   仕事を受ける
                 </Link>
                 <Link
-                  href="/register"
+                  href="/user_register"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
