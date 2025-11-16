@@ -1,10 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function ResetPassword() {
     const [email, setEmail] = useState("");
     const [isHoveringButton, setIsHoveringButton] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
+
+    // フォームのバリデーション
+    useEffect(() => {
+        const isValid = email.trim() !== "";
+        setIsFormValid(isValid);
+    }, [email]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -133,6 +140,7 @@ export default function ResetPassword() {
                     {/* 送信ボタン */}
                     <button
                         type="submit"
+                        disabled={!isFormValid}
                         onMouseEnter={() => setIsHoveringButton(true)}
                         onMouseLeave={() => setIsHoveringButton(false)}
                         style={{
@@ -140,15 +148,20 @@ export default function ResetPassword() {
                             maxWidth: "402px",
                             height: "74px",
                             borderRadius: "90px",
-                            backgroundColor: isHoveringButton ? "#b00101" : "#d70202",
+                            backgroundColor: !isFormValid
+                                ? "#fca5a5"
+                                : isHoveringButton
+                                ? "#b00101"
+                                : "#d70202",
                             color: "white",
                             fontFamily: "'Noto Sans JP', sans-serif",
                             fontSize: "24px",
                             fontWeight: "700",
                             border: "none",
-                            cursor: "pointer",
+                            cursor: isFormValid ? "pointer" : "not-allowed",
                             marginBottom: "24px",
                             transition: "background-color 0.3s ease",
+                            opacity: isFormValid ? 1 : 0.6,
                         }}
                     >
                         再設定メールを送信
