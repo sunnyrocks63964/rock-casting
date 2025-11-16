@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import DesktopOrderWork from "./DesktopOrderWork";
-import MobileOrderWork from "./MobileOrderWork";
+import DesktopUserRegister from "./DesktopUserRegister";
+import MobileUserRegister from "./MobileUserRegister";
 
-const OrderWork = () => {
+const UserRegister = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -17,7 +17,8 @@ const OrderWork = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  return isMobile ? <MobileOrderWork /> : <DesktopOrderWork />;
+  return isMobile ? <MobileUserRegister /> : <DesktopUserRegister />;
 };
 
-export default OrderWork;
+export default UserRegister;
+
