@@ -1,0 +1,84 @@
+// Rock Casting - Database Schema
+// 役割別プロフィール設計（キャスト/発注者）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================================
+// Enums
+// ===================================
+
+enum Gender {
+  male
+  female
+  other
+  prefer_not_to_say
+}
+
+// ===================================
+// Models
+// ===================================
+
+/// ユーザー認証テーブル（Supabase Authと連携）
+/// 1つのアカウントで複数の役割を持つことができる
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations（どちらか、または両方を持つことができる）
+  casterProfile  CasterProfile?  // キャスト（受注者）として活動
+  ordererProfile OrdererProfile? // 発注者として活動
+
+  @@index([email])
+  @@map("users")
+}
+
+/// キャスト（受注者）プロフィール
+/// 仕事を受注したい人の情報（すべて任意）
+model CasterProfile {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+  // 基本情報（任意）
+  fullName     String?   @map("full_name")
+  // 住所情報
+  area         String?
+  // 職業・スキル
+  occupation String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("caster_profiles")
+}
+
+/// 発注者プロフィール（個人）
+/// 仕事を依頼したい人の情報（すべて任意）
+model OrdererProfile {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+
+  // 基本情報（任意）
+  fullName     String? @map("full_name")
+
+  // 発注者固有情報（任意）
+  websiteUrl           String[] @default([]) @map("website_url") // 関連webサイトURL
+  desiredWorkAreas     String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア
+  desiredOccupations   String[] @default([]) @map("desired_occupations") // 求めている職種
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("orderer_profiles")
+}

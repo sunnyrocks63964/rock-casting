@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Inter, RocknRoll_One, Noto_Sans_JP } from "next/font/google";
 import "../styles/globals.css";
+import { TRPCProvider } from "@/lib/trpc/Provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <TRPCProvider>{children}</TRPCProvider>
+      </body>
     </html>
   );
 }
