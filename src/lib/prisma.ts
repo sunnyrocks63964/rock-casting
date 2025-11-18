@@ -9,6 +9,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// 環境変数のチェック
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL環境変数が設定されていません");
+}
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

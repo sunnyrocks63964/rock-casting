@@ -14,14 +14,14 @@ const handler = (req: NextRequest) =>
     req,
     router: appRouter,
     createContext: () => createTRPCContext({ req }),
-    onError:
-      process.env.NODE_ENV === "development"
-        ? ({ path, error }) => {
-            console.error(
-              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`
-            );
-          }
-        : undefined,
+    onError: ({ path, error }) => {
+      // 本番環境でもエラーログを出力（Vercelのログで確認可能）
+      console.error(
+        `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
+        error.cause ? `\nCause: ${error.cause}` : "",
+        error.stack ? `\nStack: ${error.stack}` : ""
+      );
+    },
   });
 
 export { handler as GET, handler as POST };
