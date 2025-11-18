@@ -5,10 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" prisma generate"
+    "postinstall": "DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" prisma generate",
+    "build:vercel": "prisma generate && next build",
+    "test:build": "npm run build",
+    "prisma:clean": "node -e \"const fs = require('fs'); const path = require('path'); const prismaPath = path.join(process.cwd(), 'node_modules', '.prisma'); try { if (fs.existsSync(prismaPath)) { fs.rmSync(prismaPath, { recursive: true, force: true }); } } catch (e) {}\"",
+    "prisma:generate": "npm run prisma:clean && prisma generate"
   },
   "keywords": [
     "casting",
