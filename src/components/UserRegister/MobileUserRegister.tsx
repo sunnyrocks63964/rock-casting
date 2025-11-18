@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { trpc } from "@/lib/trpc/client";
 
 const MobileUserRegister = () => {
+  // tRPC mutation
+  const registerMutation = trpc.auth.register.useMutation();
+
   // フォームの状態
   const [email, setEmail] = useState("");
   const [emailConfirm, setEmailConfirm] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
 
   // 登録形態の選択
   const [registrationType, setRegistrationType] = useState<string>("");
@@ -61,17 +66,56 @@ const MobileUserRegister = () => {
       emailConfirm.trim() !== "" &&
       email === emailConfirm &&
       password.trim() !== "" &&
+      passwordConfirm.trim() !== "" &&
+      password === passwordConfirm &&
       registrationType !== "";
 
     setIsFormValid(isBasicInfoValid);
-  }, [email, emailConfirm, password, registrationType]);
+  }, [email, emailConfirm, password, passwordConfirm, registrationType]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid) {
-      console.log("Form submitted");
-      // ここで登録処理を実行
+    if (!isFormValid || registerMutation.isPending) return;
+
+    // 登録形態に応じてroleを決定
+    let role: "caster" | "orderer" | "both" = "orderer";
+    
+    if (registrationType === "individual-order") {
+      role = "orderer";
+    } else if (registrationType === "individual-receive") {
+      role = "caster";
+    } else if (registrationType === "company-order" || registrationType === "company-receive") {
+      // 企業側は後で実装
+      alert("企業側の登録は現在準備中です");
+      return;
     }
+
+    // tRPCで登録APIを呼び出し
+    registerMutation.mutate(
+      {
+        email,
+        password,
+        passwordConfirm,
+        role,
+      },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            alert("登録が完了しました！");
+            // フォームをリセット
+            setEmail("");
+            setEmailConfirm("");
+            setPassword("");
+            setPasswordConfirm("");
+            setRegistrationType("");
+          }
+        },
+        onError: (error) => {
+          // エラーは既にregisterMutation.errorに設定される
+          console.error("登録エラー:", error);
+        },
+      }
+    );
   };
 
   return (
@@ -183,6 +227,38 @@ const MobileUserRegister = () => {
           </div>
 
           {/* パスワード */}
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                fontFamily: "Noto Sans JP",
+                fontSize: "14px",
+                fontWeight: "bold",
+                color: "black",
+                marginBottom: "8px",
+              }}
+            >
+              パスワード <span style={{ color: "#dc2626" }}>（必須）</span>
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="パスワードを入力してください"
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: "1px solid black",
+                borderRadius: "30px",
+                fontSize: "12px",
+                fontFamily: "Noto Sans JP",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* パスワード（確認用） */}
           <div>
             <label
               style={{
@@ -194,13 +270,13 @@ const MobileUserRegister = () => {
                 marginBottom: "8px",
               }}
             >
-              パスワード
+              パスワード（確認用） <span style={{ color: "#dc2626" }}>（必須）</span>
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="パスワードを入力してください"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              placeholder="もう一度パスワードを入力してください"
               style={{
                 width: "100%",
                 padding: "12px 16px",
@@ -1201,9 +1277,9 @@ const MobileUserRegister = () => {
         <div style={{ textAlign: "center", padding: "0 16px 32px" }}>
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || registerMutation.isPending}
             style={{
-              backgroundColor: isFormValid ? "#dc2626" : "#e99797",
+              backgroundColor: isFormValid && !registerMutation.isPending ? "#dc2626" : "#e99797",
               color: "white",
               padding: "12px 0",
               borderRadius: "90px",
@@ -1211,14 +1287,26 @@ const MobileUserRegister = () => {
               fontWeight: "bold",
               fontFamily: "Noto Sans JP",
               border: "none",
-              cursor: isFormValid ? "pointer" : "not-allowed",
+              cursor: isFormValid && !registerMutation.isPending ? "pointer" : "not-allowed",
               transition: "all 0.3s ease",
               width: "100%",
               maxWidth: "295px",
             }}
           >
-            新規登録をする
+            {registerMutation.isPending ? "登録中..." : "新規登録をする"}
           </button>
+          {registerMutation.error && (
+            <div
+              style={{
+                marginTop: "12px",
+                color: "#dc2626",
+                fontFamily: "Noto Sans JP",
+                fontSize: "12px",
+              }}
+            >
+              {registerMutation.error.message}
+            </div>
+          )}
         </div>
       </form>
     </main>
