@@ -22,6 +22,26 @@ export const authRouter = createTRPCRouter({
       const { email, password, role } = input;
 
       try {
+        // 環境変数のチェック
+        const requiredEnvVars = {
+          DATABASE_URL: process.env.DATABASE_URL,
+          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        };
+
+        const missingEnvVars = Object.entries(requiredEnvVars)
+          .filter(([_, value]) => !value)
+          .map(([key]) => key);
+
+        if (missingEnvVars.length > 0) {
+          console.error("環境変数が設定されていません:", missingEnvVars);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `環境変数が設定されていません: ${missingEnvVars.join(", ")}`,
+          });
+        }
+
         // 既存ユーザーチェック
         const existingUser = await ctx.prisma.user.findUnique({
           where: { email },
@@ -36,6 +56,7 @@ export const authRouter = createTRPCRouter({
 
         // Supabaseでユーザー作成
         const supabase = getServerSupabaseClient();
+
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
@@ -46,7 +67,7 @@ export const authRouter = createTRPCRouter({
           console.error("Supabase認証エラー:", authError);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "ユーザー登録に失敗しました",
+            message: `ユーザー登録に失敗しました: ${authError?.message || "不明なエラー"}`,
           });
         }
 
@@ -67,6 +88,18 @@ export const authRouter = createTRPCRouter({
             casterProfile: true,
             ordererProfile: true,
           },
+        }).catch(async (prismaError) => {
+          console.error("Prismaエラー:", prismaError);
+          // Supabaseで作成したユーザーを削除（ロールバック）
+          try {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          } catch (deleteError) {
+            console.error("ユーザー削除エラー（ロールバック）:", deleteError);
+          }
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `データベースへの登録に失敗しました: ${prismaError instanceof Error ? prismaError.message : "不明なエラー"}`,
+          });
         });
 
         return {
@@ -83,9 +116,10 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
         console.error("登録エラー:", error);
+        const errorMessage = error instanceof Error ? error.message : "不明なエラー";
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "ユーザー登録中にエラーが発生しました",
+          message: `ユーザー登録中にエラーが発生しました: ${errorMessage}`,
         });
       }
     }),
