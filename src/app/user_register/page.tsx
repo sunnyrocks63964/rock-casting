@@ -7,7 +7,7 @@ import UserRegister from "@/components/UserRegister";
 
 export default function UserRegisterPage() {
   return (
-    <div
+    <main
       style={{
         backgroundColor: "#000000",
         minHeight: "100vh",
@@ -16,6 +16,6 @@ export default function UserRegisterPage() {
       <Header />
       <UserRegister />
       <Footer />
-    </div>
+    </main>
   );
 }

@@ -65,7 +65,7 @@ const DesktopFooter = () => {
                   トップページ
                 </Link>
                 <Link
-                  href="/register/company"
+                  href="/order-work"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
@@ -75,7 +75,7 @@ const DesktopFooter = () => {
                   仕事を依頼する
                 </Link>
                 <Link
-                  href="/register/cast"
+                  href="/receive-work"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
@@ -95,12 +95,14 @@ const DesktopFooter = () => {
                   会員登録
                 </Link>
                 <Link
-                  href="/casts"
+                  href="#"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   キャスト一覧
                 </Link>
@@ -115,12 +117,14 @@ const DesktopFooter = () => {
                   ログイン
                 </Link>
                 <Link
-                  href="/price"
+                  href="#"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   料金
                 </Link>
@@ -158,89 +162,105 @@ const DesktopFooter = () => {
                 }}
               >
                 <Link
-                  href="/terms"
+                  href="#"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   利用規約
                 </Link>
                 <Link
-                  href="/external-transmission"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   外部送信規律に関する公表事項
                 </Link>
                 <Link
-                  href="/trademark"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   商標・特許
                 </Link>
                 <Link
-                  href="/commercial-law"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   特定商取引法に基づく表示
                 </Link>
                 <Link
-                  href="/privacy"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   プライバシーポリシー
                 </Link>
                 <Link
-                  href="/company"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   企業情報
                 </Link>
                 <Link
-                  href="/security"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   情報セキュリティーポリシー
                 </Link>
                 <Link
-                  href="/environment"
+                  href="#"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   サービス利用環境
                 </Link>
@@ -251,7 +271,7 @@ const DesktopFooter = () => {
             <div style={{ textAlign: "center" }}>
               <div style={{ marginBottom: "40px" }}>
                 <Link
-                  href="/contact"
+                  href="#"
                   style={{
                     backgroundColor: "white",
                     color: "black",
@@ -261,7 +281,9 @@ const DesktopFooter = () => {
                     textDecoration: "none",
                     display: "inline-block",
                     transition: "background-color 0.3s",
+                    cursor: "not-allowed",
                   }}
+                  onClick={(e) => e.preventDefault()}
                 >
                   お問い合わせはこちら
                 </Link>
