@@ -81,7 +81,20 @@ const DesktopUserRegister = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid || registerMutation.isPending) return;
+    
+    // バリデーションを再チェック
+    const isBasicInfoValid =
+      email.trim() !== "" &&
+      emailConfirm.trim() !== "" &&
+      email === emailConfirm &&
+      password.trim() !== "" &&
+      passwordConfirm.trim() !== "" &&
+      password === passwordConfirm &&
+      registrationType !== "";
+    
+    if (!isBasicInfoValid || registerMutation.isPending) {
+      return;
+    }
 
     // 登録形態に応じてroleを決定
     let role: "caster" | "orderer" | "both" = "orderer";
