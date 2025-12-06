@@ -1110,7 +1110,13 @@ const DesktopUserRegister = () => {
               opacity: isFormValid && !registerMutation.isPending ? 1 : 0.6,
             }}
           >
-            {registerMutation.isPending ? "登録中..." : "発注者として新規登録"}
+            {registerMutation.isPending
+              ? "登録中..."
+              : registrationType === "individual-receive" || registrationType === "company-receive"
+              ? "キャストとして新規登録"
+              : registrationType === "individual-order" || registrationType === "company-order"
+              ? "発注者として新規登録"
+              : "新規登録をする"}
           </button>
           {registerMutation.error && (
             <div
