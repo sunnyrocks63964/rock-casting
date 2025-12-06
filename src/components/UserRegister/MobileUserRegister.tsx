@@ -707,6 +707,7 @@ const MobileUserRegister = () => {
                     />
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* 業種 */}
                   <div style={{ marginBottom: "24px" }}>
                     <label
@@ -876,6 +877,7 @@ const MobileUserRegister = () => {
                     </button>
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* 職種 */}
                   <div>
                     <label
@@ -953,6 +955,7 @@ const MobileUserRegister = () => {
               {/* 個人として受注したい方 */}
               {registrationType === "individual-receive" && (
                 <>
+                  {/* TODO: 選択式に変更 */}
                   {/* 希望稼働エリア */}
                   <div style={{ marginBottom: "24px" }}>
                     <label
@@ -1026,6 +1029,7 @@ const MobileUserRegister = () => {
                     </button>
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* 職種 */}
                   <div>
                     <label
@@ -1135,6 +1139,7 @@ const MobileUserRegister = () => {
                     />
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* キャスト側への希望稼働エリア */}
                   <div style={{ marginBottom: "24px" }}>
                     <label

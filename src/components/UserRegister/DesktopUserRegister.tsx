@@ -407,6 +407,7 @@ const DesktopUserRegister = () => {
                     />
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* 業種 */}
                   <div style={{ marginBottom: "30px" }}>
                     <label
@@ -500,6 +501,7 @@ const DesktopUserRegister = () => {
                     />
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* キャスト側への希望稼働エリア */}
                   <div style={{ marginBottom: "30px" }}>
                     <label
@@ -552,6 +554,7 @@ const DesktopUserRegister = () => {
                     </button>
                   </div>
 
+                  {/* TODO: 選択式に変更 */}
                   {/* 求めている職種 */}
                   <div>
                     <label
