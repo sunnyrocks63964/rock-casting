@@ -15,11 +15,12 @@ import { getServerSupabaseClient } from "@/lib/supabase";
 export const authRouter = createTRPCRouter({
   /**
    * ユーザー新規登録（役割ベース）
+   * 企業登録と個人登録の両方に対応
    */
   register: publicProcedure
     .input(BaseRegisterSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, role } = input;
+      const { email, password, role, registrationType, organizationData } = input;
 
       try {
         // 環境変数のチェック
@@ -71,46 +72,163 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Prismaでユーザーとプロフィール作成
-        const user = await ctx.prisma.user.create({
-          data: {
-            id: authData.user.id,
-            email,
-            // 役割に応じてプロフィールを作成
-            ...(role === "caster" || role === "both"
-              ? { casterProfile: { create: {} } }
-              : {}),
-            ...(role === "orderer" || role === "both"
-              ? { ordererProfile: { create: {} } }
-              : {}),
-          },
-          include: {
-            casterProfile: true,
-            ordererProfile: true,
-          },
-        }).catch(async (prismaError) => {
-          console.error("Prismaエラー:", prismaError);
-          // Supabaseで作成したユーザーを削除（ロールバック）
-          try {
-            await supabase.auth.admin.deleteUser(authData.user.id);
-          } catch (deleteError) {
-            console.error("ユーザー削除エラー（ロールバック）:", deleteError);
-          }
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: `データベースへの登録に失敗しました: ${prismaError instanceof Error ? prismaError.message : "不明なエラー"}`,
-          });
-        });
+        // 企業登録の場合
+        const isCompanyRegistration =
+          registrationType === "company-order" || registrationType === "company-receive";
 
-        return {
-          success: true,
-          user: {
-            id: user.id,
-            email: user.email,
-            hasCasterProfile: !!user.casterProfile,
-            hasOrdererProfile: !!user.ordererProfile,
-          },
-        };
+        if (isCompanyRegistration) {
+          if (!organizationData) {
+            // Supabaseで作成したユーザーを削除（ロールバック）
+            try {
+              await supabase.auth.admin.deleteUser(authData.user.id);
+            } catch (deleteError) {
+              console.error("ユーザー削除エラー（ロールバック）:", deleteError);
+            }
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "企業登録の場合、企業情報が必要です",
+            });
+          }
+
+          // 企業情報をフィルタリング（空文字列をnullに変換）
+          const filteredOrgData = {
+            companyName: organizationData.companyName?.trim() || null,
+            industry: organizationData.industry?.trim() || null,
+            companyOverview: organizationData.companyOverview?.trim() || null,
+            websiteUrl: organizationData.websiteUrl?.trim() || null,
+            desiredWorkAreas: organizationData.desiredWorkAreas?.filter((area) => area.trim() !== "") || [],
+            desiredOccupations: organizationData.desiredOccupations?.filter((occ) => occ.trim() !== "") || [],
+          };
+
+          // トランザクションでOrganizationとUserを作成
+          const result = await ctx.prisma.$transaction(async (tx) => {
+            // Organizationを作成
+            // 企業として受注する場合は、desiredWorkAreasとdesiredOccupationsはOrganizationに保存しない
+            const orgDataForCreate =
+              registrationType === "company-receive"
+                ? {
+                    companyName: filteredOrgData.companyName,
+                    industry: filteredOrgData.industry,
+                    companyOverview: filteredOrgData.companyOverview,
+                    websiteUrl: filteredOrgData.websiteUrl,
+                    desiredWorkAreas: [],
+                    desiredOccupations: [],
+                  }
+                : filteredOrgData;
+
+            const organization = await tx.organization.create({
+              data: orgDataForCreate,
+            });
+
+            // Userを作成（organizationIdを設定）
+            const user = await tx.user.create({
+              data: {
+                id: authData.user.id,
+                email,
+                organizationId: organization.id,
+                // 企業として受注する場合はCasterProfileも作成（希望稼働エリアと職種を保存）
+                ...(registrationType === "company-receive"
+                  ? {
+                      casterProfile: {
+                        create: {
+                          // 最初の希望稼働エリアを保存（複数ある場合は最初の1つ）
+                          area: filteredOrgData.desiredWorkAreas?.[0] || null,
+                          // 最初の職種を保存（複数ある場合は最初の1つ）
+                          occupation: filteredOrgData.desiredOccupations?.[0] || null,
+                        },
+                      },
+                    }
+                  : {}),
+                // 企業として発注する場合はOrdererProfileも作成（希望稼働エリアと職種を保存）
+                ...(registrationType === "company-order"
+                  ? {
+                      ordererProfile: {
+                        create: {
+                          desiredWorkAreas: filteredOrgData.desiredWorkAreas || [],
+                          desiredOccupations: filteredOrgData.desiredOccupations || [],
+                        },
+                      },
+                    }
+                  : {}),
+              },
+              include: {
+                organization: true,
+                casterProfile: true,
+                ordererProfile: true,
+              },
+            });
+
+            return { user, organization };
+          }).catch(async (prismaError) => {
+            console.error("Prismaエラー:", prismaError);
+            // Supabaseで作成したユーザーを削除（ロールバック）
+            try {
+              await supabase.auth.admin.deleteUser(authData.user.id);
+            } catch (deleteError) {
+              console.error("ユーザー削除エラー（ロールバック）:", deleteError);
+            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `データベースへの登録に失敗しました: ${prismaError instanceof Error ? prismaError.message : "不明なエラー"}`,
+            });
+          });
+
+          return {
+            success: true,
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              organizationId: result.user.organizationId,
+              hasCasterProfile: !!result.user.casterProfile,
+              hasOrdererProfile: !!result.user.ordererProfile,
+            },
+            organization: {
+              id: result.organization.id,
+              companyName: result.organization.companyName,
+            },
+          };
+        } else {
+          // 個人登録の場合（既存のロジック）
+          const user = await ctx.prisma.user.create({
+            data: {
+              id: authData.user.id,
+              email,
+              // 役割に応じてプロフィールを作成
+              ...(role === "caster" || role === "both"
+                ? { casterProfile: { create: {} } }
+                : {}),
+              ...(role === "orderer" || role === "both"
+                ? { ordererProfile: { create: {} } }
+                : {}),
+            },
+            include: {
+              casterProfile: true,
+              ordererProfile: true,
+            },
+          }).catch(async (prismaError) => {
+            console.error("Prismaエラー:", prismaError);
+            // Supabaseで作成したユーザーを削除（ロールバック）
+            try {
+              await supabase.auth.admin.deleteUser(authData.user.id);
+            } catch (deleteError) {
+              console.error("ユーザー削除エラー（ロールバック）:", deleteError);
+            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `データベースへの登録に失敗しました: ${prismaError instanceof Error ? prismaError.message : "不明なエラー"}`,
+            });
+          });
+
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              email: user.email,
+              hasCasterProfile: !!user.casterProfile,
+              hasOrdererProfile: !!user.ordererProfile,
+            },
+          };
+        }
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;

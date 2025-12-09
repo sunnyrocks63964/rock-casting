@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { urlSchema } from "./userSchema";
 
 // ===================================
 // カスタムバリデーション
@@ -25,6 +26,14 @@ export const emailSchema = z.string().refine(
 // 登録時の役割選択
 export const UserRoleSchema = z.enum(["caster", "orderer", "both"]);
 
+// 登録形態の選択
+export const RegistrationTypeSchema = z.enum([
+  "company-order",
+  "individual-order",
+  "company-receive",
+  "individual-receive",
+]);
+
 // ===================================
 // ユーザー登録スキーマ
 // ===================================
@@ -40,6 +49,18 @@ export const BaseRegisterSchema = z.object({
     }),
   passwordConfirm: z.string(),
   role: UserRoleSchema, // "caster" | "orderer" | "both"
+  registrationType: RegistrationTypeSchema, // 登録形態
+  // 企業情報（企業登録の場合のみ）
+  organizationData: z
+    .object({
+      companyName: z.string().optional(),
+      industry: z.string().optional(),
+      companyOverview: z.string().optional(),
+      websiteUrl: z.union([urlSchema, z.literal("")]).optional(),
+      desiredWorkAreas: z.array(z.string()).default([]),
+      desiredOccupations: z.array(z.string()).default([]),
+    })
+    .optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "パスワードが一致しません",
   path: ["passwordConfirm"],

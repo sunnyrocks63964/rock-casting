@@ -35,6 +35,13 @@ const DesktopUserRegister = () => {
     { id: "individual-receive", label: "個人として受注したい方はこちら" },
   ];
 
+  // 役割の種類
+  const roles = {
+    caster: "caster",
+    orderer: "orderer",
+    both: "both",
+  } as const;
+
   // エリアを追加
   const addRegistrationArea = () => {
     setRegistrationAreas([...registrationAreas, ""]);
@@ -97,17 +104,23 @@ const DesktopUserRegister = () => {
     }
 
     // 登録形態に応じてroleを決定
-    let role: "caster" | "orderer" | "both" = "orderer";
-    
-    if (registrationType === "individual-order") {
-      role = "orderer";
-    } else if (registrationType === "individual-receive") {
-      role = "caster";
-    } else if (registrationType === "company-order" || registrationType === "company-receive") {
-      // 企業側は後で実装
-      alert("企業側の登録は現在準備中です");
-      return;
-    }
+    const role: "caster" | "orderer" | "both" =
+      registrationType === "individual-receive" || registrationType === "company-receive"
+        ? roles.caster
+        : roles.orderer;
+
+    // 企業登録の場合、企業情報を準備
+    const organizationData =
+      registrationType === "company-order" || registrationType === "company-receive"
+        ? {
+            companyName: companyName.trim() || undefined,
+            industry: industry.trim() || undefined,
+            companyOverview: companyAddress.trim() || undefined,
+            websiteUrl: websiteUrl.trim() || undefined,
+            desiredWorkAreas: registrationAreas.filter((area) => area.trim() !== ""),
+            desiredOccupations: targetBudgets.filter((budget) => budget.trim() !== ""),
+          }
+        : undefined;
 
     // tRPCで登録APIを呼び出し
     registerMutation.mutate(
@@ -116,6 +129,12 @@ const DesktopUserRegister = () => {
         password,
         passwordConfirm,
         role,
+        registrationType: registrationType as
+          | "company-order"
+          | "individual-order"
+          | "company-receive"
+          | "individual-receive",
+        organizationData,
       },
       {
         onSuccess: (result) => {
@@ -127,6 +146,12 @@ const DesktopUserRegister = () => {
             setPassword("");
             setPasswordConfirm("");
             setRegistrationType("");
+            setCompanyName("");
+            setIndustry("");
+            setCompanyAddress("");
+            setWebsiteUrl("");
+            setRegistrationAreas([""]);
+            setTargetBudgets([""]);
           }
         },
         onError: (error) => {
