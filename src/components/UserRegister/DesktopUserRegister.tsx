@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 
 const DesktopUserRegister = () => {
+  const router = useRouter();
+  
   // tRPC mutation
   const registerMutation = trpc.auth.register.useMutation();
 
@@ -140,18 +143,7 @@ const DesktopUserRegister = () => {
         onSuccess: (result) => {
           if (result.success) {
             alert("登録が完了しました！");
-            // フォームをリセット
-            setEmail("");
-            setEmailConfirm("");
-            setPassword("");
-            setPasswordConfirm("");
-            setRegistrationType("");
-            setCompanyName("");
-            setIndustry("");
-            setCompanyAddress("");
-            setWebsiteUrl("");
-            setRegistrationAreas([""]);
-            setTargetBudgets([""]);
+            router.push("/login");
           }
         },
         onError: (error) => {
