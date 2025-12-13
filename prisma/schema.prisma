@@ -26,24 +26,52 @@ enum Gender {
 // Models
 // ===================================
 
+/// 企業テーブル
+/// 企業として登録された組織の情報
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  // 企業情報（任意）
+  companyName      String?   @map("company_name") // 会社名
+  industry         String?   // 業種
+  companyOverview  String?   @map("company_overview") @db.Text // 会社概要
+  websiteUrl       String?   @map("website_url") // サイトURL
+  
+  // 発注者としての企業情報（任意）
+  desiredWorkAreas   String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア
+  desiredOccupations String[] @default([]) @map("desired_occupations") // 求めている業種
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  users User[] // 企業に紐づくユーザー（複数）
+
+  @@map("organizations")
+}
+
 /// ユーザー認証テーブル（Supabase Authと連携）
 /// 1つのアカウントで複数の役割を持つことができる
+/// organizationIdがnullの場合は個人、nullでない場合は企業ユーザー
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
+  organizationId String? @map("organization_id") @db.Uuid // 企業に紐づく場合は設定、個人の場合はnull
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations（どちらか、または両方を持つことができる）
-  casterProfile  CasterProfile?  // キャスト（受注者）として活動
-  ordererProfile OrdererProfile? // 発注者として活動
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  casterProfile   CasterProfile?  // キャスト（受注者）として活動
+  ordererProfile  OrdererProfile? // 発注者として活動
 
   @@index([email])
+  @@index([organizationId])
   @@map("users")
 }
 
 /// キャスト（受注者）プロフィール
-/// 仕事を受注したい人の情報（すべて任意）
+/// 個人として仕事を受注したい人の情報（すべて任意）
+/// 企業として受注する場合も、このプロフィールを使用（企業情報はOrganizationに保存）
 model CasterProfile {
   id     String @id @default(uuid()) @db.Uuid
   userId String @unique @map("user_id") @db.Uuid
@@ -62,8 +90,9 @@ model CasterProfile {
   @@map("caster_profiles")
 }
 
-/// 発注者プロフィール（個人）
-/// 仕事を依頼したい人の情報（すべて任意）
+/// 発注者プロフィール
+/// 個人として仕事を依頼したい人の情報（すべて任意）
+/// 企業として発注する場合は、Organizationテーブルに企業情報を保存
 model OrdererProfile {
   id     String @id @default(uuid()) @db.Uuid
   userId String @unique @map("user_id") @db.Uuid
