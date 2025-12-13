@@ -27,7 +27,7 @@ export const emailSchema = z.string().refine(
 export const UserRoleSchema = z.enum(["caster", "orderer", "both"]);
 
 // 登録形態の選択
-export const RegistrationTypeSchema = z.enum([
+const RegistrationTypeSchema = z.enum([
   "company-order",
   "individual-order",
   "company-receive",
