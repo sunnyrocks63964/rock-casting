@@ -31,8 +31,26 @@ export default function MobileLogin() {
                         return;
                     }
 
-                    // セッション設定が完了するまで少し待つ
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // セッションが確実に設定されていることを確認
+                    let retryCount = 0;
+                    const maxRetries = 10;
+                    const retryDelay = 100;
+
+                    while (retryCount < maxRetries) {
+                        const { data: { session: currentSession } } = await supabase.auth.getSession();
+                        if (currentSession?.user) {
+                            // セッションが設定されたことを確認
+                            break;
+                        }
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    }
+
+                    if (retryCount >= maxRetries) {
+                        console.error("セッション設定の確認に失敗しました");
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
                 } catch (error) {
                     console.error("セッション設定エラー:", error);
                     setErrorMessage("セッションの設定に失敗しました");

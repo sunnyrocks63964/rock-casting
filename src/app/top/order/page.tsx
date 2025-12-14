@@ -14,7 +14,7 @@ export default function OrderTopPage() {
     const [userId, setUserId] = useState<string | null>(null);
 
     // 現在のユーザー情報を取得
-    const { data: userData, isLoading: isLoadingUser } = trpc.auth.getCurrentUser.useQuery(
+    const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
         { userId: userId! },
         {
             enabled: !!userId,
@@ -24,6 +24,11 @@ export default function OrderTopPage() {
 
     // 認証チェック
     useEffect(() => {
+        let isMounted = true;
+        let retryCount = 0;
+        const maxRetries = 5;
+        const retryDelay = 200; // 200ms
+
         const checkAuth = async () => {
             try {
                 // Supabaseセッションを確認
@@ -31,28 +36,47 @@ export default function OrderTopPage() {
 
                 if (error) {
                     console.error("セッション取得エラー:", error);
-                    router.push("/login");
+                    if (isMounted) {
+                        router.push("/login");
+                    }
                     return;
                 }
 
                 if (!session?.user) {
-                    // セッションがない場合はログインページにリダイレクト
-                    router.push("/login");
+                    // セッションがない場合、リトライする（ログイン直後の可能性がある）
+                    if (retryCount < maxRetries && isMounted) {
+                        retryCount++;
+                        setTimeout(() => {
+                            if (isMounted) {
+                                checkAuth();
+                            }
+                        }, retryDelay);
+                    } else if (isMounted) {
+                        // リトライ回数を超えた場合はログインページにリダイレクト
+                        router.push("/login");
+                    }
                     return;
                 }
 
-                setUserId(session.user.id);
+                // セッションが見つかった
+                if (isMounted) {
+                    setUserId(session.user.id);
+                }
             } catch (error) {
                 console.error("認証チェックエラー:", error);
-                router.push("/login");
+                if (isMounted) {
+                    router.push("/login");
+                }
             }
         };
 
         // 認証状態の変更をリッスン
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (!isMounted) return;
+
             if (event === 'SIGNED_IN' && session?.user) {
                 setUserId(session.user.id);
-            } else if (event === 'SIGNED_OUT' || !session) {
+            } else if (event === 'SIGNED_OUT' || (!session && event === 'TOKEN_REFRESHED')) {
                 router.push("/login");
             }
         });
@@ -62,6 +86,7 @@ export default function OrderTopPage() {
 
         // クリーンアップ
         return () => {
+            isMounted = false;
             subscription.unsubscribe();
         };
     }, [router]);
@@ -72,9 +97,20 @@ export default function OrderTopPage() {
             return;
         }
 
-        if (!userData) {
-            // ユーザー情報が取得できない場合はログインページにリダイレクト
+        // エラーが発生した場合
+        if (userError) {
+            console.error("ユーザー情報取得エラー:", userError);
             router.push("/login");
+            return;
+        }
+
+        // ユーザー情報が取得できない場合
+        if (!userData) {
+            // userIdが設定されているのにuserDataが取得できない場合はエラー
+            if (userId) {
+                console.error("ユーザー情報が取得できませんでした");
+                router.push("/login");
+            }
             return;
         }
 
@@ -87,7 +123,7 @@ export default function OrderTopPage() {
         // 認証成功
         setIsAuthorized(true);
         setIsLoading(false);
-    }, [userData, isLoadingUser, router]);
+    }, [userData, isLoadingUser, userError, userId, router]);
 
     // ローディング中または認証チェック中
     if (isLoading || !isAuthorized) {
