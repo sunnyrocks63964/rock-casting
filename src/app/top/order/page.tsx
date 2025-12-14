@@ -29,7 +29,13 @@ export default function OrderTopPage() {
                 // Supabaseセッションを確認
                 const { data: { session }, error } = await supabase.auth.getSession();
 
-                if (error || !session?.user) {
+                if (error) {
+                    console.error("セッション取得エラー:", error);
+                    router.push("/login");
+                    return;
+                }
+
+                if (!session?.user) {
                     // セッションがない場合はログインページにリダイレクト
                     router.push("/login");
                     return;
@@ -42,7 +48,22 @@ export default function OrderTopPage() {
             }
         };
 
+        // 認証状態の変更をリッスン
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+                setUserId(session.user.id);
+            } else if (event === 'SIGNED_OUT' || !session) {
+                router.push("/login");
+            }
+        });
+
+        // 初回チェック
         checkAuth();
+
+        // クリーンアップ
+        return () => {
+            subscription.unsubscribe();
+        };
     }, [router]);
 
     // ユーザー情報が取得できたら、orderer_profileを持っているかチェック

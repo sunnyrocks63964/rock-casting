@@ -15,30 +15,39 @@ export default function DesktopLogin() {
     // tRPC mutation
     const loginMutation = trpc.auth.login.useMutation({
         onSuccess: async (data) => {
-            console.log("ログイン成功 data----->:", data);
-            
-            // セッションをクライアント側に設定する必要がある
-            // サーバーサイドでログインした場合、クライアント側のSupabaseクライアントにセッションを設定
+            // セッションをクライアント側のSupabaseクライアントに設定
             if (data.session) {
-                const { supabase } = await import("@/lib/supabase");
-                await supabase.auth.setSession({
-                    access_token: data.session.access_token,
-                    refresh_token: data.session.refresh_token,
-                });
+                try {
+                    const { supabase } = await import("@/lib/supabase");
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: data.session.access_token,
+                        refresh_token: data.session.refresh_token,
+                    });
+
+                    if (sessionError) {
+                        console.error("セッション設定エラー:", sessionError);
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
+
+                    // セッション設定が完了するまで少し待つ
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch (error) {
+                    console.error("セッション設定エラー:", error);
+                    setErrorMessage("セッションの設定に失敗しました");
+                    return;
+                }
             }
-            
+
             // ログイン成功時にプロフィールに応じて遷移
             if (data.user.hasOrdererProfile) {
-                console.log("orderer_profileあり、/top/orderに遷移");
-                window.location.href = "/top/order";
+                router.push("/top/order");
             } else {
-                console.log("orderer_profileなし、/topに遷移");
-                window.location.href = "/top";
+                router.push("/top");
             }
         },
         onError: (error) => {
             // エラーメッセージを設定
-            console.error("ログインエラー:", error);
             setErrorMessage(error.message || "ログインに失敗しました");
         },
     });
