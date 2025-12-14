@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RocknRoll_One } from "next/font/google";
 import { trpc } from "@/lib/trpc/client";
+import userPicture from "./images/user_picture.png";
 
 const rocknrollOne = RocknRoll_One({
     weight: "400",
     subsets: ["latin"],
 });
 
-// Figmaから取得した画像URL
-const img229589552 = "https://www.figma.com/api/mcp/asset/c08fde1f-9ab8-4621-8f71-0c28de47766d";
 
 const LoginedHeader = () => {
     const router = useRouter();
@@ -39,7 +38,7 @@ const LoginedHeader = () => {
                 right: 0,
                 zIndex: 50,
                 backgroundColor: "#060606",
-                padding: "20px clamp(20px, 4vw, 60px)",
+                padding: "clamp(12px, 1.2vw, 20px) clamp(20px, 4vw, 60px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -75,7 +74,8 @@ const LoginedHeader = () => {
                 style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "clamp(20px, 3vw, 40px)",
+                    gap: "0",
+                    marginLeft: "clamp(20px, 2vw, 40px)",
                 }}
             >
                 <Link
@@ -83,11 +83,11 @@ const LoginedHeader = () => {
                     style={{
                         color: "white",
                         textDecoration: "none",
-                        fontSize: "20px",
+                        fontSize: "clamp(12px, 1.05vw, 20px)",
                         fontWeight: "700",
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        lineHeight: "normal",
                         transition: "color 0.3s ease",
+                        padding: "0 clamp(25px, 3.8vw, 70px) 0 0",
+                        whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
                         const target = e.target as HTMLElement;
@@ -105,11 +105,11 @@ const LoginedHeader = () => {
                     style={{
                         color: "white",
                         textDecoration: "none",
-                        fontSize: "20px",
+                        fontSize: "clamp(12px, 1.05vw, 20px)",
                         fontWeight: "700",
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        lineHeight: "normal",
                         transition: "color 0.3s ease",
+                        padding: "0 clamp(30px, 4.5vw, 85px) 0 0",
+                        whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
                         const target = e.target as HTMLElement;
@@ -127,11 +127,11 @@ const LoginedHeader = () => {
                     style={{
                         color: "white",
                         textDecoration: "none",
-                        fontSize: "20px",
+                        fontSize: "clamp(12px, 1.05vw, 20px)",
                         fontWeight: "500",
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        lineHeight: "normal",
                         transition: "color 0.3s ease",
+                        padding: "0 clamp(30px, 4.5vw, 85px) 0 0",
+                        whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
                         const target = e.target as HTMLElement;
@@ -149,11 +149,11 @@ const LoginedHeader = () => {
                     style={{
                         color: "white",
                         textDecoration: "none",
-                        fontSize: "20px",
+                        fontSize: "clamp(12px, 1.05vw, 20px)",
                         fontWeight: "500",
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        lineHeight: "normal",
                         transition: "color 0.3s ease",
+                        padding: "0 clamp(30px, 4.5vw, 85px) 0 0",
+                        whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
                         const target = e.target as HTMLElement;
@@ -173,11 +173,11 @@ const LoginedHeader = () => {
                 style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "20px",
+                    gap: "0",
                 }}
             >
                 <img
-                    src={img229589552}
+                    src={userPicture.src}
                     alt="ユーザーアイコン"
                     style={{
                         width: "47px",
@@ -185,6 +185,7 @@ const LoginedHeader = () => {
                         borderRadius: "50%",
                         cursor: "pointer",
                         objectFit: "cover",
+                        marginRight: "clamp(15px, 1.6vw, 30px)",
                     }}
                 />
                 <button
@@ -192,23 +193,26 @@ const LoginedHeader = () => {
                     style={{
                         backgroundColor: "white",
                         color: "black",
-                        border: "1px solid black",
+                        border: "1px solid white",
                         borderRadius: "90px",
-                        padding: "12px 30px",
-                        fontSize: "20px",
+                        padding: "clamp(8px, 0.6vw, 12px) clamp(15px, 1.6vw, 30px)",
+                        fontSize: "clamp(12px, 1.05vw, 20px)",
                         fontWeight: "700",
-                        fontFamily: "'Noto Sans JP', sans-serif",
                         cursor: "pointer",
-                        lineHeight: "normal",
                         transition: "all 0.3s ease",
+                        display: "inline-block",
+                        textAlign: "center",
+                        whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
                         const target = e.currentTarget;
-                        target.style.backgroundColor = "#f3f4f6";
+                        target.style.backgroundColor = "black";
+                        target.style.color = "white";
                     }}
                     onMouseLeave={(e) => {
                         const target = e.currentTarget;
                         target.style.backgroundColor = "white";
+                        target.style.color = "black";
                     }}
                 >
                     ログアウト

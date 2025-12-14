@@ -1,14 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-
-// Figmaから取得した画像URL
-const imgIlyaPavlovXE87COvVo4Unsplash1 = "https://www.figma.com/api/mcp/asset/17da497c-9a82-479d-94b5-64513dfcdf8d";
-const img11 = "https://www.figma.com/api/mcp/asset/71526ac8-5e39-44ab-916f-a545ddf44cca";
-const img41 = "https://www.figma.com/api/mcp/asset/c2e85d78-ee06-40d6-a3be-89761f660e7c";
-const img411 = "https://www.figma.com/api/mcp/asset/5e5d48ef-84f6-4a10-94c5-36ac065b1bc5";
-const imgAdobeStock6826886821 = "https://www.figma.com/api/mcp/asset/860ac4dc-23a9-41db-bf9d-6d834a0bb895";
-const imgLastPage898182 = "https://www.figma.com/api/mcp/asset/5667a7c5-cef0-4dbe-a3a1-7af20652156c";
+import { FaChevronRight } from "react-icons/fa";
+import cast01 from "../Cast/images/cast_01.png";
+import img11 from "./images/search_magnifying_glass.png";
+import favoriteIcon from "./images/favorite.png";
+import topOrderBgIcon from "./images/top_order_bg.png";
 
 const TopOrder = () => {
     const [searchKeyword, setSearchKeyword] = useState("");
@@ -34,73 +31,6 @@ const TopOrder = () => {
                     flexShrink: 0,
                 }}
             >
-                {/* 検索バー */}
-                <div
-                    style={{
-                        backgroundColor: "white",
-                        borderRadius: "10px",
-                        padding: "20px",
-                        marginBottom: "20px",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        <input
-                            type="text"
-                            placeholder="フリーワードで検索"
-                            value={searchKeyword}
-                            onChange={(e) => setSearchKeyword(e.target.value)}
-                            style={{
-                                flex: 1,
-                                padding: "10px",
-                                borderRadius: "10px",
-                                border: "none",
-                                fontSize: "16px",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                color: "#d3d3d3",
-                            }}
-                        />
-                        <button
-                            style={{
-                                backgroundColor: "#ff6d00",
-                                border: "none",
-                                borderRadius: "10px",
-                                width: "60px",
-                                height: "60px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <img
-                                src={img11}
-                                alt="検索"
-                                style={{
-                                    width: "30px",
-                                    height: "30px",
-                                }}
-                            />
-                        </button>
-                    </div>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            color: "white",
-                            textAlign: "center",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                        }}
-                    >
-                        100件のうち、1~15件を表示
-                    </p>
-                </div>
-
                 {/* フィルター */}
                 <div
                     style={{
@@ -145,12 +75,11 @@ const TopOrder = () => {
                             >
                                 フォトグラファー
                             </span>
-                            <img
-                                src={img411}
-                                alt="矢印"
+                            <FaChevronRight
                                 style={{
                                     width: "12px",
                                     height: "12px",
+                                    color: "black",
                                 }}
                             />
                         </div>
@@ -172,12 +101,11 @@ const TopOrder = () => {
                             >
                                 モデル
                             </span>
-                            <img
-                                src={img411}
-                                alt="矢印"
+                            <FaChevronRight
                                 style={{
                                     width: "12px",
                                     height: "12px",
+                                    color: "black",
                                 }}
                             />
                         </div>
@@ -199,12 +127,11 @@ const TopOrder = () => {
                             >
                                 アーティスト
                             </span>
-                            <img
-                                src={img411}
-                                alt="矢印"
+                            <FaChevronRight
                                 style={{
                                     width: "12px",
                                     height: "12px",
+                                    color: "black",
                                 }}
                             />
                         </div>
@@ -225,12 +152,11 @@ const TopOrder = () => {
                             >
                                 クリエイター
                             </span>
-                            <img
-                                src={img411}
-                                alt="矢印"
+                            <FaChevronRight
                                 style={{
                                     width: "12px",
                                     height: "12px",
+                                    color: "black",
                                 }}
                             />
                         </div>
@@ -720,6 +646,81 @@ const TopOrder = () => {
                     flex: 1,
                 }}
             >
+                {/* 検索バー */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "20px",
+                        height: "60px",
+                    }}
+                >
+                    {/* 検索入力フィールド */}
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "10px 0 0 10px",
+                            height: "60px",
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            paddingLeft: "20px",
+                        }}
+                    >
+                        <input
+                            type="text"
+                            placeholder="フリーワードで検索"
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            style={{
+                                flex: 1,
+                                border: "none",
+                                outline: "none",
+                                fontSize: "16px",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                                color: "#d3d3d3",
+                                backgroundColor: "transparent",
+                            }}
+                        />
+                    </div>
+                    {/* 検索ボタン */}
+                    <button
+                        style={{
+                            backgroundColor: "#ff6d00",
+                            border: "none",
+                            borderRadius: "0 10px 10px 0",
+                            width: "60px",
+                            height: "60px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <img
+                            src={img11.src}
+                            alt="検索"
+                            style={{
+                                width: "30px",
+                                height: "30px",
+                            }}
+                        />
+                    </button>
+                </div>
+                {/* 検索結果表示 */}
+                <p
+                    style={{
+                        fontSize: "16px",
+                        color: "white",
+                        textAlign: "center",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        marginBottom: "20px",
+                    }}
+                >
+                    100件のうち、1~15件を表示
+                </p>
+
                 {/* パッケージ予約説明 */}
                 <div
                     style={{
@@ -732,7 +733,7 @@ const TopOrder = () => {
                     }}
                 >
                     <img
-                        src={imgAdobeStock6826886821}
+                        src={topOrderBgIcon.src}
                         alt="パッケージ予約"
                         style={{
                             position: "absolute",
@@ -806,7 +807,7 @@ const TopOrder = () => {
                         >
                             {/* キャスト画像 */}
                             <img
-                                src={imgIlyaPavlovXE87COvVo4Unsplash1}
+                                src={cast01.src}
                                 alt={`キャスト ${index + 1}`}
                                 style={{
                                     width: "204px",
@@ -935,7 +936,7 @@ const TopOrder = () => {
                                         }}
                                     >
                                         <img
-                                            src={img41}
+                                            src={favoriteIcon.src}
                                             alt="お気に入り"
                                             style={{
                                                 width: "14px",
@@ -982,28 +983,6 @@ const TopOrder = () => {
                             {page}
                         </button>
                     ))}
-                    <button
-                        style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "10px",
-                            border: "none",
-                            backgroundColor: "transparent",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <img
-                            src={imgLastPage898182}
-                            alt="次へ"
-                            style={{
-                                width: "24px",
-                                height: "24px",
-                            }}
-                        />
-                    </button>
                 </div>
             </div>
         </div>

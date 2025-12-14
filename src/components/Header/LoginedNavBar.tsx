@@ -2,19 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-
-// Figmaから取得した画像URL
-const img211 = "https://www.figma.com/api/mcp/asset/c9f50273-2f4c-4a14-b11b-8ad5d78c21f1";
+import notificationBell from "./images/notification_bell.png";
 
 const LoginedNavBar = () => {
     return (
         <div
             style={{
                 position: "fixed",
-                top: "87px",
+                top: "80px",
                 left: 0,
                 right: 0,
-                height: "39px",
+                height: "40px",
                 backgroundColor: "#ff6d00",
                 zIndex: 40,
                 display: "flex",
@@ -142,7 +140,7 @@ const LoginedNavBar = () => {
                 お気に入り
             </Link>
             <img
-                src={img211}
+                src={notificationBell.src}
                 alt="通知"
                 style={{
                     width: "25px",
