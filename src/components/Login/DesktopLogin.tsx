@@ -14,12 +14,31 @@ export default function DesktopLogin() {
 
     // tRPC mutation
     const loginMutation = trpc.auth.login.useMutation({
-        onSuccess: () => {
-            // ログイン成功時に/topページに遷移
-            router.push("/top");
+        onSuccess: async (data) => {
+            console.log("ログイン成功 data----->:", data);
+            
+            // セッションをクライアント側に設定する必要がある
+            // サーバーサイドでログインした場合、クライアント側のSupabaseクライアントにセッションを設定
+            if (data.session) {
+                const { supabase } = await import("@/lib/supabase");
+                await supabase.auth.setSession({
+                    access_token: data.session.access_token,
+                    refresh_token: data.session.refresh_token,
+                });
+            }
+            
+            // ログイン成功時にプロフィールに応じて遷移
+            if (data.user.hasOrdererProfile) {
+                console.log("orderer_profileあり、/top/orderに遷移");
+                window.location.href = "/top/order";
+            } else {
+                console.log("orderer_profileなし、/topに遷移");
+                window.location.href = "/top";
+            }
         },
         onError: (error) => {
             // エラーメッセージを設定
+            console.error("ログインエラー:", error);
             setErrorMessage(error.message || "ログインに失敗しました");
         },
     });
