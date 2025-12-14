@@ -8,17 +8,21 @@ export default function DesktopResetPassword() {
     const [isHoveringButton, setIsHoveringButton] = useState(false);
     const [isFormValid, setIsFormValid] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // tRPC mutation
     const resetPasswordMutation = trpc.auth.requestPasswordReset.useMutation({
         onSuccess: () => {
-            // 成功時はエラーメッセージをクリア
+            // 成功時はエラーメッセージをクリアし、成功メッセージを表示
             setErrorMessage(null);
-            // TODO: 成功メッセージを表示するか、別ページに遷移する
+            setSuccessMessage("パスワードリセットメールを送信しました。メールをご確認ください。");
+            // フォームをリセット
+            setEmail("");
         },
         onError: (error) => {
             // エラーメッセージを設定
             setErrorMessage(error.message || "パスワードリセットメールの送信に失敗しました");
+            setSuccessMessage(null);
         },
     });
 
@@ -191,6 +195,34 @@ export default function DesktopResetPassword() {
                                 }}
                             >
                                 {errorMessage}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 成功メッセージ */}
+                    {successMessage && (
+                        <div
+                            style={{
+                                width: "100%",
+                                maxWidth: "600px",
+                                marginBottom: "24px",
+                                padding: "12px 16px",
+                                backgroundColor: "#dcfce7",
+                                border: "1px solid #22c55e",
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: "400",
+                                    color: "#16a34a",
+                                    margin: 0,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {successMessage}
                             </p>
                         </div>
                     )}

@@ -11,6 +11,7 @@ import {
   ResetPasswordRequestSchema,
 } from "@/lib/validations/authSchema";
 import { getServerSupabaseClient } from "@/lib/supabase";
+import { sendPasswordResetEmail } from "@/lib/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
 import type { z } from "zod";
@@ -397,12 +398,33 @@ export const authRouter = createTRPCRouter({
         }
 
         const supabase = getServerSupabaseClient();
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/confirm`,
+        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/confirm`;
+
+        // パスワードリセットリンクを生成（メールは送信しない）
+        const { data, error } = await supabase.auth.admin.generateLink({
+          type: "recovery",
+          email,
+          options: {
+            redirectTo,
+          },
         });
 
-        if (error) {
-          console.error("パスワードリセットエラー:", error);
+        if (error || !data) {
+          console.error("パスワードリセットリンク生成エラー:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "パスワードリセットリンクの生成に失敗しました",
+          });
+        }
+
+        // カスタムメールを送信
+        try {
+          await sendPasswordResetEmail({
+            email,
+            resetLink: data.properties.action_link,
+          });
+        } catch (emailError) {
+          console.error("メール送信エラー:", emailError);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "パスワードリセットメールの送信に失敗しました",
