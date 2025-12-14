@@ -1,11 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { trpc } from "@/lib/trpc/client";
 
 export default function DesktopResetPassword() {
     const [email, setEmail] = useState("");
     const [isHoveringButton, setIsHoveringButton] = useState(false);
     const [isFormValid, setIsFormValid] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    // tRPC mutation
+    const resetPasswordMutation = trpc.auth.requestPasswordReset.useMutation({
+        onSuccess: () => {
+            // 成功時はエラーメッセージをクリアし、成功メッセージを表示
+            setErrorMessage(null);
+            setSuccessMessage("パスワードリセットメールを送信しました。メールをご確認ください。");
+            // フォームをリセット
+            setEmail("");
+        },
+        onError: (error) => {
+            // エラーメッセージを設定
+            setErrorMessage(error.message || "パスワードリセットメールの送信に失敗しました");
+            setSuccessMessage(null);
+        },
+    });
 
     // フォームのバリデーション
     useEffect(() => {
@@ -13,10 +32,25 @@ export default function DesktopResetPassword() {
         setIsFormValid(isValid);
     }, [email]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: パスワードリセットメール送信処理を実装
-        console.log("Password reset request for:", email);
+        
+        // バリデーション
+        if (!isFormValid || resetPasswordMutation.isPending) {
+            return;
+        }
+
+        // エラーメッセージをクリア
+        setErrorMessage(null);
+
+        // パスワードリセットAPIを呼び出し
+        try {
+            await resetPasswordMutation.mutateAsync({
+                email: email.trim(),
+            });
+        } catch (error) {
+            // エラーはonErrorで処理されるため、ここでは何もしない
+        }
     };
 
     return (
@@ -137,10 +171,66 @@ export default function DesktopResetPassword() {
                         />
                     </div>
 
+                    {/* エラーメッセージ */}
+                    {errorMessage && (
+                        <div
+                            style={{
+                                width: "100%",
+                                maxWidth: "600px",
+                                marginBottom: "24px",
+                                padding: "12px 16px",
+                                backgroundColor: "#fee2e2",
+                                border: "1px solid #ef4444",
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: "400",
+                                    color: "#dc2626",
+                                    margin: 0,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {errorMessage}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 成功メッセージ */}
+                    {successMessage && (
+                        <div
+                            style={{
+                                width: "100%",
+                                maxWidth: "600px",
+                                marginBottom: "24px",
+                                padding: "12px 16px",
+                                backgroundColor: "#dcfce7",
+                                border: "1px solid #22c55e",
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: "400",
+                                    color: "#16a34a",
+                                    margin: 0,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {successMessage}
+                            </p>
+                        </div>
+                    )}
+
                     {/* 送信ボタン */}
                     <button
                         type="submit"
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || resetPasswordMutation.isPending}
                         onMouseEnter={() => setIsHoveringButton(true)}
                         onMouseLeave={() => setIsHoveringButton(false)}
                         style={{
@@ -148,7 +238,7 @@ export default function DesktopResetPassword() {
                             maxWidth: "402px",
                             height: "74px",
                             borderRadius: "90px",
-                            backgroundColor: !isFormValid
+                            backgroundColor: !isFormValid || resetPasswordMutation.isPending
                                 ? "#fca5a5"
                                 : isHoveringButton
                                 ? "#b00101"
@@ -158,13 +248,13 @@ export default function DesktopResetPassword() {
                             fontSize: "24px",
                             fontWeight: "700",
                             border: "none",
-                            cursor: isFormValid ? "pointer" : "not-allowed",
+                            cursor: isFormValid && !resetPasswordMutation.isPending ? "pointer" : "not-allowed",
                             marginBottom: "24px",
                             transition: "background-color 0.3s ease",
-                            opacity: isFormValid ? 1 : 0.6,
+                            opacity: isFormValid && !resetPasswordMutation.isPending ? 1 : 0.6,
                         }}
                     >
-                        再設定メールを送信
+                        {resetPasswordMutation.isPending ? "送信中..." : "再設定メールを送信"}
                     </button>
 
                     {/* 新規登録リンク */}

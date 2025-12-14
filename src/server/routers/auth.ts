@@ -11,6 +11,7 @@ import {
   ResetPasswordRequestSchema,
 } from "@/lib/validations/authSchema";
 import { getServerSupabaseClient } from "@/lib/supabase";
+import { sendPasswordResetEmail } from "@/lib/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
 import type { z } from "zod";
@@ -380,18 +381,54 @@ export const authRouter = createTRPCRouter({
    */
   requestPasswordReset: publicProcedure
     .input(ResetPasswordRequestSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
       try {
-        const supabase = getServerSupabaseClient();
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/confirm`,
+        // Userテーブルでメールアドレスが登録されているかチェック
+        const user = await ctx.prisma.user.findUnique({
+          where: { email },
         });
 
-        if (error) {
-          console.error("パスワードリセットエラー:", error);
-          // セキュリティのため、メールアドレスが存在しない場合でも成功を返す
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "そのメールアドレスは登録されていません",
+          });
+        }
+
+        const supabase = getServerSupabaseClient();
+        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/confirm`;
+
+        // パスワードリセットリンクを生成（メールは送信しない）
+        const { data, error } = await supabase.auth.admin.generateLink({
+          type: "recovery",
+          email,
+          options: {
+            redirectTo,
+          },
+        });
+
+        if (error || !data) {
+          console.error("パスワードリセットリンク生成エラー:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "パスワードリセットリンクの生成に失敗しました",
+          });
+        }
+
+        // カスタムメールを送信
+        try {
+          await sendPasswordResetEmail({
+            email,
+            resetLink: data.properties.action_link,
+          });
+        } catch (emailError) {
+          console.error("メール送信エラー:", emailError);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "パスワードリセットメールの送信に失敗しました",
+          });
         }
 
         return {
@@ -399,6 +436,9 @@ export const authRouter = createTRPCRouter({
           message: "パスワードリセットメールを送信しました",
         };
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         console.error("パスワードリセットエラー:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
