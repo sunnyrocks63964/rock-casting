@@ -14,7 +14,7 @@ import { getServerSupabaseClient } from "@/lib/supabase";
 import { sendPasswordResetEmail } from "@/lib/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
-import type { z } from "zod";
+import { z } from "zod";
 
 type BaseRegisterInput = z.infer<typeof BaseRegisterSchema>;
 
@@ -443,6 +443,51 @@ export const authRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "パスワードリセット中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 現在のセッションからユーザー情報を取得
+   */
+  getCurrentUser: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        const user = await ctx.prisma.user.findUnique({
+          where: { id: userId },
+          include: {
+            casterProfile: true,
+            ordererProfile: true,
+            organization: true,
+          },
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "ユーザーが見つかりません",
+          });
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          hasCasterProfile: !!user.casterProfile,
+          hasOrdererProfile: !!user.ordererProfile,
+          organizationId: user.organizationId,
+          organization: user.organization,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("ユーザー情報取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "ユーザー情報取得中にエラーが発生しました",
         });
       }
     }),

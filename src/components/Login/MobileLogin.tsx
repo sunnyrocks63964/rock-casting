@@ -1,13 +1,75 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { trpc } from "@/lib/trpc/client";
 
 export default function MobileLogin() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isHoveringButton, setIsHoveringButton] = useState(false);
     const [isFormValid, setIsFormValid] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // tRPC mutation
+    const loginMutation = trpc.auth.login.useMutation({
+        onSuccess: async (data) => {
+            // セッションをクライアント側のSupabaseクライアントに設定
+            if (data.session) {
+                try {
+                    const { supabase } = await import("@/lib/supabase");
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: data.session.access_token,
+                        refresh_token: data.session.refresh_token,
+                    });
+
+                    if (sessionError) {
+                        console.error("セッション設定エラー:", sessionError);
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
+
+                    // セッションが確実に設定されていることを確認
+                    let retryCount = 0;
+                    const maxRetries = 10;
+                    const retryDelay = 100;
+
+                    while (retryCount < maxRetries) {
+                        const { data: { session: currentSession } } = await supabase.auth.getSession();
+                        if (currentSession?.user) {
+                            // セッションが設定されたことを確認
+                            break;
+                        }
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    }
+
+                    if (retryCount >= maxRetries) {
+                        console.error("セッション設定の確認に失敗しました");
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
+                } catch (error) {
+                    console.error("セッション設定エラー:", error);
+                    setErrorMessage("セッションの設定に失敗しました");
+                    return;
+                }
+            }
+
+            // ログイン成功時にプロフィールに応じて遷移
+            if (data.user.hasOrdererProfile) {
+                router.push("/top/order");
+            } else {
+                router.push("/top");
+            }
+        },
+        onError: (error) => {
+            // エラーメッセージを設定
+            setErrorMessage(error.message || "ログインに失敗しました");
+        },
+    });
 
     // フォームのバリデーション
     useEffect(() => {
@@ -15,10 +77,26 @@ export default function MobileLogin() {
         setIsFormValid(isValid);
     }, [email, password]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: ログイン処理を実装
-        console.log("Login attempt with:", { email, password });
+        
+        // バリデーション
+        if (!isFormValid || loginMutation.isPending) {
+            return;
+        }
+
+        // エラーメッセージをクリア
+        setErrorMessage(null);
+
+        // ログインAPIを呼び出し
+        try {
+            await loginMutation.mutateAsync({
+                email: email.trim(),
+                password: password,
+            });
+        } catch (error) {
+            // エラーはonErrorで処理されるため、ここでは何もしない
+        }
     };
 
     return (
@@ -200,7 +278,7 @@ export default function MobileLogin() {
                         <div
                             style={{
                                 textAlign: "right",
-                                marginBottom: "47px",
+                                marginBottom: errorMessage ? "16px" : "47px",
                             }}
                         >
                             <a
@@ -218,17 +296,43 @@ export default function MobileLogin() {
                             </a>
                         </div>
 
+                        {/* エラーメッセージ */}
+                        {errorMessage && (
+                            <div
+                                style={{
+                                    marginBottom: "24px",
+                                    padding: "12px 16px",
+                                    backgroundColor: "#fee2e2",
+                                    border: "1px solid #ef4444",
+                                    borderRadius: "8px",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        color: "#dc2626",
+                                        margin: 0,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    {errorMessage}
+                                </p>
+                            </div>
+                        )}
+
                         {/* ログインボタン */}
                         <button
                             type="submit"
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || loginMutation.isPending}
                             onMouseEnter={() => setIsHoveringButton(true)}
                             onMouseLeave={() => setIsHoveringButton(false)}
                             style={{
                                 width: "100%",
                                 height: "38px",
                                 borderRadius: "90px",
-                                backgroundColor: !isFormValid
+                                backgroundColor: !isFormValid || loginMutation.isPending
                                     ? "#e99797"
                                     : isHoveringButton
                                     ? "#b00101"
@@ -238,12 +342,13 @@ export default function MobileLogin() {
                                 fontSize: "14px",
                                 fontWeight: "700",
                                 border: "none",
-                                cursor: isFormValid ? "pointer" : "not-allowed",
+                                cursor: isFormValid && !loginMutation.isPending ? "pointer" : "not-allowed",
                                 marginBottom: "18px",
                                 transition: "background-color 0.3s ease",
+                                opacity: isFormValid && !loginMutation.isPending ? 1 : 0.6,
                             }}
                         >
-                            ログイン
+                            {loginMutation.isPending ? "ログイン中..." : "ログイン"}
                         </button>
 
                         {/* 新規登録リンク */}

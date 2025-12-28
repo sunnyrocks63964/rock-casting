@@ -12,7 +12,8 @@
     "build:vercel": "cross-env PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 prisma generate && next build",
     "test:build": "npm run build",
     "prisma:clean": "node -e \"const fs = require('fs'); const path = require('path'); const prismaPath = path.join(process.cwd(), 'node_modules', '.prisma'); try { if (fs.existsSync(prismaPath)) { fs.rmSync(prismaPath, { recursive: true, force: true }); } } catch (e) {}\"",
-    "prisma:generate": "npm run prisma:clean && cross-env PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 prisma generate"
+    "prisma:generate": "npm run prisma:clean && cross-env PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 prisma generate",
+    "prisma:reset-connection": "node scripts/reset-prisma-connection.js"
   },
   "keywords": [
     "casting",
@@ -46,6 +47,7 @@
     "postcss": "^8.5.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
     "resend": "^6.6.0",
     "superjson": "^2.2.5",
     "tailwindcss": "^4.1.13",

@@ -14,9 +14,55 @@ export default function DesktopLogin() {
 
     // tRPC mutation
     const loginMutation = trpc.auth.login.useMutation({
-        onSuccess: () => {
-            // ログイン成功時に/topページに遷移
-            router.push("/top");
+        onSuccess: async (data) => {
+            // セッションをクライアント側のSupabaseクライアントに設定
+            if (data.session) {
+                try {
+                    const { supabase } = await import("@/lib/supabase");
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: data.session.access_token,
+                        refresh_token: data.session.refresh_token,
+                    });
+
+                    if (sessionError) {
+                        console.error("セッション設定エラー:", sessionError);
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
+
+                    // セッションが確実に設定されていることを確認
+                    let retryCount = 0;
+                    const maxRetries = 10;
+                    const retryDelay = 100;
+
+                    while (retryCount < maxRetries) {
+                        const { data: { session: currentSession } } = await supabase.auth.getSession();
+                        if (currentSession?.user) {
+                            // セッションが設定されたことを確認
+                            break;
+                        }
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    }
+
+                    if (retryCount >= maxRetries) {
+                        console.error("セッション設定の確認に失敗しました");
+                        setErrorMessage("セッションの設定に失敗しました");
+                        return;
+                    }
+                } catch (error) {
+                    console.error("セッション設定エラー:", error);
+                    setErrorMessage("セッションの設定に失敗しました");
+                    return;
+                }
+            }
+
+            // ログイン成功時にプロフィールに応じて遷移
+            if (data.user.hasOrdererProfile) {
+                router.push("/top/order");
+            } else {
+                router.push("/top");
+            }
         },
         onError: (error) => {
             // エラーメッセージを設定
