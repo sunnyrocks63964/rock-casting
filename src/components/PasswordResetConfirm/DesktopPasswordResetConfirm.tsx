@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const DesktopPasswordResetConfirm = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   // フォームの状態
   const [password, setPassword] = useState("");
