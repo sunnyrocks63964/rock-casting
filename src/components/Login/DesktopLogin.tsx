@@ -58,7 +58,9 @@ export default function DesktopLogin() {
             }
 
             // ログイン成功時にプロフィールに応じて遷移
-            if (data.user.hasOrdererProfile) {
+            if (data.user.hasCasterProfile) {
+                router.push("/top/caster");
+            } else if (data.user.hasOrdererProfile) {
                 router.push("/top/order");
             } else {
                 router.push("/top");
