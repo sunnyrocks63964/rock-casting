@@ -1,15 +1,85 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaChevronRight } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import cast01 from "../Cast/images/cast_01.png";
 import img11 from "./images/search_magnifying_glass.png";
 import favoriteIcon from "./images/favorite.png";
 import topOrderBgIcon from "./images/top_order_bg.png";
+import JobTypeFilterDetail, {
+    JobType,
+    jobTypeFilterData,
+} from "./JobTypeFilterDetail";
 
 const TopOrder = () => {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [openJobType, setOpenJobType] = useState<JobType | null>(null);
+    const [selectedFilters, setSelectedFilters] = useState<
+        Record<JobType, Record<string, string[]>>
+    >({
+        photographer: {},
+        model: {},
+        artist: {},
+        creator: {},
+    });
+
+    const jobTypeLabels: Record<JobType, string> = {
+        photographer: "フォトグラファー",
+        model: "モデル",
+        artist: "アーティスト",
+        creator: "クリエイター",
+    };
+
+    const handleJobTypeClick = (jobType: JobType) => {
+        setOpenJobType(jobType);
+    };
+
+    const handleFilterChange = (jobType: JobType, category: string, items: string[]) => {
+        setSelectedFilters((prev) => ({
+            ...prev,
+            [jobType]: {
+                ...prev[jobType],
+                [category]: items,
+            },
+        }));
+    };
+
+    const hasSelectedFilters = (jobType: JobType): boolean => {
+        const filters = selectedFilters[jobType];
+        return Object.values(filters).some((items) => items.length > 0);
+    };
+
+    const getSelectedCount = (jobType: JobType): number => {
+        const filters = selectedFilters[jobType];
+        return Object.values(filters).reduce((sum, items) => sum + items.length, 0);
+    };
+
+    const getSelectedItemsList = (jobType: JobType): string[] => {
+        const filters = selectedFilters[jobType];
+        const filterData = jobTypeFilterData[jobType];
+        const categoryDisplays: string[] = [];
+
+        // 各カテゴリ（ジャンル）ごとに処理
+        Object.keys(filterData).forEach((categoryKey) => {
+            const category = filterData[categoryKey];
+            const selectedItems = filters[categoryKey] || [];
+            const totalItems = category.items.length;
+
+            // 選択項目がある場合のみ表示
+            if (selectedItems.length > 0) {
+                if (selectedItems.length === totalItems) {
+                    // 全て選択されている場合は「ジャンル名　全選択」
+                    categoryDisplays.push(`${category.name}　全選択`);
+                } else {
+                    // 一部選択されている場合は選択項目を列挙
+                    categoryDisplays.push(`${category.name}：${selectedItems.join("、")}`);
+                }
+            }
+        });
+
+        return categoryDisplays;
+    };
 
     return (
         <div
@@ -57,109 +127,87 @@ const TopOrder = () => {
                             paddingTop: "16px",
                         }}
                     >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: "12px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                フォトグラファー
-                            </span>
-                            <FaChevronRight
-                                style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    color: "black",
-                                }}
-                            />
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: "12px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                モデル
-                            </span>
-                            <FaChevronRight
-                                style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    color: "black",
-                                }}
-                            />
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: "12px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                アーティスト
-                            </span>
-                            <FaChevronRight
-                                style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    color: "black",
-                                }}
-                            />
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                クリエイター
-                            </span>
-                            <FaChevronRight
-                                style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    color: "black",
-                                }}
-                            />
-                        </div>
+                        {(["photographer", "model", "artist", "creator"] as JobType[]).map(
+                            (jobType, index, array) => {
+                                const hasSelected = hasSelectedFilters(jobType);
+                                const selectedItemsList = getSelectedItemsList(jobType);
+                                const isLast = index === array.length - 1;
+
+                                return (
+                                    <div key={jobType}>
+                                        <div
+                                            onClick={() => handleJobTypeClick(jobType)}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                marginBottom: isLast ? "0" : "12px",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "4px",
+                                                    flex: 1,
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "black",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    {jobTypeLabels[jobType]}
+                                                </span>
+                                                {hasSelected && (
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: "2px",
+                                                        }}
+                                                    >
+                                                        {selectedItemsList.map((item, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                style={{
+                                                                    fontSize: "9px",
+                                                                    color: "#666",
+                                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                                    lineHeight: "1.4",
+                                                                }}
+                                                            >
+                                                                {item}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {hasSelected ? (
+                                                <FaChevronDown
+                                                    style={{
+                                                        width: "12px",
+                                                        height: "12px",
+                                                        color: "black",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <FaChevronRight
+                                                    style={{
+                                                        width: "12px",
+                                                        height: "12px",
+                                                        color: "black",
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                        )}
                     </div>
                 </div>
 
@@ -985,6 +1033,18 @@ const TopOrder = () => {
                     ))}
                 </div>
             </div>
+
+            {/* フィルター詳細モーダル */}
+            {openJobType && (
+                <JobTypeFilterDetail
+                    jobType={openJobType}
+                    selectedFilters={selectedFilters[openJobType]}
+                    onFilterChange={(category, items) =>
+                        handleFilterChange(openJobType, category, items)
+                    }
+                    onClose={() => setOpenJobType(null)}
+                />
+            )}
         </div>
     );
 };
