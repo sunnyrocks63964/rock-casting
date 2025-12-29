@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import img11 from "../TopOrder/images/search_magnifying_glass.png";
 import favoriteIcon from "../TopOrder/images/favorite.png";
@@ -10,6 +11,7 @@ import JobTypeFilterDetail, {
 } from "../TopOrder/JobTypeFilterDetail";
 
 const TopCaster = () => {
+    const router = useRouter();
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [openJobType, setOpenJobType] = useState<JobType | null>(null);
@@ -941,6 +943,7 @@ const TopCaster = () => {
                                     }}
                                 >
                                     <button
+                                        onClick={() => router.push("/project/detail")}
                                         style={{
                                             backgroundColor: "#d70202",
                                             color: "white",
