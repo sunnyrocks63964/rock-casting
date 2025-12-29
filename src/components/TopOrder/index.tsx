@@ -23,6 +23,14 @@ const TopOrder = () => {
         artist: {},
         creator: {},
     });
+    // 基本情報のstate
+    const [ageMin, setAgeMin] = useState("");
+    const [ageMax, setAgeMax] = useState("");
+    const [heightMin, setHeightMin] = useState("");
+    const [heightMax, setHeightMax] = useState("");
+    const [gender, setGender] = useState<string[]>([]);
+    // 活動可能日のstate
+    const [availableDays, setAvailableDays] = useState<string[]>([]);
 
     const jobTypeLabels: Record<JobType, string> = {
         photographer: "フォトグラファー",
@@ -79,6 +87,24 @@ const TopOrder = () => {
         });
 
         return categoryDisplays;
+    };
+
+    const handleReset = () => {
+        // 職種フィルターをリセット
+        setSelectedFilters({
+            photographer: {},
+            model: {},
+            artist: {},
+            creator: {},
+        });
+        // 基本情報をリセット
+        setAgeMin("");
+        setAgeMax("");
+        setHeightMin("");
+        setHeightMax("");
+        setGender([]);
+        // 活動可能日をリセット
+        setAvailableDays([]);
     };
 
     return (
@@ -260,6 +286,8 @@ const TopOrder = () => {
                                 <input
                                     type="text"
                                     placeholder=""
+                                    value={ageMin}
+                                    onChange={(e) => setAgeMin(e.target.value)}
                                     style={{
                                         width: "67px",
                                         height: "20px",
@@ -282,6 +310,8 @@ const TopOrder = () => {
                                 <input
                                     type="text"
                                     placeholder=""
+                                    value={ageMax}
+                                    onChange={(e) => setAgeMax(e.target.value)}
                                     style={{
                                         width: "67px",
                                         height: "20px",
@@ -318,6 +348,8 @@ const TopOrder = () => {
                                 <input
                                     type="text"
                                     placeholder=""
+                                    value={heightMin}
+                                    onChange={(e) => setHeightMin(e.target.value)}
                                     style={{
                                         width: "67px",
                                         height: "20px",
@@ -340,6 +372,8 @@ const TopOrder = () => {
                                 <input
                                     type="text"
                                     placeholder=""
+                                    value={heightMax}
+                                    onChange={(e) => setHeightMax(e.target.value)}
                                     style={{
                                         width: "67px",
                                         height: "20px",
@@ -383,6 +417,14 @@ const TopOrder = () => {
                                 >
                                     <input
                                         type="checkbox"
+                                        checked={gender.includes("男性")}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setGender([...gender, "男性"]);
+                                            } else {
+                                                setGender(gender.filter((g) => g !== "男性"));
+                                            }
+                                        }}
                                         style={{
                                             width: "14px",
                                             height: "14px",
@@ -410,6 +452,14 @@ const TopOrder = () => {
                                 >
                                     <input
                                         type="checkbox"
+                                        checked={gender.includes("女性")}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setGender([...gender, "女性"]);
+                                            } else {
+                                                setGender(gender.filter((g) => g !== "女性"));
+                                            }
+                                        }}
                                         style={{
                                             width: "14px",
                                             height: "14px",
@@ -437,6 +487,14 @@ const TopOrder = () => {
                                 >
                                     <input
                                         type="checkbox"
+                                        checked={gender.includes("その他")}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setGender([...gender, "その他"]);
+                                            } else {
+                                                setGender(gender.filter((g) => g !== "その他"));
+                                            }
+                                        }}
                                         style={{
                                             width: "14px",
                                             height: "14px",
@@ -494,6 +552,14 @@ const TopOrder = () => {
                             >
                                 <input
                                     type="checkbox"
+                                    checked={availableDays.includes("平日")}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setAvailableDays([...availableDays, "平日"]);
+                                        } else {
+                                            setAvailableDays(availableDays.filter((d) => d !== "平日"));
+                                        }
+                                    }}
                                     style={{
                                         width: "14px",
                                         height: "14px",
@@ -521,6 +587,14 @@ const TopOrder = () => {
                             >
                                 <input
                                     type="checkbox"
+                                    checked={availableDays.includes("土日祝")}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setAvailableDays([...availableDays, "土日祝"]);
+                                        } else {
+                                            setAvailableDays(availableDays.filter((d) => d !== "土日祝"));
+                                        }
+                                    }}
                                     style={{
                                         width: "14px",
                                         height: "14px",
@@ -548,6 +622,14 @@ const TopOrder = () => {
                             >
                                 <input
                                     type="checkbox"
+                                    checked={availableDays.includes("早朝対応可能")}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setAvailableDays([...availableDays, "早朝対応可能"]);
+                                        } else {
+                                            setAvailableDays(availableDays.filter((d) => d !== "早朝対応可能"));
+                                        }
+                                    }}
                                     style={{
                                         width: "14px",
                                         height: "14px",
@@ -575,6 +657,14 @@ const TopOrder = () => {
                             >
                                 <input
                                     type="checkbox"
+                                    checked={availableDays.includes("深夜対応可能")}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setAvailableDays([...availableDays, "深夜対応可能"]);
+                                        } else {
+                                            setAvailableDays(availableDays.filter((d) => d !== "深夜対応可能"));
+                                        }
+                                    }}
                                     style={{
                                         width: "14px",
                                         height: "14px",
@@ -602,6 +692,14 @@ const TopOrder = () => {
                             >
                                 <input
                                     type="checkbox"
+                                    checked={availableDays.includes("即日対応可能")}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setAvailableDays([...availableDays, "即日対応可能"]);
+                                        } else {
+                                            setAvailableDays(availableDays.filter((d) => d !== "即日対応可能"));
+                                        }
+                                    }}
                                     style={{
                                         width: "14px",
                                         height: "14px",
@@ -647,6 +745,7 @@ const TopOrder = () => {
                         絞り込む
                     </button>
                     <button
+                        onClick={handleReset}
                         style={{
                             backgroundColor: "white",
                             color: "black",

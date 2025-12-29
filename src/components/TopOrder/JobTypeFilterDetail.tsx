@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { FaChevronDown } from "react-icons/fa";
+import React from "react";
 
 export type JobType = "photographer" | "model" | "artist" | "creator";
 
