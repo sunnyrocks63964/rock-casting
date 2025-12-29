@@ -398,7 +398,7 @@ export const authRouter = createTRPCRouter({
         }
 
         const supabase = getServerSupabaseClient();
-        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/confirm`;
+        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/password_reset`;
 
         // パスワードリセットリンクを生成（メールは送信しない）
         const { data, error } = await supabase.auth.admin.generateLink({
