@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import cast01 from "../Cast/images/cast_01.png";
 import img11 from "./images/search_magnifying_glass.png";
@@ -12,6 +13,7 @@ import JobTypeFilterDetail, {
 } from "./JobTypeFilterDetail";
 
 const TopOrder = () => {
+    const router = useRouter();
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [openJobType, setOpenJobType] = useState<JobType | null>(null);
@@ -1028,6 +1030,7 @@ const TopOrder = () => {
                                     }}
                                 >
                                     <button
+                                        onClick={() => router.push("/cast/detail")}
                                         style={{
                                             backgroundColor: "#d70202",
                                             color: "white",
