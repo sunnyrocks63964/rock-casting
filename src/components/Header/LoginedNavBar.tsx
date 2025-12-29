@@ -9,7 +9,7 @@ const LoginedNavBar = () => {
         <div
             style={{
                 position: "fixed",
-                top: "80px",
+                top: "90px",
                 left: 0,
                 right: 0,
                 height: "40px",
