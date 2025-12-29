@@ -456,182 +456,16 @@ const TopOrder = () => {
                                 </label>
                             </div>
                         </div>
-
-                        {/* 対応可能時間 */}
-                        <div>
-                            <label
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    display: "block",
-                                    marginBottom: "8px",
-                                }}
-                            >
-                                対応可能時間
-                            </label>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexWrap: "wrap",
-                                    gap: "8px",
-                                }}
-                            >
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        平日
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        土日祝
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        早朝対応可能
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        即日対応可能
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        深夜対応可能
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
                     </div>
-                </div>
 
-                {/* 活動可能日フィルター */}
-                <div
-                    style={{
-                        backgroundColor: "white",
-                        borderRadius: "10px",
-                        padding: "20px",
-                        marginBottom: "20px",
-                    }}
-                >
+                    {/* 活動可能日 */}
                     <h3
                         style={{
                             fontSize: "14px",
                             fontWeight: "700",
                             color: "black",
                             marginBottom: "16px",
+                            marginTop: "20px",
                             fontFamily: "'Noto Sans JP', sans-serif",
                         }}
                     >
@@ -643,7 +477,149 @@ const TopOrder = () => {
                             paddingTop: "16px",
                         }}
                     >
-                        {/* カレンダーなどは後で実装 */}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "8px",
+                            }}
+                        >
+                            <label
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        border: "1px solid black",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "11px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    平日
+                                </span>
+                            </label>
+                            <label
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        border: "1px solid black",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "11px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    土日祝
+                                </span>
+                            </label>
+                            <label
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        border: "1px solid black",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "11px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    早朝対応可能
+                                </span>
+                            </label>
+                            <label
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        border: "1px solid black",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "11px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    深夜対応可能
+                                </span>
+                            </label>
+                            <label
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        border: "1px solid black",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "11px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    即日対応可能
+                                </span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
