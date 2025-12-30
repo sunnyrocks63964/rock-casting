@@ -13,7 +13,11 @@
     "test:build": "npm run build",
     "prisma:clean": "node -e \"const fs = require('fs'); const path = require('path'); const prismaPath = path.join(process.cwd(), 'node_modules', '.prisma'); try { if (fs.existsSync(prismaPath)) { fs.rmSync(prismaPath, { recursive: true, force: true }); } } catch (e) {}\"",
     "prisma:generate": "npm run prisma:clean && cross-env PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 prisma generate",
-    "prisma:reset-connection": "node scripts/reset-prisma-connection.js"
+    "prisma:reset-connection": "node scripts/reset-prisma-connection.js",
+    "prisma:seed-master": "node scripts/seed-master-data.js",
+    "auth:list-users": "node scripts/delete-auth-users.js --list",
+    "auth:delete-user": "node scripts/delete-auth-users.js --email",
+    "auth:delete-all-users": "node scripts/delete-auth-users.js --all"
   },
   "keywords": [
     "casting",
