@@ -872,7 +872,7 @@ const DesktopUserRegister = () => {
               {registrationType === "individual-order" && (
                 <>
                   {/* 関連ウェブサイトURL */}
-                  <div style={{ marginBottom: "30px" }}>
+                  <div>
                     <label
                       style={{
                         display: "block",
@@ -900,110 +900,6 @@ const DesktopUserRegister = () => {
                         outline: "none",
                       }}
                     />
-                  </div>
-
-                  {/* キャスト側への希望稼働エリア */}
-                  <div style={{ marginBottom: "30px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                        color: "black",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      キャスト側への希望稼働エリア
-                    </label>
-                    {registrationAreas.map((area, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={area}
-                        onChange={(e) => updateRegistrationArea(index, e.target.value)}
-                        placeholder="キャスト側への希望稼働エリアを入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addRegistrationArea}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + エリアを追加する
-                    </button>
-                  </div>
-
-                  {/* 求めている職種 */}
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                        color: "black",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      求めている職種
-                    </label>
-                    {targetBudgets.map((budget, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={budget}
-                        onChange={(e) => updateTargetBudget(index, e.target.value)}
-                        placeholder="求めている職種を入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addTargetBudget}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + 職種を追加する
-                    </button>
                   </div>
                 </>
               )}
