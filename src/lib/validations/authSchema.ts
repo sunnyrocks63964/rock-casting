@@ -34,6 +34,18 @@ const RegistrationTypeSchema = z.enum([
   "individual-receive",
 ]);
 
+// 活動エリアデータのスキーマ
+const SelectedAreaSchema = z.object({
+  prefectureCode: z.number().int().min(1).max(47),
+  tokyoWardCode: z.number().int().min(1).max(23).optional(),
+});
+
+const WorkAreaDataSchema = z.object({
+  workAreas: z.array(SelectedAreaSchema).default([]),
+  travelAreas: z.array(SelectedAreaSchema).default([]),
+  onlineAvailable: z.boolean().default(false),
+});
+
 // ===================================
 // ユーザー登録スキーマ
 // ===================================
@@ -61,6 +73,8 @@ export const BaseRegisterSchema = z.object({
       desiredOccupations: z.array(z.string()).default([]),
     })
     .optional(),
+  // 活動エリアデータ（キャスト登録の場合のみ）
+  workAreaData: WorkAreaDataSchema.optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "パスワードが一致しません",
   path: ["passwordConfirm"],

@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
+import WorkAreaSelector, {
+  type WorkAreaData,
+} from "@/components/WorkAreaSelector";
 
 const DesktopUserRegister = () => {
   const router = useRouter();
@@ -24,8 +27,14 @@ const DesktopUserRegister = () => {
   const [industry, setIndustry] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [registrationAreas, setRegistrationAreas] = useState<string[]>([""]);
   const [targetBudgets, setTargetBudgets] = useState<string[]>([""]);
+
+  // 稼働エリア情報（キャスト用）
+  const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+    workAreas: [],
+    travelAreas: [],
+    onlineAvailable: false,
+  });
 
   // ボタンの有効/無効状態
   const [isFormValid, setIsFormValid] = useState(false);
@@ -45,21 +54,9 @@ const DesktopUserRegister = () => {
     both: "both",
   } as const;
 
-  // エリアを追加
-  const addRegistrationArea = () => {
-    setRegistrationAreas([...registrationAreas, ""]);
-  };
-
   // 単価を追加
   const addTargetBudget = () => {
     setTargetBudgets([...targetBudgets, ""]);
-  };
-
-  // エリアを更新
-  const updateRegistrationArea = (index: number, value: string) => {
-    const newAreas = [...registrationAreas];
-    newAreas[index] = value;
-    setRegistrationAreas(newAreas);
   };
 
   // 単価を更新
@@ -120,16 +117,17 @@ const DesktopUserRegister = () => {
             industry: industry.trim() || undefined,
             companyOverview: companyAddress.trim() || undefined,
             websiteUrl: websiteUrl.trim() || undefined,
-            desiredWorkAreas:
-              registrationType === "company-receive"
-                ? registrationAreas.filter((area) => area.trim() !== "")
-                : undefined,
+            desiredWorkAreas: undefined, // TODO: 新しいworkAreaDataに移行
             desiredOccupations:
               registrationType === "company-receive"
                 ? targetBudgets.filter((budget) => budget.trim() !== "")
                 : undefined,
           }
         : undefined;
+
+    // キャスト登録の場合のみworkAreaDataを送信
+    const shouldSendWorkAreaData =
+      registrationType === "individual-receive" || registrationType === "company-receive";
 
     // tRPCで登録APIを呼び出し
     registerMutation.mutate(
@@ -144,6 +142,7 @@ const DesktopUserRegister = () => {
           | "company-receive"
           | "individual-receive",
         organizationData,
+        workAreaData: shouldSendWorkAreaData ? workAreaData : undefined,
       },
       {
         onSuccess: (result) => {
@@ -653,7 +652,7 @@ const DesktopUserRegister = () => {
                     />
                   </div>
 
-                  {/* 希望稼働エリア */}
+                  {/* 活動エリア */}
                   <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
@@ -665,44 +664,12 @@ const DesktopUserRegister = () => {
                         marginBottom: "10px",
                       }}
                     >
-                      希望稼働エリア
+                      活動エリア
                     </label>
-                    {registrationAreas.map((area, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={area}
-                        onChange={(e) => updateRegistrationArea(index, e.target.value)}
-                        placeholder="希望稼働エリアを入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addRegistrationArea}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + エリアを追加する
-                    </button>
+                    <WorkAreaSelector
+                      value={workAreaData}
+                      onChange={setWorkAreaData}
+                    />
                   </div>
 
                   {/* 職種 */}
@@ -762,7 +729,7 @@ const DesktopUserRegister = () => {
               {/* 個人として受注したい方 */}
               {registrationType === "individual-receive" && (
                 <>
-                  {/* 希望稼働エリア */}
+                  {/* 活動エリア */}
                   <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
@@ -774,44 +741,12 @@ const DesktopUserRegister = () => {
                         marginBottom: "10px",
                       }}
                     >
-                      希望稼働エリア
+                      活動エリア
                     </label>
-                    {registrationAreas.map((area, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={area}
-                        onChange={(e) => updateRegistrationArea(index, e.target.value)}
-                        placeholder="希望稼働エリアを入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addRegistrationArea}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + エリアを追加する
-                    </button>
+                    <WorkAreaSelector
+                      value={workAreaData}
+                      onChange={setWorkAreaData}
+                    />
                   </div>
 
                   {/* 職種 */}

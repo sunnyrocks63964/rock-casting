@@ -77,15 +77,21 @@ model CasterProfile {
   userId String @unique @map("user_id") @db.Uuid
   // 基本情報（任意）
   fullName     String?   @map("full_name")
-  // 住所情報
+  // 住所情報（後方互換性のため残す）
   area         String?
   // 職業・スキル
   occupation String?
+  // オンライン対応可能かどうか
+  onlineAvailable Boolean @default(false) @map("online_available")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // 稼働エリアと出張対応可能範囲のリレーション
+  workAreas CasterWorkArea[]
+  travelAreas CasterTravelArea[]
+
   @@index([userId])
   @@map("caster_profiles")
 }
@@ -102,7 +108,7 @@ model OrdererProfile {
 
   // 発注者固有情報（任意）
   websiteUrl           String[] @default([]) @map("website_url") // 関連webサイトURL
-  desiredWorkAreas     String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア
+  desiredWorkAreas     String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア（後方互換性のため残す）
   desiredOccupations   String[] @default([]) @map("desired_occupations") // 求めている職種
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -111,4 +117,153 @@ model OrdererProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
   @@map("orderer_profiles")
+}
+
+// ===================================
+// マスターデータテーブル
+// ===================================
+
+/// 地域ブロックマスター（関東、関西など）
+model Region {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      Int      @unique // 地域コード（1-8: 北海道、東北、関東、中部、近畿、中国、四国、九州・沖縄）
+  name      String   // 地域名（例: "関東", "関西"）
+  nameKana  String?  @map("name_kana") // かな読み
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  prefectures Prefecture[]
+
+  @@index([code])
+  @@map("regions")
+}
+
+/// 都道府県マスター
+model Prefecture {
+  id        String   @id @default(uuid()) @db.Uuid
+  regionId  String   @map("region_id") @db.Uuid // 所属する地域ブロック
+  code      Int      @unique // 都道府県コード（1-47）
+  name      String   // 都道府県名（例: "東京都", "大阪府"）
+  nameKana  String?  @map("name_kana") // かな読み（例: "とうきょうと"）
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  region              Region                @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  cities              City[]
+  casterWorkAreas     CasterWorkArea[]     @relation("PrefectureWorkAreas")
+  casterTravelAreas   CasterTravelArea[]   @relation("PrefectureTravelAreas")
+
+  @@index([code])
+  @@index([regionId])
+  @@map("prefectures")
+}
+
+/// 市区町村マスター
+model City {
+  id            String   @id @default(uuid()) @db.Uuid
+  prefectureId  String   @map("prefecture_id") @db.Uuid
+  code          String   // 市区町村コード（5桁または6桁）
+  name          String   // 市区町村名（例: "渋谷区", "横浜市"）
+  nameKana      String?  @map("name_kana") // かな読み
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  prefecture         Prefecture            @relation(fields: [prefectureId], references: [id], onDelete: Cascade)
+  casterWorkAreas    CasterWorkArea[]      @relation("CityWorkAreas")
+  casterTravelAreas  CasterTravelArea[]    @relation("CityTravelAreas")
+
+  @@index([prefectureId])
+  @@index([code])
+  @@map("cities")
+}
+
+/// 東京23区マスター
+model TokyoWard {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      Int      @unique // 23区コード（1-23）
+  name      String   // 区名（例: "千代田区", "中央区"）
+  nameKana  String?  @map("name_kana") // かな読み
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  casterWorkAreas    CasterWorkArea[]      @relation("TokyoWardWorkAreas")
+  casterTravelAreas  CasterTravelArea[]    @relation("TokyoWardTravelAreas")
+
+  @@index([code])
+  @@map("tokyo_wards")
+}
+
+// ===================================
+// キャストの稼働エリア関連テーブル
+// ===================================
+
+/// キャストの稼働エリア
+/// 都道府県全体、特定の市区町村、または東京23区を指定可能
+/// 複数のエリアを登録できる
+model CasterWorkArea {
+  id            String   @id @default(uuid()) @db.Uuid
+  casterProfileId String  @map("caster_profile_id") @db.Uuid
+  
+  // 都道府県（必須）- 都道府県全体を選ぶ場合はこれのみ設定
+  prefectureId  String   @map("prefecture_id") @db.Uuid
+  
+  // 市区町村（任意）- 特定の市区町村を選ぶ場合に設定
+  cityId        String?  @map("city_id") @db.Uuid
+  
+  // 東京23区（任意）- 東京23区を選ぶ場合に設定（prefectureIdが東京都の場合のみ有効）
+  tokyoWardId   String?  @map("tokyo_ward_id") @db.Uuid
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+  prefecture    Prefecture    @relation("PrefectureWorkAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
+  city          City?         @relation("CityWorkAreas", fields: [cityId], references: [id], onDelete: Cascade)
+  tokyoWard     TokyoWard?    @relation("TokyoWardWorkAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([prefectureId])
+  @@index([cityId])
+  @@index([tokyoWardId])
+  @@map("caster_work_areas")
+}
+
+/// キャストの出張対応可能範囲
+/// 稼働エリアと同様の構造で、出張で対応可能な範囲を指定
+model CasterTravelArea {
+  id            String   @id @default(uuid()) @db.Uuid
+  casterProfileId String  @map("caster_profile_id") @db.Uuid
+  
+  // 都道府県（必須）
+  prefectureId  String   @map("prefecture_id") @db.Uuid
+  
+  // 市区町村（任意）
+  cityId        String?  @map("city_id") @db.Uuid
+  
+  // 東京23区（任意）
+  tokyoWardId   String?  @map("tokyo_ward_id") @db.Uuid
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+  prefecture    Prefecture    @relation("PrefectureTravelAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
+  city          City?         @relation("CityTravelAreas", fields: [cityId], references: [id], onDelete: Cascade)
+  tokyoWard     TokyoWard?    @relation("TokyoWardTravelAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([prefectureId])
+  @@index([cityId])
+  @@index([tokyoWardId])
+  @@map("caster_travel_areas")
 }

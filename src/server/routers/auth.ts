@@ -15,6 +15,7 @@ import { sendPasswordResetEmail } from "@/lib/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import { createWorkAreas } from "./workAreas";
 
 type BaseRegisterInput = z.infer<typeof BaseRegisterSchema>;
 
@@ -65,12 +66,14 @@ const prepareCompanyUserData = ({
   registrationType,
   filteredOrgData,
   organizationId,
+  workAreaData,
 }: {
   authUserId: string;
   email: string;
   registrationType: BaseRegisterInput["registrationType"];
   filteredOrgData: ReturnType<typeof filterOrganizationData>;
   organizationId: string;
+  workAreaData?: BaseRegisterInput["workAreaData"];
 }) => {
   const baseData = {
     id: authUserId,
@@ -85,6 +88,7 @@ const prepareCompanyUserData = ({
         create: {
           area: filteredOrgData.desiredWorkAreas?.[0] || null,
           occupation: filteredOrgData.desiredOccupations?.[0] || null,
+          onlineAvailable: workAreaData?.onlineAvailable ?? false,
         },
       },
     };
@@ -112,12 +116,14 @@ const createCompanyRegistration = async ({
   email,
   registrationType,
   filteredOrgData,
+  workAreaData,
 }: {
   prisma: PrismaClient;
   authUserId: string;
   email: string;
   registrationType: BaseRegisterInput["registrationType"];
   filteredOrgData: ReturnType<typeof filterOrganizationData>;
+  workAreaData?: BaseRegisterInput["workAreaData"];
 }) => {
   return await prisma.$transaction(async (tx) => {
     const orgDataForCreate = prepareOrganizationData({ registrationType, filteredOrgData });
@@ -131,6 +137,7 @@ const createCompanyRegistration = async ({
       registrationType,
       filteredOrgData,
       organizationId: organization.id,
+      workAreaData,
     });
 
     const user = await tx.user.create({
@@ -142,6 +149,16 @@ const createCompanyRegistration = async ({
       },
     });
 
+    // 企業として受注する場合、活動エリアを作成
+    if (registrationType === "company-receive" && user.casterProfile && workAreaData) {
+      await createWorkAreas({
+        prisma: tx,
+        casterProfileId: user.casterProfile.id,
+        workAreas: workAreaData.workAreas,
+        travelAreas: workAreaData.travelAreas,
+      });
+    }
+
     return { user, organization };
   });
 };
@@ -152,17 +169,28 @@ const createIndividualRegistration = async ({
   authUserId,
   email,
   role,
+  workAreaData,
 }: {
   prisma: PrismaClient;
   authUserId: string;
   email: string;
   role: BaseRegisterInput["role"];
+  workAreaData?: BaseRegisterInput["workAreaData"];
 }) => {
-  return await prisma.user.create({
+  const isCaster = role === "caster" || role === "both";
+  const casterProfileData = isCaster
+    ? {
+        create: {
+          onlineAvailable: workAreaData?.onlineAvailable ?? false,
+        },
+      }
+    : undefined;
+
+  const user = await prisma.user.create({
     data: {
       id: authUserId,
       email,
-      ...(role === "caster" || role === "both" ? { casterProfile: { create: {} } } : {}),
+      ...(casterProfileData ? { casterProfile: casterProfileData } : {}),
       ...(role === "orderer" || role === "both" ? { ordererProfile: { create: {} } } : {}),
     },
     include: {
@@ -170,6 +198,18 @@ const createIndividualRegistration = async ({
       ordererProfile: true,
     },
   });
+
+  // キャストプロフィールが作成された場合、活動エリアを作成
+  if (isCaster && user.casterProfile && workAreaData) {
+    await createWorkAreas({
+      prisma,
+      casterProfileId: user.casterProfile.id,
+      workAreas: workAreaData.workAreas,
+      travelAreas: workAreaData.travelAreas,
+    });
+  }
+
+  return user;
 };
 
 export const authRouter = createTRPCRouter({
@@ -180,7 +220,7 @@ export const authRouter = createTRPCRouter({
   register: publicProcedure
     .input(BaseRegisterSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, role, registrationType, organizationData } = input;
+      const { email, password, role, registrationType, organizationData, workAreaData } = input;
 
       try {
         // 環境変数のチェック
@@ -242,6 +282,7 @@ export const authRouter = createTRPCRouter({
             authUserId: authData.user.id,
             email,
             role,
+            workAreaData,
           }).catch(async (prismaError) => {
             console.error("Prismaエラー:", prismaError);
             await rollbackSupabaseUser(supabase, authData.user.id);
@@ -279,6 +320,7 @@ export const authRouter = createTRPCRouter({
           email,
           registrationType,
           filteredOrgData,
+          workAreaData,
         }).catch(async (prismaError) => {
           console.error("Prismaエラー:", prismaError);
           await rollbackSupabaseUser(supabase, authData.user.id);
