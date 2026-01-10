@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
+import { inferRouterOutputs } from "@trpc/server";
 import cast01 from "../Cast/images/cast_01.png";
 import img11 from "./images/search_magnifying_glass.png";
 import favoriteIcon from "./images/favorite.png";
@@ -12,6 +13,15 @@ import JobTypeFilterDetail, {
     jobTypeFilterData,
 } from "./JobTypeFilterDetail";
 import { trpc } from "@/lib/trpc/client";
+import { type AppRouter } from "@/server/routers/_app";
+
+// tRPC の型推論を使用して型を取得
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type CasterListOutput = RouterOutputs["profile"]["getCasterList"];
+type Caster = CasterListOutput["casters"][number];
+type CasterProfile = NonNullable<Caster["casterProfile"]>;
+type JobTypeWithSkills = CasterProfile["jobTypes"][number];
+type WorkAreaWithRelations = CasterProfile["workAreas"][number];
 
 const TopOrder = () => {
     const router = useRouter();
@@ -55,13 +65,13 @@ const TopOrder = () => {
     }, [casterListData]);
 
     // 職種名を取得するヘルパー関数
-    const getJobTypeNames = (jobTypes: any[]): string => {
+    const getJobTypeNames = (jobTypes: JobTypeWithSkills[]): string => {
         if (!jobTypes || jobTypes.length === 0) return "";
         return jobTypes.map((jt) => jobTypeLabels[jt.jobType as JobType] || jt.jobType).join("、");
     };
 
     // エリア情報を取得するヘルパー関数
-    const getAreaInfo = (workAreas: any[]): string => {
+    const getAreaInfo = (workAreas: WorkAreaWithRelations[]): string => {
         if (!workAreas || workAreas.length === 0) return "";
         const areas = workAreas.map((wa) => {
             if (wa.tokyoWard) {
