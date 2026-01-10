@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
-import { inferRouterOutputs } from "@trpc/server";
 import cast01 from "../Cast/images/cast_01.png";
 import img11 from "./images/search_magnifying_glass.png";
 import favoriteIcon from "./images/favorite.png";
@@ -12,16 +11,6 @@ import JobTypeFilterDetail, {
     JobType,
     jobTypeFilterData,
 } from "./JobTypeFilterDetail";
-import { trpc } from "@/lib/trpc/client";
-import { type AppRouter } from "@/server/routers/_app";
-
-// tRPC の型推論を使用して型を取得
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type CasterListOutput = RouterOutputs["profile"]["getCasterList"];
-type Caster = CasterListOutput["casters"][number];
-type CasterProfile = NonNullable<Caster["casterProfile"]>;
-type JobTypeWithSkills = CasterProfile["jobTypes"][number];
-type WorkAreaWithRelations = CasterProfile["workAreas"][number];
 
 const TopOrder = () => {
     const router = useRouter();
@@ -51,47 +40,6 @@ const TopOrder = () => {
         artist: "アーティスト",
         creator: "クリエイター",
     };
-
-    // キャスト一覧を取得
-    const { data: casterListData, isLoading: isLoadingCasters } = trpc.profile.getCasterList.useQuery({
-        page: currentPage,
-        limit: 15,
-        searchKeyword: searchKeyword || undefined,
-    });
-
-    // キャストデータを取得
-    const casters = useMemo(() => {
-        return casterListData?.casters || [];
-    }, [casterListData]);
-
-    // 職種名を取得するヘルパー関数
-    const getJobTypeNames = (jobTypes: JobTypeWithSkills[]): string => {
-        if (!jobTypes || jobTypes.length === 0) return "";
-        return jobTypes.map((jt) => jobTypeLabels[jt.jobType as JobType] || jt.jobType).join("、");
-    };
-
-    // エリア情報を取得するヘルパー関数
-    const getAreaInfo = (workAreas: WorkAreaWithRelations[]): string => {
-        if (!workAreas || workAreas.length === 0) return "";
-        const areas = workAreas.map((wa) => {
-            if (wa.tokyoWard) {
-                return wa.tokyoWard.name;
-            }
-            if (wa.city) {
-                return wa.city.name;
-            }
-            if (wa.prefecture) {
-                return wa.prefecture.name;
-            }
-            return "";
-        }).filter(Boolean);
-        return areas.length > 0 ? areas[0] : "";
-    };
-
-    // 検索キーワードが変更されたときにページをリセット
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchKeyword]);
 
     const handleJobTypeClick = (jobType: JobType) => {
         setOpenJobType(jobType);
@@ -849,11 +797,6 @@ const TopOrder = () => {
                             placeholder="フリーワードで検索"
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    setCurrentPage(1);
-                                }
-                            }}
                             style={{
                                 flex: 1,
                                 border: "none",
@@ -867,9 +810,6 @@ const TopOrder = () => {
                     </div>
                     {/* 検索ボタン */}
                     <button
-                        onClick={() => {
-                            setCurrentPage(1);
-                        }}
                         style={{
                             backgroundColor: "#ff6d00",
                             border: "none",
@@ -894,19 +834,17 @@ const TopOrder = () => {
                     </button>
                 </div>
                 {/* 検索結果表示 */}
-                {casterListData && (
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            color: "white",
-                            textAlign: "center",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        {casterListData.total}件のうち、{Math.min((currentPage - 1) * 15 + 1, casterListData.total)}~{Math.min(currentPage * 15, casterListData.total)}件を表示
-                    </p>
-                )}
+                <p
+                    style={{
+                        fontSize: "16px",
+                        color: "white",
+                        textAlign: "center",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        marginBottom: "20px",
+                    }}
+                >
+                    100件のうち、1~15件を表示
+                </p>
 
                 {/* パッケージ予約説明 */}
                 <div
@@ -981,237 +919,197 @@ const TopOrder = () => {
                         gap: "20px",
                     }}
                 >
-                    {isLoadingCasters ? (
+                    {Array.from({ length: 15 }).map((_, index) => (
                         <div
+                            key={index}
                             style={{
-                                textAlign: "center",
-                                padding: "40px",
-                                color: "white",
-                                fontFamily: "'Noto Sans JP', sans-serif",
+                                backgroundColor: "white",
+                                borderRadius: "10px",
+                                padding: "20px",
+                                display: "flex",
+                                gap: "20px",
                             }}
                         >
-                            読み込み中...
-                        </div>
-                    ) : casters.length === 0 ? (
-                        <div
-                            style={{
-                                textAlign: "center",
-                                padding: "40px",
-                                color: "white",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                            }}
-                        >
-                            キャストが見つかりませんでした
-                        </div>
-                    ) : (
-                        casters.map((user) => {
-                            const profile = user.casterProfile;
-                            if (!profile) return null;
+                            {/* キャスト画像 */}
+                            <img
+                                src={cast01.src}
+                                alt={`キャスト ${index + 1}`}
+                                style={{
+                                    width: "204px",
+                                    height: "136px",
+                                    borderRadius: "10px",
+                                    objectFit: "cover",
+                                    flexShrink: 0,
+                                }}
+                            />
 
-                            const jobTypeNames = getJobTypeNames(profile.jobTypes || []);
-                            const areaInfo = getAreaInfo(profile.workAreas || []);
-
-                            return (
-                                <div
-                                    key={user.id}
+                            {/* キャスト情報 */}
+                            <div
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "8px",
+                                }}
+                            >
+                                <h3
                                     style={{
-                                        backgroundColor: "white",
-                                        borderRadius: "10px",
-                                        padding: "20px",
-                                        display: "flex",
-                                        gap: "20px",
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
                                     }}
                                 >
-                                    {/* キャスト画像 */}
-                                    <img
-                                        src={cast01.src}
-                                        alt={profile.fullName || "キャスト"}
-                                        style={{
-                                            width: "204px",
-                                            height: "136px",
-                                            borderRadius: "10px",
-                                            objectFit: "cover",
-                                            flexShrink: 0,
-                                        }}
-                                    />
+                                    山田　花子
+                                </h3>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    モデル
+                                </p>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "#333",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    自己紹介タイトル自己紹介タイトル自己紹介タイトル
+                                </p>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "#333",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    東京都/21歳/女性/152cm
+                                </p>
+                            </div>
 
-                                    {/* キャスト情報 */}
-                                    <div
+                            {/* 右側: 価格とボタン */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-end",
+                                    gap: "12px",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        backgroundColor: "#cf8080",
+                                        color: "white",
+                                        padding: "4px 12px",
+                                        borderRadius: "3px",
+                                        fontSize: "14px",
+                                        fontWeight: "700",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    固定報酬制
+                                </div>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                    }}
+                                >
+                                    3,000円～
+                                </p>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "8px",
+                                    }}
+                                >
+                                    <button
+                                        onClick={() => router.push("/cast/detail")}
                                         style={{
-                                            flex: 1,
+                                            backgroundColor: "#d70202",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "90px",
+                                            padding: "8px 24px",
+                                            fontSize: "16px",
+                                            fontWeight: "700",
+                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        詳細を確認
+                                    </button>
+                                    <button
+                                        style={{
+                                            backgroundColor: "white",
+                                            color: "black",
+                                            border: "1px solid black",
+                                            borderRadius: "90px",
+                                            padding: "8px 24px",
+                                            fontSize: "12px",
+                                            fontWeight: "400",
+                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                            cursor: "pointer",
                                             display: "flex",
-                                            flexDirection: "column",
+                                            alignItems: "center",
                                             gap: "8px",
                                         }}
                                     >
-                                        <h3
+                                        <img
+                                            src={favoriteIcon.src}
+                                            alt="お気に入り"
                                             style={{
-                                                fontSize: "20px",
-                                                fontWeight: "700",
-                                                color: "black",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                width: "14px",
+                                                height: "14px",
                                             }}
-                                        >
-                                            {profile.fullName || "名前未設定"}
-                                        </h3>
-                                        {jobTypeNames && (
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "black",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {jobTypeNames}
-                                            </p>
-                                        )}
-                                        {profile.occupation && (
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "#333",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {profile.occupation}
-                                            </p>
-                                        )}
-                                        {(areaInfo || profile.area) && (
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "#333",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {areaInfo || profile.area}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* 右側: 価格とボタン */}
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-end",
-                                            gap: "12px",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                backgroundColor: "#cf8080",
-                                                color: "white",
-                                                padding: "4px 12px",
-                                                borderRadius: "3px",
-                                                fontSize: "14px",
-                                                fontWeight: "700",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
-                                            }}
-                                        >
-                                            固定報酬制
-                                        </div>
-                                        <p
-                                            style={{
-                                                fontSize: "16px",
-                                                color: "black",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
-                                            }}
-                                        >
-                                            3,000円～
-                                        </p>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "8px",
-                                            }}
-                                        >
-                                            <button
-                                                onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
-                                                style={{
-                                                    backgroundColor: "#d70202",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "90px",
-                                                    padding: "8px 24px",
-                                                    fontSize: "16px",
-                                                    fontWeight: "700",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                詳細を確認
-                                            </button>
-                                            <button
-                                                style={{
-                                                    backgroundColor: "white",
-                                                    color: "black",
-                                                    border: "1px solid black",
-                                                    borderRadius: "90px",
-                                                    padding: "8px 24px",
-                                                    fontSize: "12px",
-                                                    fontWeight: "400",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "8px",
-                                                }}
-                                            >
-                                                <img
-                                                    src={favoriteIcon.src}
-                                                    alt="お気に入り"
-                                                    style={{
-                                                        width: "14px",
-                                                        height: "14px",
-                                                    }}
-                                                />
-                                                お気に入りに追加
-                                            </button>
-                                        </div>
-                                    </div>
+                                        />
+                                        お気に入りに追加
+                                    </button>
                                 </div>
-                            );
-                        })
-                    )}
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* ページネーション */}
-                {casterListData && casterListData.totalPages > 1 && (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: "10px",
-                            marginTop: "40px",
-                        }}
-                    >
-                        {Array.from({ length: casterListData.totalPages }, (_, i) => i + 1).map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    borderRadius: "10px",
-                                    border: "1px solid black",
-                                    backgroundColor: page === currentPage ? "#ff6d00" : "white",
-                                    color: page === currentPage ? "white" : "black",
-                                    fontSize: "20px",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginTop: "40px",
+                    }}
+                >
+                    {[1, 2, 3, 4].map((page) => (
+                        <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "10px",
+                                border: "1px solid black",
+                                backgroundColor: page === currentPage ? "#ff6d00" : "white",
+                                color: page === currentPage ? "white" : "black",
+                                fontSize: "20px",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* フィルター詳細モーダル */}
