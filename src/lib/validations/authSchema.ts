@@ -46,6 +46,23 @@ const WorkAreaDataSchema = z.object({
   onlineAvailable: z.boolean().default(false),
 });
 
+// 職種データのスキーマ
+const JobTypeSchema = z.enum(["photographer", "model", "artist", "creator"]);
+
+const JobTypeSkillSchema = z.object({
+  category: z.string(),
+  values: z.array(z.string()),
+});
+
+const SelectedJobTypeSchema = z.object({
+  jobType: JobTypeSchema,
+  skills: z.array(JobTypeSkillSchema).default([]),
+});
+
+const JobTypeDataSchema = z.object({
+  selectedJobTypes: z.array(SelectedJobTypeSchema).default([]),
+});
+
 // ===================================
 // ユーザー登録スキーマ
 // ===================================
@@ -75,6 +92,8 @@ export const BaseRegisterSchema = z.object({
     .optional(),
   // 活動エリアデータ（キャスト登録の場合のみ）
   workAreaData: WorkAreaDataSchema.optional(),
+  // 職種データ（キャスト登録の場合のみ）
+  jobTypeData: JobTypeDataSchema.optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "パスワードが一致しません",
   path: ["passwordConfirm"],
