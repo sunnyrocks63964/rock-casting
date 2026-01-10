@@ -39,6 +39,7 @@ const CastDetail = () => {
                     <div
                         style={{
                             display: "flex",
+                            justifyContent: "center",
                             gap: "58px",
                             marginBottom: "60px",
                         }}
@@ -573,6 +574,8 @@ const CastDetail = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
+                                maxWidth: "1358px",
+                                margin: "0 auto",
                             }}
                         >
                             {/* プロフィールセクション */}
@@ -696,6 +699,8 @@ const CastDetail = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
+                                maxWidth: "1358px",
+                                margin: "0 auto",
                             }}
                         >
                             {/* 注意事項セクション */}
