@@ -5,6 +5,7 @@
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import {
   CasterProfileUpdateSchema,
@@ -275,7 +276,7 @@ export const profileRouter = createTRPCRouter({
         const skip = (page - 1) * limit;
 
         // 検索条件の構築
-        const where: any = {
+        const where: Prisma.UserWhereInput = {
           casterProfile: {
             isNot: null,
           },
