@@ -837,7 +837,7 @@ const CastDetail = ({ castProfile }: CastDetailProps) => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
-                                maxWidth: "1357px",
+                                maxWidth: "1358px",
                                 margin: "0 auto",
                             }}
                         >
