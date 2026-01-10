@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc/client";
 import LoginedHeader from "@/components/Header/LoginedHeader";
@@ -11,15 +11,26 @@ import CastDetail from "@/components/CastDetail";
 
 export default function CastDetailPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
+    const castUserId = searchParams.get("userId");
 
     // 現在のユーザー情報を取得
     const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
         { userId: userId! },
         {
             enabled: !!userId,
+            retry: false,
+        }
+    );
+
+    // キャストプロフィールを取得
+    const { data: castProfile, isLoading: isLoadingCastProfile } = trpc.profile.getCasterProfile.useQuery(
+        { userId: castUserId! },
+        {
+            enabled: !!castUserId,
             retry: false,
         }
     );
@@ -114,8 +125,7 @@ export default function CastDetailPage() {
         setIsLoading(false);
     }, [userData, isLoadingUser, userError, userId, router]);
 
-
-    if (isLoading || !isAuthorized) {
+    if (isLoading || !isAuthorized || isLoadingCastProfile || !castProfile) {
         return (
             <main
                 style={{
@@ -150,7 +160,7 @@ export default function CastDetailPage() {
         >
             <LoginedHeader />
             <LoginedNavBar />
-            <CastDetail />
+            <CastDetail castProfile={castProfile} />
             <Footer />
         </main>
     );
