@@ -279,10 +279,16 @@ export const profileRouter = createTRPCRouter({
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(15),
         searchKeyword: z.string().optional(),
+        jobTypeFilters: z
+          .record(
+            z.string(),
+            z.record(z.string(), z.array(z.string()))
+          )
+          .optional(),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { page, limit, searchKeyword } = input;
+      const { page, limit, searchKeyword, jobTypeFilters } = input;
 
       try {
         const skip = (page - 1) * limit;
@@ -322,6 +328,69 @@ export const profileRouter = createTRPCRouter({
               },
             },
           ];
+        }
+
+        // 職種フィルターの適用
+        if (jobTypeFilters && Object.keys(jobTypeFilters).length > 0) {
+          const jobTypeFilterConditions: Prisma.UserWhereInput[] = [];
+
+          // 各職種ごとにフィルター条件を構築
+          Object.entries(jobTypeFilters).forEach(([jobType, categories]) => {
+            // この職種に選択されたカテゴリがあるかチェック
+            const hasSelectedCategories = Object.values(categories).some(
+              (values) => values.length > 0
+            );
+
+            if (!hasSelectedCategories) {
+              return;
+            }
+
+            // 各カテゴリごとのスキル条件を構築
+            const skillConditions: Prisma.CasterJobSkillWhereInput[] = [];
+            Object.entries(categories).forEach(([category, values]) => {
+              if (values.length > 0) {
+                skillConditions.push({
+                  category,
+                  value: {
+                    in: values,
+                  },
+                });
+              }
+            });
+
+            // この職種にマッチする条件を構築
+            // 職種が存在し、かつ選択されたスキル条件のいずれかにマッチする必要がある
+            const jobTypeCondition: Prisma.UserWhereInput = {
+              casterProfile: {
+                jobTypes: {
+                  some: {
+                    jobType: jobType as "photographer" | "model" | "artist" | "creator",
+                    skills: {
+                      some: {
+                        OR: skillConditions,
+                      },
+                    },
+                  },
+                },
+              },
+            };
+
+            jobTypeFilterConditions.push(jobTypeCondition);
+          });
+
+          // 職種フィルター条件をORで結合（いずれかの職種にマッチすればOK）
+          if (jobTypeFilterConditions.length > 0) {
+            // 既存のOR条件がある場合はANDで結合、ない場合は直接設定
+            if (where.OR) {
+              where.AND = [
+                { OR: where.OR },
+                { OR: jobTypeFilterConditions },
+              ];
+              delete where.OR;
+            } else {
+              where.OR = jobTypeFilterConditions;
+            }
+          }
         }
 
         // キャスト一覧を取得
