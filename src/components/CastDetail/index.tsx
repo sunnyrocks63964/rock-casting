@@ -699,7 +699,7 @@ const CastDetail = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
-                                maxWidth: "1358px",
+                                maxWidth: "1357px",
                                 margin: "0 auto",
                             }}
                         >
