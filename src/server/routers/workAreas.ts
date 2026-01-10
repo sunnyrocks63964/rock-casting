@@ -189,91 +189,119 @@ export async function createWorkAreas({
   workAreas: Array<{ prefectureCode: number; tokyoWardCode?: number }>;
   travelAreas: Array<{ prefectureCode: number; tokyoWardCode?: number }>;
 }) {
-  // PrismaClientLikeに変換して型安全にアクセス
-  const client = toPrismaClientLike(prisma);
+  try {
+    // PrismaClientLikeに変換して型安全にアクセス
+    const client = toPrismaClientLike(prisma);
 
-  // 稼働エリアを作成
-  for (const area of workAreas) {
-    const prefecture = await client.prefecture.findUnique({
-      where: { code: area.prefectureCode },
-    });
-
-    if (!prefecture) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: `都道府県コード ${area.prefectureCode} が見つかりません`,
-      });
-    }
-
-    const workAreaData: {
-      casterProfileId: string;
-      prefectureId: string;
-      tokyoWardId?: string;
-    } = {
-      casterProfileId,
-      prefectureId: prefecture.id,
-    };
-
-    if (area.tokyoWardCode !== undefined) {
-      const tokyoWard = await client.tokyoWard.findUnique({
-        where: { code: area.tokyoWardCode },
+    // 稼働エリアを作成
+    for (const area of workAreas) {
+      const prefecture = await client.prefecture.findUnique({
+        where: { code: area.prefectureCode },
       });
 
-      if (!tokyoWard) {
+      if (!prefecture) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
+          message: `都道府県コード ${area.prefectureCode} が見つかりません`,
         });
       }
 
-      workAreaData.tokyoWardId = tokyoWard.id;
-    }
+      const workAreaData: {
+        casterProfileId: string;
+        prefectureId: string;
+        tokyoWardId?: string;
+      } = {
+        casterProfileId,
+        prefectureId: prefecture.id,
+      };
 
-    await client.casterWorkArea.create({
-      data: workAreaData,
-    });
-  }
+      if (area.tokyoWardCode !== undefined) {
+        const tokyoWard = await client.tokyoWard.findUnique({
+          where: { code: area.tokyoWardCode },
+        });
 
-  // 出張対応エリアを作成
-  for (const area of travelAreas) {
-    const prefecture = await client.prefecture.findUnique({
-      where: { code: area.prefectureCode },
-    });
+        if (!tokyoWard) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
+          });
+        }
 
-    if (!prefecture) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: `都道府県コード ${area.prefectureCode} が見つかりません`,
+        workAreaData.tokyoWardId = tokyoWard.id;
+      }
+
+      await client.casterWorkArea.create({
+        data: workAreaData,
       });
     }
 
-    const travelAreaData: {
-      casterProfileId: string;
-      prefectureId: string;
-      tokyoWardId?: string;
-    } = {
-      casterProfileId,
-      prefectureId: prefecture.id,
-    };
-
-    if (area.tokyoWardCode !== undefined) {
-      const tokyoWard = await client.tokyoWard.findUnique({
-        where: { code: area.tokyoWardCode },
+    // 出張対応エリアを作成
+    for (const area of travelAreas) {
+      const prefecture = await client.prefecture.findUnique({
+        where: { code: area.prefectureCode },
       });
 
-      if (!tokyoWard) {
+      if (!prefecture) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
+          message: `都道府県コード ${area.prefectureCode} が見つかりません`,
         });
       }
 
-      travelAreaData.tokyoWardId = tokyoWard.id;
-    }
+      const travelAreaData: {
+        casterProfileId: string;
+        prefectureId: string;
+        tokyoWardId?: string;
+      } = {
+        casterProfileId,
+        prefectureId: prefecture.id,
+      };
 
-    await client.casterTravelArea.create({
-      data: travelAreaData,
+      if (area.tokyoWardCode !== undefined) {
+        const tokyoWard = await client.tokyoWard.findUnique({
+          where: { code: area.tokyoWardCode },
+        });
+
+        if (!tokyoWard) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
+          });
+        }
+
+        travelAreaData.tokyoWardId = tokyoWard.id;
+      }
+
+      await client.casterTravelArea.create({
+        data: travelAreaData,
+      });
+    }
+  } catch (error) {
+    // TRPCErrorの場合はそのまま再スロー
+    if (error instanceof TRPCError) {
+      throw error;
+    }
+    
+    // その他のエラーの場合、詳細な情報をログに記録
+    const errorMessage = error instanceof Error ? error.message : "不明なエラー";
+    const errorCode = error && typeof error === "object" && "code" in error ? String(error.code) : "UNKNOWN";
+    
+    console.error("createWorkAreasエラー:", {
+      message: errorMessage,
+      code: errorCode,
+      casterProfileId,
+      error,
     });
+    
+    // トランザクションエラーの場合、より詳細なエラーメッセージを提供
+    if (errorCode === "P2028" || errorMessage.includes("Transaction")) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `トランザクションエラーが発生しました: ${errorMessage}`,
+      });
+    }
+    
+    throw error;
   }
 }
 

@@ -36,6 +36,18 @@ export const profileRouter = createTRPCRouter({
                 createdAt: true,
               },
             },
+            jobTypes: {
+              include: {
+                skills: true,
+              },
+            },
+            workAreas: {
+              include: {
+                prefecture: true,
+                city: true,
+                tokyoWard: true,
+              },
+            },
           },
         });
 

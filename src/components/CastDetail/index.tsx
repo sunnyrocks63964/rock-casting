@@ -2,12 +2,53 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { inferRouterOutputs } from "@trpc/server";
 import cast01 from "../Cast/images/cast_01.png";
 import favoriteIcon from "../TopOrder/images/favorite.png";
+import { type AppRouter } from "@/server/routers/_app";
 
-const CastDetail = () => {
+// tRPC の型推論を使用して型を取得
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type CasterProfileOutput = RouterOutputs["profile"]["getCasterProfile"];
+
+const jobTypeLabels: Record<string, string> = {
+    photographer: "フォトグラファー",
+    model: "モデル",
+    artist: "アーティスト",
+    creator: "クリエイター",
+};
+
+interface CastDetailProps {
+    castProfile: CasterProfileOutput;
+}
+
+const CastDetail = ({ castProfile }: CastDetailProps) => {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<"profile" | "member">("profile");
+
+    // 職種名を取得（複数の場合はカンマ区切り）
+    const getJobTypeNames = (): string => {
+        if (!castProfile.jobTypes || castProfile.jobTypes.length === 0) {
+            return "-";
+        }
+        return castProfile.jobTypes
+            .map((jt) => jobTypeLabels[jt.jobType] || jt.jobType)
+            .join("、");
+    };
+
+    // 居住地を取得
+    const getResidence = (): string => {
+        if (castProfile.area) {
+            return castProfile.area;
+        }
+        if (castProfile.workAreas && castProfile.workAreas.length > 0) {
+            const prefecture = castProfile.workAreas[0]?.prefecture?.name;
+            if (prefecture) {
+                return prefecture;
+            }
+        }
+        return "-";
+    };
 
     return (
         <div
@@ -39,6 +80,7 @@ const CastDetail = () => {
                     <div
                         style={{
                             display: "flex",
+                            justifyContent: "center",
                             gap: "58px",
                             marginBottom: "60px",
                         }}
@@ -123,7 +165,7 @@ const CastDetail = () => {
                                     margin: "0",
                                 }}
                             >
-                                山田　花子
+                                {castProfile.fullName || "-"}
                             </h1>
 
                             {/* 自己紹介タイトル */}
@@ -135,7 +177,7 @@ const CastDetail = () => {
                                     margin: "0",
                                 }}
                             >
-                                自己紹介タイトル自己紹介タイトル自己紹介タイトル
+                                {castProfile.occupation || "-"}
                             </p>
 
                             {/* 区切り線 */}
@@ -184,7 +226,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        モデル
+                                        {getJobTypeNames()}
                                     </p>
                                 </div>
                                 <div
@@ -215,7 +257,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        東京都
+                                        {getResidence()}
                                     </p>
                                 </div>
                                 <div
@@ -246,7 +288,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        2002 / 12/3
+                                        -
                                     </p>
                                 </div>
                                 <div
@@ -277,7 +319,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        女性
+                                        -
                                     </p>
                                 </div>
                                 <div
@@ -308,7 +350,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        175cm
+                                        -
                                     </p>
                                 </div>
                                 <div
@@ -339,7 +381,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        50kg
+                                        -
                                     </p>
                                 </div>
                                 <div
@@ -370,7 +412,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        X ,Instagram,Youtube
+                                        -
                                     </p>
                                 </div>
                                 <div
@@ -401,7 +443,7 @@ const CastDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        フリーランス
+                                        -
                                     </p>
                                 </div>
                             </div>
@@ -573,6 +615,8 @@ const CastDetail = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
+                                maxWidth: "1358px",
+                                margin: "0 auto",
                             }}
                         >
                             {/* プロフィールセクション */}
@@ -597,10 +641,107 @@ const CastDetail = () => {
                                         lineHeight: "1.6",
                                     }}
                                 >
-                                    趣味特技 :<br />
-                                    ピアノ(11年)、ホルン(9年)、自身で着物の着用が出来る
+                                    {castProfile.occupation || "-"}
                                 </p>
                             </div>
+
+                            {/* 職種・スキルセクション */}
+                            {castProfile.jobTypes && castProfile.jobTypes.length > 0 && (
+                                <div>
+                                    <h2
+                                        style={{
+                                            fontSize: "20px",
+                                            fontWeight: "700",
+                                            color: "black",
+                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                            margin: "0 0 20px 0",
+                                        }}
+                                    >
+                                        職種・スキル
+                                    </h2>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "30px",
+                                        }}
+                                    >
+                                        {castProfile.jobTypes.map((jobType) => (
+                                            <div key={jobType.id}>
+                                                <h3
+                                                    style={{
+                                                        fontSize: "18px",
+                                                        fontWeight: "700",
+                                                        color: "black",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                        margin: "0 0 15px 0",
+                                                    }}
+                                                >
+                                                    {jobTypeLabels[jobType.jobType] || jobType.jobType}
+                                                </h3>
+                                                {jobType.skills && jobType.skills.length > 0 ? (
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: "12px",
+                                                        }}
+                                                    >
+                                                        {Object.entries(
+                                                            jobType.skills.reduce<Record<string, string[]>>(
+                                                                (acc, skill) => {
+                                                                    if (!acc[skill.category]) {
+                                                                        acc[skill.category] = [];
+                                                                    }
+                                                                    acc[skill.category].push(skill.value);
+                                                                    return acc;
+                                                                },
+                                                                {}
+                                                            )
+                                                        ).map(([category, values]) => (
+                                                            <div key={category}>
+                                                                <p
+                                                                    style={{
+                                                                        fontSize: "16px",
+                                                                        fontWeight: "700",
+                                                                        color: "black",
+                                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                                        margin: "0 0 8px 0",
+                                                                    }}
+                                                                >
+                                                                    {category}
+                                                                </p>
+                                                                <p
+                                                                    style={{
+                                                                        fontSize: "16px",
+                                                                        color: "black",
+                                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                                        margin: "0",
+                                                                        lineHeight: "1.6",
+                                                                    }}
+                                                                >
+                                                                    {values.join("、")}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p
+                                                        style={{
+                                                            fontSize: "16px",
+                                                            color: "black",
+                                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                                            margin: "0",
+                                                        }}
+                                                    >
+                                                        -
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* 実績セクション */}
                             <div>
@@ -696,6 +837,8 @@ const CastDetail = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: "40px",
+                                maxWidth: "1358px",
+                                margin: "0 auto",
                             }}
                         >
                             {/* 注意事項セクション */}
