@@ -2,9 +2,8 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaUser } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
-import cast01 from "../Cast/images/cast_01.png";
 import img11 from "./images/search_magnifying_glass.png";
 import favoriteIcon from "./images/favorite.png";
 import topOrderBgIcon from "./images/top_order_bg.png";
@@ -1060,17 +1059,26 @@ const TopOrder = () => {
                                     }}
                                 >
                                     {/* キャスト画像 */}
-                                    <img
-                                        src={cast01.src}
-                                        alt={profile.fullName || "キャスト"}
+                                    <div
                                         style={{
                                             width: "204px",
                                             height: "136px",
                                             borderRadius: "10px",
-                                            objectFit: "cover",
+                                            backgroundColor: "#e5e5e5",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
                                             flexShrink: 0,
                                         }}
-                                    />
+                                    >
+                                        <FaUser
+                                            style={{
+                                                width: "80px",
+                                                height: "80px",
+                                                color: "#999999",
+                                            }}
+                                        />
+                                    </div>
 
                                     {/* キャスト情報 */}
                                     <div

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FaUser } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
-import cast01 from "../Cast/images/cast_01.png";
 import favoriteIcon from "../TopOrder/images/favorite.png";
 import { type AppRouter } from "@/server/routers/_app";
 
@@ -100,16 +100,17 @@ const CastDetail = ({ castProfile }: CastDetailProps) => {
                                     width: "700px",
                                     height: "467px",
                                     borderRadius: "10px",
-                                    overflow: "hidden",
+                                    backgroundColor: "#e5e5e5",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
                             >
-                                <img
-                                    src={cast01.src}
-                                    alt="山田　花子"
+                                <FaUser
                                     style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
+                                        width: "200px",
+                                        height: "200px",
+                                        color: "#999999",
                                     }}
                                 />
                             </div>
@@ -127,16 +128,17 @@ const CastDetail = ({ castProfile }: CastDetailProps) => {
                                             width: "130px",
                                             height: "87px",
                                             borderRadius: "10px",
-                                            overflow: "hidden",
+                                            backgroundColor: "#e5e5e5",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
                                         }}
                                     >
-                                        <img
-                                            src={cast01.src}
-                                            alt={`サムネイル ${index + 1}`}
+                                        <FaUser
                                             style={{
-                                                width: "100%",
-                                                height: "100%",
-                                                objectFit: "cover",
+                                                width: "40px",
+                                                height: "40px",
+                                                color: "#999999",
                                             }}
                                         />
                                     </div>
