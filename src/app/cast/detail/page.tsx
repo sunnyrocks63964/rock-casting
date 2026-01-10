@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc/client";
@@ -9,7 +9,7 @@ import LoginedNavBar from "@/components/Header/LoginedNavBar";
 import Footer from "@/components/Footer";
 import CastDetail from "@/components/CastDetail";
 
-export default function CastDetailPage() {
+function CastDetailContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(true);
@@ -166,3 +166,33 @@ export default function CastDetailPage() {
     );
 }
 
+export default function CastDetailPage() {
+    return (
+        <Suspense
+            fallback={
+                <main
+                    style={{
+                        minHeight: "100vh",
+                        backgroundColor: "#060606",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontFamily: "'Noto Sans JP', sans-serif",
+                            fontSize: "16px",
+                            color: "white",
+                        }}
+                    >
+                        読み込み中...
+                    </div>
+                </main>
+            }
+        >
+            <CastDetailContent />
+        </Suspense>
+    );
+}
