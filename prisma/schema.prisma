@@ -22,6 +22,13 @@ enum Gender {
   prefer_not_to_say
 }
 
+enum JobType {
+  photographer
+  model
+  artist
+  creator
+}
+
 // ===================================
 // Models
 // ===================================
@@ -91,6 +98,8 @@ model CasterProfile {
   // 稼働エリアと出張対応可能範囲のリレーション
   workAreas CasterWorkArea[]
   travelAreas CasterTravelArea[]
+  // 職種情報
+  jobTypes CasterJobType[]
 
   @@index([userId])
   @@map("caster_profiles")
@@ -266,4 +275,47 @@ model CasterTravelArea {
   @@index([cityId])
   @@index([tokyoWardId])
   @@map("caster_travel_areas")
+}
+
+// ===================================
+// キャストの職種・スキル関連テーブル
+// ===================================
+
+/// キャストの職種情報
+/// 1人のキャストが複数の職種を持つことができる（例: フォトグラファー兼モデル）
+model CasterJobType {
+  id              String   @id @default(uuid()) @db.Uuid
+  casterProfileId String   @map("caster_profile_id") @db.Uuid
+  jobType         JobType  @map("job_type")
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+  skills        CasterJobSkill[]
+  
+  @@index([casterProfileId])
+  @@index([jobType])
+  @@map("caster_job_types")
+}
+
+/// キャストの職種ごとのスキル/属性
+/// 各職種に対して、カテゴリと値のペアで柔軟にスキル情報を保存
+/// 例: カテゴリ="撮影ジャンル", 値="ポートレート撮影"
+model CasterJobSkill {
+  id        String @id @default(uuid()) @db.Uuid
+  jobTypeId String @map("job_type_id") @db.Uuid
+  category  String // カテゴリ名（例: "撮影ジャンル", "経験年数", "料金帯"）
+  value     String // 選択された値（例: "ポートレート撮影", "5年以上10年未満"）
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  jobType CasterJobType @relation(fields: [jobTypeId], references: [id], onDelete: Cascade)
+  
+  @@index([jobTypeId])
+  @@index([category])
+  @@map("caster_job_skills")
 }

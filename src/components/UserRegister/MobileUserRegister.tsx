@@ -6,6 +6,9 @@ import { trpc } from "@/lib/trpc/client";
 import WorkAreaSelector, {
   type WorkAreaData,
 } from "@/components/WorkAreaSelector";
+import JobTypeSelector, {
+  type JobTypeSelectorData,
+} from "@/components/JobTypeSelector";
 
 const MobileUserRegister = () => {
   const router = useRouter();
@@ -33,6 +36,11 @@ const MobileUserRegister = () => {
     workAreas: [],
     travelAreas: [],
     onlineAvailable: false,
+  });
+
+  // 職種情報（キャスト用）
+  const [jobTypeData, setJobTypeData] = useState<JobTypeSelectorData>({
+    selectedJobTypes: [],
   });
 
   // ボタンの有効/無効状態
@@ -111,9 +119,9 @@ const MobileUserRegister = () => {
           }
         : undefined;
 
-    // TODO: バックエンドAPIを更新して、workAreaDataを送信できるようにする
-    // 現在は一旦、フロントエンドのみ実装
-    console.log("Work Area Data:", workAreaData);
+    // キャスト登録の場合のみworkAreaDataとjobTypeDataを送信
+    const shouldSendWorkAreaData =
+      registrationType === "individual-receive" || registrationType === "company-receive";
 
     // tRPCで登録APIを呼び出し
     registerMutation.mutate(
@@ -128,8 +136,8 @@ const MobileUserRegister = () => {
           | "company-receive"
           | "individual-receive",
         organizationData,
-        // TODO: workAreaDataをバックエンドに送信
-        // workAreaData,
+        workAreaData: shouldSendWorkAreaData ? workAreaData : undefined,
+        jobTypeData: shouldSendWorkAreaData ? jobTypeData : undefined,
       },
       {
         onSuccess: (result) => {
@@ -693,9 +701,8 @@ const MobileUserRegister = () => {
                     />
                   </div>
 
-                  {/* TODO: 選択式に変更 */}
                   {/* 職種 */}
-                  <div>
+                  <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
                         display: "block",
@@ -706,64 +713,12 @@ const MobileUserRegister = () => {
                         marginBottom: "8px",
                       }}
                     >
-                      職種 <span style={{ color: "red" }}>（必須）</span>
+                      職種
                     </label>
-                    {targetBudgets.map((budget, index) => (
-                      <div key={index} style={{ marginBottom: "8px" }}>
-                        <div style={{ position: "relative" }}>
-                          <input
-                            type="text"
-                            value={budget}
-                            onChange={(e) =>
-                              updateTargetBudget(index, e.target.value)
-                            }
-                            placeholder="職種を選択してください"
-                            style={{
-                              width: "100%",
-                              padding: "12px 16px",
-                              border: "1px solid black",
-                              borderRadius: "30px",
-                              fontSize: "12px",
-                              fontFamily: "Noto Sans JP",
-                              outline: "none",
-                              boxSizing: "border-box",
-                            }}
-                          />
-                          <span
-                            style={{
-                              position: "absolute",
-                              right: "20px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              color: "lightgrey",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            ▼
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addTargetBudget}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "13px",
-                        color: "black",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "block",
-                        marginLeft: "auto",
-                        marginRight: "auto",
-                        marginTop: "8px",
-                      }}
-                    >
-                      ＋　エリアを追加する
-                    </button>
+                    <JobTypeSelector
+                      value={jobTypeData}
+                      onChange={setJobTypeData}
+                    />
                   </div>
                 </>
               )}
@@ -791,9 +746,8 @@ const MobileUserRegister = () => {
                     />
                   </div>
 
-                  {/* TODO: 選択式に変更 */}
                   {/* 職種 */}
-                  <div>
+                  <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
                         display: "block",
@@ -804,64 +758,12 @@ const MobileUserRegister = () => {
                         marginBottom: "8px",
                       }}
                     >
-                      職種 <span style={{ color: "red" }}>（必須）</span>
+                      職種
                     </label>
-                    {targetBudgets.map((budget, index) => (
-                      <div key={index} style={{ marginBottom: "8px" }}>
-                        <div style={{ position: "relative" }}>
-                          <input
-                            type="text"
-                            value={budget}
-                            onChange={(e) =>
-                              updateTargetBudget(index, e.target.value)
-                            }
-                            placeholder="職種を選択してください"
-                            style={{
-                              width: "100%",
-                              padding: "12px 16px",
-                              border: "1px solid black",
-                              borderRadius: "30px",
-                              fontSize: "12px",
-                              fontFamily: "Noto Sans JP",
-                              outline: "none",
-                              boxSizing: "border-box",
-                            }}
-                          />
-                          <span
-                            style={{
-                              position: "absolute",
-                              right: "20px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              color: "lightgrey",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            ▼
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addTargetBudget}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "13px",
-                        color: "black",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "block",
-                        marginLeft: "auto",
-                        marginRight: "auto",
-                        marginTop: "8px",
-                      }}
-                    >
-                      ＋　エリアを追加する
-                    </button>
+                    <JobTypeSelector
+                      value={jobTypeData}
+                      onChange={setJobTypeData}
+                    />
                   </div>
                 </>
               )}

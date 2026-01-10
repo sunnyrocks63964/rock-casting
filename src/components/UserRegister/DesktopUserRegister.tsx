@@ -6,6 +6,9 @@ import { trpc } from "@/lib/trpc/client";
 import WorkAreaSelector, {
   type WorkAreaData,
 } from "@/components/WorkAreaSelector";
+import JobTypeSelector, {
+  type JobTypeSelectorData,
+} from "@/components/JobTypeSelector";
 
 const DesktopUserRegister = () => {
   const router = useRouter();
@@ -34,6 +37,11 @@ const DesktopUserRegister = () => {
     workAreas: [],
     travelAreas: [],
     onlineAvailable: false,
+  });
+
+  // 職種情報（キャスト用）
+  const [jobTypeData, setJobTypeData] = useState<JobTypeSelectorData>({
+    selectedJobTypes: [],
   });
 
   // ボタンの有効/無効状態
@@ -125,7 +133,7 @@ const DesktopUserRegister = () => {
           }
         : undefined;
 
-    // キャスト登録の場合のみworkAreaDataを送信
+    // キャスト登録の場合のみworkAreaDataとjobTypeDataを送信
     const shouldSendWorkAreaData =
       registrationType === "individual-receive" || registrationType === "company-receive";
 
@@ -143,6 +151,7 @@ const DesktopUserRegister = () => {
           | "individual-receive",
         organizationData,
         workAreaData: shouldSendWorkAreaData ? workAreaData : undefined,
+        jobTypeData: shouldSendWorkAreaData ? jobTypeData : undefined,
       },
       {
         onSuccess: (result) => {
@@ -673,7 +682,7 @@ const DesktopUserRegister = () => {
                   </div>
 
                   {/* 職種 */}
-                  <div>
+                  <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
                         display: "block",
@@ -686,42 +695,10 @@ const DesktopUserRegister = () => {
                     >
                       職種
                     </label>
-                    {targetBudgets.map((budget, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={budget}
-                        onChange={(e) => updateTargetBudget(index, e.target.value)}
-                        placeholder="職種を入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addTargetBudget}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + 職種を追加する
-                    </button>
+                    <JobTypeSelector
+                      value={jobTypeData}
+                      onChange={setJobTypeData}
+                    />
                   </div>
                 </>
               )}
@@ -750,7 +727,7 @@ const DesktopUserRegister = () => {
                   </div>
 
                   {/* 職種 */}
-                  <div>
+                  <div style={{ marginBottom: "30px" }}>
                     <label
                       style={{
                         display: "block",
@@ -763,42 +740,10 @@ const DesktopUserRegister = () => {
                     >
                       職種
                     </label>
-                    {targetBudgets.map((budget, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={budget}
-                        onChange={(e) => updateTargetBudget(index, e.target.value)}
-                        placeholder="職種を入力してください"
-                        style={{
-                          width: "100%",
-                          padding: "15px 20px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "30px",
-                          fontSize: "16px",
-                          fontFamily: "Noto Sans JP",
-                          outline: "none",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addTargetBudget}
-                      style={{
-                        fontFamily: "Noto Sans JP",
-                        fontSize: "14px",
-                        color: "#3b82f6",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      + 職種を追加する
-                    </button>
+                    <JobTypeSelector
+                      value={jobTypeData}
+                      onChange={setJobTypeData}
+                    />
                   </div>
                 </>
               )}

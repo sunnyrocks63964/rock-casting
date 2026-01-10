@@ -15,9 +15,157 @@ import { sendPasswordResetEmail } from "@/lib/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { createWorkAreas } from "./workAreas";
+import { createWorkAreas, type TransactionClient } from "./workAreas";
 
 type BaseRegisterInput = z.infer<typeof BaseRegisterSchema>;
+
+// CasterJobTypeとCasterJobSkill用の型安全なアクセス用型
+type JobTypeClient = {
+  casterJobType: {
+    create: <T extends {
+      data: {
+        casterProfileId: string;
+        jobType: "photographer" | "model" | "artist" | "creator";
+      };
+    }>(
+      args: T
+    ) => Promise<{ id: string }>;
+  };
+  casterJobSkill: {
+    create: <T extends {
+      data: {
+        jobTypeId: string;
+        category: string;
+        value: string;
+      };
+    }>(
+      args: T
+    ) => Promise<void>;
+  };
+};
+
+// 型ガード: casterJobTypeプロパティが存在し、createメソッドを持つかチェック
+function hasCasterJobTypeCreateMethod(
+  prop: unknown
+): prop is {
+  create: (args: {
+    data: {
+      casterProfileId: string;
+      jobType: "photographer" | "model" | "artist" | "creator";
+    };
+  }) => Promise<{ id: string }>;
+} {
+  return (
+    typeof prop === "object" &&
+    prop !== null &&
+    "create" in prop &&
+    typeof (prop as { create: unknown }).create === "function"
+  );
+}
+
+// 型ガード: casterJobSkillプロパティが存在し、createメソッドを持つかチェック
+function hasCasterJobSkillCreateMethod(
+  prop: unknown
+): prop is {
+  create: (args: {
+    data: {
+      jobTypeId: string;
+      category: string;
+      value: string;
+    };
+  }) => Promise<void>;
+} {
+  return (
+    typeof prop === "object" &&
+    prop !== null &&
+    "create" in prop &&
+    typeof (prop as { create: unknown }).create === "function"
+  );
+}
+
+// PrismaClientとTransactionClientをJobTypeClientに変換するヘルパー関数
+// 型ガードを使用して型安全にアクセス
+function toJobTypeClient(client: PrismaClient | TransactionClient): JobTypeClient {
+  // プロパティの存在を確認
+  if (!("casterJobType" in client) || !("casterJobSkill" in client)) {
+    throw new Error("Invalid Prisma client type: missing casterJobType or casterJobSkill");
+  }
+
+  // プロパティを安全に取得
+  const casterJobType = (client as { casterJobType?: unknown }).casterJobType;
+  const casterJobSkill = (client as { casterJobSkill?: unknown }).casterJobSkill;
+
+  // 型ガードで各プロパティを検証
+  if (!hasCasterJobTypeCreateMethod(casterJobType)) {
+    throw new Error("Invalid Prisma client type: casterJobType.create is not a function");
+  }
+
+  if (!hasCasterJobSkillCreateMethod(casterJobSkill)) {
+    throw new Error("Invalid Prisma client type: casterJobSkill.create is not a function");
+  }
+
+  // 型ガードにより、TypeScriptは各プロパティが正しい型であることを認識
+  return {
+    casterJobType: {
+      create: (args: {
+        data: {
+          casterProfileId: string;
+          jobType: "photographer" | "model" | "artist" | "creator";
+        };
+      }) => casterJobType.create(args),
+    },
+    casterJobSkill: {
+      create: (args: {
+        data: {
+          jobTypeId: string;
+          category: string;
+          value: string;
+        };
+      }) => casterJobSkill.create(args),
+    },
+  };
+}
+
+/**
+ * jobTypeDataからCasterJobTypeとCasterJobSkillを作成するヘルパー関数
+ */
+async function createJobTypes({
+  prisma,
+  casterProfileId,
+  jobTypeData,
+}: {
+  prisma: PrismaClient | TransactionClient;
+  casterProfileId: string;
+  jobTypeData: NonNullable<BaseRegisterInput["jobTypeData"]>;
+}) {
+  // 型安全なクライアントに変換
+  const client = toJobTypeClient(prisma);
+  
+  // 各職種について処理
+  for (const selectedJobType of jobTypeData.selectedJobTypes) {
+    // CasterJobTypeを作成
+    const casterJobType = await client.casterJobType.create({
+      data: {
+        casterProfileId,
+        jobType: selectedJobType.jobType,
+      },
+    });
+
+    // 各スキルカテゴリについて処理
+    for (const skill of selectedJobType.skills) {
+      // カテゴリ内の各値をCasterJobSkillとして作成
+      for (const value of skill.values) {
+        await client.casterJobSkill.create({
+          data: {
+            jobTypeId: casterJobType.id,
+            category: skill.category,
+            value: value,
+          },
+        });
+      }
+    }
+  }
+}
 
 // 企業情報をフィルタリング（空文字列をnullに変換）
 const filterOrganizationData = (organizationData: NonNullable<BaseRegisterInput["organizationData"]>) => ({
@@ -117,6 +265,7 @@ const createCompanyRegistration = async ({
   registrationType,
   filteredOrgData,
   workAreaData,
+  jobTypeData,
 }: {
   prisma: PrismaClient;
   authUserId: string;
@@ -124,6 +273,7 @@ const createCompanyRegistration = async ({
   registrationType: BaseRegisterInput["registrationType"];
   filteredOrgData: ReturnType<typeof filterOrganizationData>;
   workAreaData?: BaseRegisterInput["workAreaData"];
+  jobTypeData?: BaseRegisterInput["jobTypeData"];
 }) => {
   return await prisma.$transaction(async (tx) => {
     const orgDataForCreate = prepareOrganizationData({ registrationType, filteredOrgData });
@@ -149,14 +299,23 @@ const createCompanyRegistration = async ({
       },
     });
 
-    // 企業として受注する場合、活動エリアを作成
-    if (registrationType === "company-receive" && user.casterProfile && workAreaData) {
-      await createWorkAreas({
-        prisma: tx,
-        casterProfileId: user.casterProfile.id,
-        workAreas: workAreaData.workAreas,
-        travelAreas: workAreaData.travelAreas,
-      });
+    // 企業として受注する場合、活動エリアと職種情報を作成
+    if (registrationType === "company-receive" && user.casterProfile) {
+      if (workAreaData) {
+        await createWorkAreas({
+          prisma: tx,
+          casterProfileId: user.casterProfile.id,
+          workAreas: workAreaData.workAreas,
+          travelAreas: workAreaData.travelAreas,
+        });
+      }
+      if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
+        await createJobTypes({
+          prisma: tx,
+          casterProfileId: user.casterProfile.id,
+          jobTypeData,
+        });
+      }
     }
 
     return { user, organization };
@@ -170,46 +329,59 @@ const createIndividualRegistration = async ({
   email,
   role,
   workAreaData,
+  jobTypeData,
 }: {
   prisma: PrismaClient;
   authUserId: string;
   email: string;
   role: BaseRegisterInput["role"];
   workAreaData?: BaseRegisterInput["workAreaData"];
+  jobTypeData?: BaseRegisterInput["jobTypeData"];
 }) => {
-  const isCaster = role === "caster" || role === "both";
-  const casterProfileData = isCaster
-    ? {
-        create: {
-          onlineAvailable: workAreaData?.onlineAvailable ?? false,
-        },
-      }
-    : undefined;
+  return await prisma.$transaction(async (tx) => {
+    const isCaster = role === "caster" || role === "both";
+    const casterProfileData = isCaster
+      ? {
+          create: {
+            onlineAvailable: workAreaData?.onlineAvailable ?? false,
+          },
+        }
+      : undefined;
 
-  const user = await prisma.user.create({
-    data: {
-      id: authUserId,
-      email,
-      ...(casterProfileData ? { casterProfile: casterProfileData } : {}),
-      ...(role === "orderer" || role === "both" ? { ordererProfile: { create: {} } } : {}),
-    },
-    include: {
-      casterProfile: true,
-      ordererProfile: true,
-    },
-  });
-
-  // キャストプロフィールが作成された場合、活動エリアを作成
-  if (isCaster && user.casterProfile && workAreaData) {
-    await createWorkAreas({
-      prisma,
-      casterProfileId: user.casterProfile.id,
-      workAreas: workAreaData.workAreas,
-      travelAreas: workAreaData.travelAreas,
+    const user = await tx.user.create({
+      data: {
+        id: authUserId,
+        email,
+        ...(casterProfileData ? { casterProfile: casterProfileData } : {}),
+        ...(role === "orderer" || role === "both" ? { ordererProfile: { create: {} } } : {}),
+      },
+      include: {
+        casterProfile: true,
+        ordererProfile: true,
+      },
     });
-  }
 
-  return user;
+    // キャストプロフィールが作成された場合、活動エリアと職種情報を作成
+    if (isCaster && user.casterProfile) {
+      if (workAreaData) {
+        await createWorkAreas({
+          prisma: tx,
+          casterProfileId: user.casterProfile.id,
+          workAreas: workAreaData.workAreas,
+          travelAreas: workAreaData.travelAreas,
+        });
+      }
+      if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
+        await createJobTypes({
+          prisma: tx,
+          casterProfileId: user.casterProfile.id,
+          jobTypeData,
+        });
+      }
+    }
+
+    return user;
+  });
 };
 
 export const authRouter = createTRPCRouter({
@@ -220,7 +392,7 @@ export const authRouter = createTRPCRouter({
   register: publicProcedure
     .input(BaseRegisterSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, role, registrationType, organizationData, workAreaData } = input;
+      const { email, password, role, registrationType, organizationData, workAreaData, jobTypeData } = input;
 
       try {
         // 環境変数のチェック
@@ -283,6 +455,7 @@ export const authRouter = createTRPCRouter({
             email,
             role,
             workAreaData,
+            jobTypeData,
           }).catch(async (prismaError) => {
             console.error("Prismaエラー:", prismaError);
             await rollbackSupabaseUser(supabase, authData.user.id);
@@ -321,6 +494,7 @@ export const authRouter = createTRPCRouter({
           registrationType,
           filteredOrgData,
           workAreaData,
+          jobTypeData,
         }).catch(async (prismaError) => {
           console.error("Prismaエラー:", prismaError);
           await rollbackSupabaseUser(supabase, authData.user.id);
