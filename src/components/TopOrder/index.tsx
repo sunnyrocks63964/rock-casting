@@ -36,6 +36,10 @@ const TopOrder = () => {
         artist: {},
         creator: {},
     });
+    // 適用されたフィルター（実際にAPIに送信されるフィルター）
+    const [appliedFilters, setAppliedFilters] = useState<
+        Partial<Record<JobType, Record<string, string[]>>> | undefined
+    >(undefined);
     // 基本情報のstate
     const [ageMin, setAgeMin] = useState("");
     const [ageMax, setAgeMax] = useState("");
@@ -57,6 +61,7 @@ const TopOrder = () => {
         page: currentPage,
         limit: 15,
         searchKeyword: searchKeyword || undefined,
+        jobTypeFilters: appliedFilters,
     });
 
     // キャストデータを取得
@@ -92,6 +97,11 @@ const TopOrder = () => {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchKeyword]);
+
+    // フィルターが変更されたときにページをリセット
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [appliedFilters]);
 
     const handleJobTypeClick = (jobType: JobType) => {
         setOpenJobType(jobType);
@@ -143,6 +153,30 @@ const TopOrder = () => {
         return categoryDisplays;
     };
 
+    const handleApplyFilters = () => {
+        // 選択されたフィルターを適用（空のフィルターは除外）
+        const filtersToApply: Partial<Record<JobType, Record<string, string[]>>> = {};
+
+        // 型安全に職種をループ
+        const jobTypes: JobType[] = ["photographer", "model", "artist", "creator"];
+        jobTypes.forEach((jobType) => {
+            const categories = selectedFilters[jobType];
+            const filteredCategories: Record<string, string[]> = {};
+            Object.entries(categories).forEach(([category, values]) => {
+                if (values.length > 0) {
+                    filteredCategories[category] = values;
+                }
+            });
+            if (Object.keys(filteredCategories).length > 0) {
+                filtersToApply[jobType] = filteredCategories;
+            }
+        });
+
+        // フィルターが空の場合はundefinedを設定（全キャストを表示）
+        const hasAnyFilter = Object.keys(filtersToApply).length > 0;
+        setAppliedFilters(hasAnyFilter ? filtersToApply : undefined);
+    };
+
     const handleReset = () => {
         // 職種フィルターをリセット
         setSelectedFilters({
@@ -151,6 +185,8 @@ const TopOrder = () => {
             artist: {},
             creator: {},
         });
+        // 適用されたフィルターもリセット
+        setAppliedFilters(undefined);
         // 基本情報をリセット
         setAgeMin("");
         setAgeMax("");
@@ -784,6 +820,7 @@ const TopOrder = () => {
                     }}
                 >
                     <button
+                        onClick={handleApplyFilters}
                         style={{
                             backgroundColor: "#d70202",
                             color: "white",
