@@ -335,7 +335,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                             border: "1px solid #bababa",
                                             padding: "15px",
                                             borderRadius: "10px",
-                                            fontSize: "18px",
+                                            fontSize: "12px",
                                             fontFamily: "'Noto Sans JP', sans-serif",
                                             lineHeight: "1.5",
                                             wordBreak: "break-word",
