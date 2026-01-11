@@ -274,9 +274,9 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {otherUserName || "○○"}さんから「応募・スカウト」が届いています。
+                        {otherUserName || "○○"}さんからメッセージが届いています。
                         <br />
-                        あなたがクライアントへを条件をて提示すると、「条件交渉」のステップに進みます！
+                        あなたがクライアントへを条件を提示すると、「条件交渉」のステップに進みます！
                     </p>
                 </div>
             </div>
