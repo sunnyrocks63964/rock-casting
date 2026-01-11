@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { FaUser } from "react-icons/fa";
 
@@ -52,15 +52,6 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             alert("メッセージの送信に失敗しました: " + error.message);
         },
     });
-
-    // 定期的にメッセージを更新（ポーリング）
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refetch();
-        }, 3000); // 3秒ごとに更新
-
-        return () => clearInterval(interval);
-    }, [refetch]);
 
     const handleSendMessage = () => {
         if (!messageContent.trim() || isSending) {
