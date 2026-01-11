@@ -8,13 +8,8 @@ const LoginedNavBar = () => {
     return (
         <div
             style={{
-                position: "fixed",
-                top: "90px",
-                left: 0,
-                right: 0,
                 height: "40px",
                 backgroundColor: "#ff6d00",
-                zIndex: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "flex-end",
