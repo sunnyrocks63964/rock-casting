@@ -6,6 +6,7 @@ import { FaUser } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import favoriteIcon from "../TopOrder/images/favorite.png";
 import { type AppRouter } from "@/server/routers/_app";
+import { trpc } from "@/lib/trpc/client";
 
 // tRPC の型推論を使用して型を取得
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -20,11 +21,21 @@ const jobTypeLabels: Record<string, string> = {
 
 interface CastDetailProps {
     castProfile: CasterProfileOutput;
+    ordererUserId: string;
 }
 
-const CastDetail = ({ castProfile }: CastDetailProps) => {
+const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<"profile" | "member">("profile");
+    const { mutate: createThread, isPending: isCreatingThread } = trpc.message.createThread.useMutation({
+        onSuccess: (data) => {
+            router.push(`/order/message/${data.threadId}`);
+        },
+        onError: (error) => {
+            console.error("スレッド作成エラー:", error);
+            alert("スカウトに失敗しました: " + error.message);
+        },
+    });
 
     // 職種名を取得（複数の場合はカンマ区切り）
     const getJobTypeNames = (): string => {
@@ -470,10 +481,18 @@ const CastDetail = ({ castProfile }: CastDetailProps) => {
                             >
                                 <button
                                     onClick={() => {
-                                        // スカウト機能の実装
+                                        if (!castProfile.user?.id) {
+                                            alert("キャスト情報が取得できませんでした");
+                                            return;
+                                        }
+                                        createThread({
+                                            ordererId: ordererUserId,
+                                            casterId: castProfile.user.id,
+                                        });
                                     }}
+                                    disabled={isCreatingThread}
                                     style={{
-                                        backgroundColor: "#d70202",
+                                        backgroundColor: isCreatingThread ? "#999" : "#d70202",
                                         color: "white",
                                         border: "none",
                                         borderRadius: "90px",
@@ -481,12 +500,12 @@ const CastDetail = ({ castProfile }: CastDetailProps) => {
                                         fontSize: "14px",
                                         fontWeight: "700",
                                         fontFamily: "'Noto Sans JP', sans-serif",
-                                        cursor: "pointer",
+                                        cursor: isCreatingThread ? "not-allowed" : "pointer",
                                         width: "262px",
                                         height: "40px",
                                     }}
                                 >
-                                    キャストをスカウトする
+                                    {isCreatingThread ? "処理中..." : "キャストをスカウトする"}
                                 </button>
                                 <button
                                     onClick={() => {

@@ -29,6 +29,14 @@ enum JobType {
   creator
 }
 
+enum MessageThreadStatus {
+  scout          // 応募・スカウト
+  negotiation    // 条件交渉
+  agreed         // 条件合意
+  completed      // 完了
+  cancelled      // キャンセル
+}
+
 // ===================================
 // Models
 // ===================================
@@ -70,6 +78,10 @@ model User {
   organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   casterProfile   CasterProfile?  // キャスト（受注者）として活動
   ordererProfile  OrdererProfile? // 発注者として活動
+  // メッセージ関連
+  ordererMessageThreads MessageThread[] @relation("OrdererMessageThreads")
+  casterMessageThreads  MessageThread[] @relation("CasterMessageThreads")
+  sentMessages          Message[]
 
   @@index([email])
   @@index([organizationId])
@@ -318,4 +330,51 @@ model CasterJobSkill {
   @@index([jobTypeId])
   @@index([category])
   @@map("caster_job_skills")
+}
+
+// ===================================
+// メッセージ関連テーブル
+// ===================================
+
+/// メッセージスレッド（会話）
+/// 発注者とキャストの間の会話スレッド
+model MessageThread {
+  id        String   @id @default(uuid()) @db.Uuid
+  ordererId String   @map("orderer_id") @db.Uuid // 発注者のユーザーID
+  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
+  status    MessageThreadStatus @default(scout) @map("status") // スレッドのステータス
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  orderer User      @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
+  caster  User      @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
+  messages Message[]
+  
+  @@unique([ordererId, casterId]) // 同じ発注者とキャストの組み合わせは1つのスレッドのみ
+  @@index([ordererId])
+  @@index([casterId])
+  @@map("message_threads")
+}
+
+/// メッセージ
+/// スレッド内の個々のメッセージ
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  threadId  String   @map("thread_id") @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid // 送信者のユーザーID
+  content   String   @db.Text // メッセージ内容
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@index([threadId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
 }
