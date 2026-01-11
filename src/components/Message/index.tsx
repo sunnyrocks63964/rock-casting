@@ -64,13 +64,6 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
         });
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
-
     const handleFileSelect = () => {
         // ファイル選択の処理（今後実装）
         console.log("ファイル選択");
@@ -427,7 +420,6 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                     <textarea
                         value={messageContent}
                         onChange={(e) => setMessageContent(e.target.value)}
-                        onKeyDown={handleKeyDown}
                         placeholder="ここにテキスト"
                         disabled={isSending}
                         style={{
@@ -444,11 +436,14 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                         }}
                     />
 
-                    {/* ファイル選択ボタン */}
+                    {/* ファイル選択ボタンと送信ボタン */}
                     <div
                         style={{
                             marginTop: "8px",
                             marginLeft: "8px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                         }}
                     >
                         <button
@@ -467,6 +462,24 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             }}
                         >
                             ファイルを選択
+                        </button>
+                        <button
+                            onClick={handleSendMessage}
+                            disabled={!messageContent.trim() || isSending}
+                            style={{
+                                backgroundColor: "#fead50",
+                                border: "none",
+                                borderRadius: "10px",
+                                padding: "10px 46px",
+                                fontSize: "16px",
+                                fontWeight: "400",
+                                color: "#000",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                                cursor: messageContent.trim() && !isSending ? "pointer" : "not-allowed",
+                                height: "39px",
+                            }}
+                        >
+                            送信
                         </button>
                     </div>
 
