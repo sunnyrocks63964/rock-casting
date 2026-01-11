@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
-import { FaUser } from "react-icons/fa";
 
 interface MessageProps {
     threadId: string;
