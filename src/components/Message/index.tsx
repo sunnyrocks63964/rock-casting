@@ -340,6 +340,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                             lineHeight: "1.5",
                                             wordBreak: "break-word",
                                             width: "100%",
+                                            color: "#000",
                                         }}
                                     >
                                         {message.content}
