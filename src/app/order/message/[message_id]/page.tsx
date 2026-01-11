@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc/client";
 import LoginedHeader from "@/components/Header/LoginedHeader";
 import LoginedNavBar from "@/components/Header/LoginedNavBar";
 import Footer from "@/components/Footer";
-import CastDetail from "@/components/CastDetail";
+import Message from "@/components/Message";
 
-function CastDetailContent() {
+function OrderMessageContent() {
     const router = useRouter();
-    const searchParams = useSearchParams();
+    const params = useParams();
+    const messageId = params.message_id as string;
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
-    const castUserId = searchParams.get("userId");
+    const [otherUserName, setOtherUserName] = useState<string>("");
 
     // 現在のユーザー情報を取得
     const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
@@ -26,11 +27,14 @@ function CastDetailContent() {
         }
     );
 
-    // キャストプロフィールを取得
-    const { data: castProfile, isLoading: isLoadingCastProfile } = trpc.profile.getCasterProfile.useQuery(
-        { userId: castUserId! },
+    // スレッド情報を取得
+    const { data: thread, isLoading: isLoadingThread } = trpc.message.getThread.useQuery(
         {
-            enabled: !!castUserId,
+            threadId: messageId,
+            userId: userId!,
+        },
+        {
+            enabled: !!userId && !!messageId,
             retry: false,
         }
     );
@@ -125,7 +129,25 @@ function CastDetailContent() {
         setIsLoading(false);
     }, [userData, isLoadingUser, userError, userId, router]);
 
-    if (isLoading || !isAuthorized || isLoadingCastProfile || !castProfile) {
+    // 相手の名前を設定
+    useEffect(() => {
+        if (thread && userId) {
+            const isOrderer = thread.ordererId === userId;
+            let name = "ユーザー";
+            
+            if (isOrderer) {
+                // 発注者の場合、相手はキャスト
+                name = thread.caster.casterProfile?.fullName || thread.caster.email || "ユーザー";
+            } else {
+                // キャストの場合、相手は発注者
+                name = thread.orderer.ordererProfile?.fullName || thread.orderer.email || "ユーザー";
+            }
+            
+            setOtherUserName(name);
+        }
+    }, [thread, userId]);
+
+    if (isLoading || !isAuthorized || isLoadingThread || !thread || !userId) {
         return (
             <main
                 style={{
@@ -160,13 +182,13 @@ function CastDetailContent() {
         >
             <LoginedHeader />
             <LoginedNavBar />
-            <CastDetail castProfile={castProfile} ordererUserId={userId!} />
+            <Message threadId={messageId} userId={userId} otherUserName={otherUserName} />
             <Footer />
         </main>
     );
 }
 
-export default function CastDetailPage() {
+export default function OrderMessagePage() {
     return (
         <Suspense
             fallback={
@@ -192,7 +214,9 @@ export default function CastDetailPage() {
                 </main>
             }
         >
-            <CastDetailContent />
+            <OrderMessageContent />
         </Suspense>
     );
 }
+
+
