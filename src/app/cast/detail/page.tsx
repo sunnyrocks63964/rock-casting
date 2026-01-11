@@ -158,8 +158,18 @@ function CastDetailContent() {
                 color: "white",
             }}
         >
-            <LoginedHeader />
-            <LoginedNavBar />
+            <div
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                }}
+            >
+                <LoginedHeader />
+                <LoginedNavBar />
+            </div>
             <CastDetail castProfile={castProfile} ordererUserId={userId!} />
             <Footer />
         </main>

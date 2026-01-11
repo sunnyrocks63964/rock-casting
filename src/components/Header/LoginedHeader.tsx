@@ -32,11 +32,6 @@ const LoginedHeader = () => {
     return (
         <header
             style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                zIndex: 50,
                 backgroundColor: "#060606",
                 padding: "clamp(12px, 1.2vw, 20px) clamp(20px, 4vw, 60px)",
                 display: "flex",
