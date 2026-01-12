@@ -70,6 +70,17 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
     };
 
     const handleProposeNewTerms = () => {
+        // バリデーション: 全てのフィールドが入力されているかチェック
+        if (!contractAmount.trim()) {
+            return;
+        }
+        if (!projectContent.trim()) {
+            return;
+        }
+        if (!completionYear || !completionMonth || !completionDay) {
+            return;
+        }
+
         // 新しい条件を提示する処理（今後実装）
         console.log("新しい条件を提示");
     };
@@ -115,6 +126,14 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
     const status = "status" in thread ? (thread.status as string) : "scout";
     const isOrderer = thread.ordererId === userId;
     const otherUser = isOrderer ? thread.caster : thread.orderer;
+
+    // 新しい条件を提示するボタンの有効/無効判定
+    const isFormValid =
+        contractAmount.trim() &&
+        projectContent.trim() &&
+        completionYear &&
+        completionMonth &&
+        completionDay;
 
     return (
         <div
@@ -771,8 +790,9 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                 </p>
                 <button
                     onClick={handleProposeNewTerms}
+                    disabled={!isFormValid}
                     style={{
-                        backgroundColor: "#fead50",
+                        backgroundColor: !isFormValid ? "#d9d9d9" : "#fead50",
                         border: "none",
                         borderRadius: "10px",
                         padding: "10px 46px",
@@ -780,7 +800,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                         fontWeight: "400",
                         color: "#000",
                         fontFamily: "'Noto Sans JP', sans-serif",
-                        cursor: "pointer",
+                        cursor: !isFormValid ? "not-allowed" : "pointer",
                         height: "39px",
                         width: "250px",
                         flexShrink: 0,
