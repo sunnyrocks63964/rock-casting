@@ -12,7 +12,7 @@ interface MessageProps {
 // ステータスバッジの取得
 const getStatusBadges = (currentStatus: string) => {
     const statuses = [
-        { value: "scout", label: "応募\n・スカウト" },
+        { value: "scout", label: "応募・スカウト" },
         { value: "negotiation", label: "条件交渉" },
         { value: "agreed", label: "条件合意" },
         { value: "contract", label: "契約" },
@@ -184,7 +184,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             >
                 {getStatusBadges(status).map((badge, index) => {
                     const badgeWidth = badge.value === "scout" ? "191px" : badge.value === "negotiation" ? "173px" : badge.value === "agreed" ? "192px" : "191px";
-                    const badgeHeight = "55px";
+                    const badgeHeight = "40px";
                     
                     // 各バッジのSVGパスとviewBoxを定義
                     const getSvgConfig = () => {
@@ -221,6 +221,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                 width={badgeWidth}
                                 height={badgeHeight}
                                 viewBox={svgConfig.viewBox}
+                                preserveAspectRatio="none"
                                 fill="none"
                                 style={{
                                     position: "absolute",
@@ -241,11 +242,11 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                     left: "50%",
                                     transform: "translate(-50%, -50%)",
                                     margin: 0,
-                                    fontSize: "20px",
+                                    fontSize: "18px",
                                     fontWeight: "700",
                                     color: badge.isActive ? "#333" : "#a4a4a4",
                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                    whiteSpace: "pre-wrap",
+                                    whiteSpace: "nowrap",
                                     textAlign: "center",
                                     width: badge.value === "scout" ? "147px" : "auto",
                                     lineHeight: "1.2",
