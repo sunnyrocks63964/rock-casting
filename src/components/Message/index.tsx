@@ -12,7 +12,7 @@ interface MessageProps {
 // ステータスバッジの取得
 const getStatusBadges = (currentStatus: string) => {
     const statuses = [
-        { value: "scout", label: "応募\n・スカウト" },
+        { value: "scout", label: "応募・スカウト" },
         { value: "negotiation", label: "条件交渉" },
         { value: "agreed", label: "条件合意" },
         { value: "contract", label: "契約" },
@@ -70,6 +70,17 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
     };
 
     const handleProposeNewTerms = () => {
+        // バリデーション: 全てのフィールドが入力されているかチェック
+        if (!contractAmount.trim()) {
+            return;
+        }
+        if (!projectContent.trim()) {
+            return;
+        }
+        if (!completionYear || !completionMonth || !completionDay) {
+            return;
+        }
+
         // 新しい条件を提示する処理（今後実装）
         console.log("新しい条件を提示");
     };
@@ -115,6 +126,14 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
     const status = "status" in thread ? (thread.status as string) : "scout";
     const isOrderer = thread.ordererId === userId;
     const otherUser = isOrderer ? thread.caster : thread.orderer;
+
+    // 新しい条件を提示するボタンの有効/無効判定
+    const isFormValid =
+        contractAmount.trim() &&
+        projectContent.trim() &&
+        completionYear &&
+        completionMonth &&
+        completionDay;
 
     return (
         <div
@@ -165,7 +184,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             >
                 {getStatusBadges(status).map((badge, index) => {
                     const badgeWidth = badge.value === "scout" ? "191px" : badge.value === "negotiation" ? "173px" : badge.value === "agreed" ? "192px" : "191px";
-                    const badgeHeight = "55px";
+                    const badgeHeight = "40px";
                     
                     // 各バッジのSVGパスとviewBoxを定義
                     const getSvgConfig = () => {
@@ -202,6 +221,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                 width={badgeWidth}
                                 height={badgeHeight}
                                 viewBox={svgConfig.viewBox}
+                                preserveAspectRatio="none"
                                 fill="none"
                                 style={{
                                     position: "absolute",
@@ -222,11 +242,11 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                     left: "50%",
                                     transform: "translate(-50%, -50%)",
                                     margin: 0,
-                                    fontSize: "20px",
+                                    fontSize: "18px",
                                     fontWeight: "700",
                                     color: badge.isActive ? "#333" : "#a4a4a4",
                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                    whiteSpace: "pre-wrap",
+                                    whiteSpace: "nowrap",
                                     textAlign: "center",
                                     width: badge.value === "scout" ? "147px" : "auto",
                                     lineHeight: "1.2",
@@ -771,8 +791,9 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                 </p>
                 <button
                     onClick={handleProposeNewTerms}
+                    disabled={!isFormValid}
                     style={{
-                        backgroundColor: "#fead50",
+                        backgroundColor: !isFormValid ? "#d9d9d9" : "#fead50",
                         border: "none",
                         borderRadius: "10px",
                         padding: "10px 46px",
@@ -780,7 +801,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                         fontWeight: "400",
                         color: "#000",
                         fontFamily: "'Noto Sans JP', sans-serif",
-                        cursor: "pointer",
+                        cursor: !isFormValid ? "not-allowed" : "pointer",
                         height: "39px",
                         width: "250px",
                         flexShrink: 0,
