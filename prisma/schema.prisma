@@ -82,6 +82,7 @@ model User {
   ordererMessageThreads MessageThread[] @relation("OrdererMessageThreads")
   casterMessageThreads  MessageThread[] @relation("CasterMessageThreads")
   sentMessages          Message[]
+  contractProposals     ContractProposal[] @relation("ProposedContracts")
 
   @@index([email])
   @@index([organizationId])
@@ -351,6 +352,7 @@ model MessageThread {
   orderer User      @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
   caster  User      @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
   messages Message[]
+  contractProposals ContractProposal[]
   
   @@unique([ordererId, casterId]) // 同じ発注者とキャストの組み合わせは1つのスレッドのみ
   @@index([ordererId])
@@ -377,4 +379,34 @@ model Message {
   @@index([senderId])
   @@index([createdAt])
   @@map("messages")
+}
+
+/// 契約条件提示
+/// メッセージスレッド内での契約条件の提示を記録
+model ContractProposal {
+  id        String   @id @default(uuid()) @db.Uuid
+  threadId  String   @map("thread_id") @db.Uuid
+  proposerId String  @map("proposer_id") @db.Uuid // 提案者のユーザーID
+  
+  // 提案内容
+  contractAmount  Int      @map("contract_amount") // 契約金額（税抜）
+  projectContent  String   @map("project_content") @db.Text // 案件内容
+  completionDate  DateTime @map("completion_date") @db.Date // 完了予定日
+  
+  // 合意状態
+  isAgreed       Boolean  @default(false) @map("is_agreed") // 合意済みかどうか
+  agreedAt       DateTime? @map("agreed_at") @db.Timestamptz(6) // 合意日時
+  agreedBy       String?  @map("agreed_by") @db.Uuid // 合意したユーザーID
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  proposer User          @relation("ProposedContracts", fields: [proposerId], references: [id], onDelete: Cascade)
+  
+  @@index([threadId])
+  @@index([proposerId])
+  @@index([createdAt])
+  @@map("contract_proposals")
 }
