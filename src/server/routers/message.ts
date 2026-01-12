@@ -195,6 +195,29 @@ export const messageRouter = createTRPCRouter({
                 createdAt: "asc",
               },
             },
+            contractProposals: {
+              include: {
+                proposer: {
+                  select: {
+                    id: true,
+                    email: true,
+                    casterProfile: {
+                      select: {
+                        fullName: true,
+                      },
+                    },
+                    ordererProfile: {
+                      select: {
+                        fullName: true,
+                      },
+                    },
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "asc",
+              },
+            },
           },
         });
 
@@ -287,6 +310,240 @@ export const messageRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "スレッド一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 契約条件提示を作成
+   */
+  createContractProposal: publicProcedure
+    .input(
+      z.object({
+        threadId: z.string().uuid(),
+        proposerId: z.string().uuid(),
+        contractAmount: z.number().int().positive(),
+        projectContent: z.string().min(1).max(5000),
+        completionDate: z.string(), // ISO 8601形式の日付文字列
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { threadId, proposerId, contractAmount, projectContent, completionDate } = input;
+
+      try {
+        // スレッドの存在確認と権限チェック
+        const thread = await ctx.prisma.messageThread.findUnique({
+          where: { id: threadId },
+        });
+
+        if (!thread) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "スレッドが見つかりません",
+          });
+        }
+
+        // 提案者がスレッドの参加者であることを確認
+        if (thread.ordererId !== proposerId && thread.casterId !== proposerId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "この条件を提示する権限がありません",
+          });
+        }
+
+        // 契約条件提示を作成
+        const proposal = await ctx.prisma.contractProposal.create({
+          data: {
+            threadId,
+            proposerId,
+            contractAmount,
+            projectContent,
+            completionDate: new Date(completionDate),
+          },
+        });
+
+        // スレッドのステータスをnegotiationに更新
+        await ctx.prisma.messageThread.update({
+          where: { id: threadId },
+          data: { 
+            status: "negotiation",
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          proposal,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("契約条件提示作成エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "契約条件提示作成中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * スレッドの契約条件提示一覧を取得
+   */
+  getContractProposals: publicProcedure
+    .input(
+      z.object({
+        threadId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { threadId, userId } = input;
+
+      try {
+        // スレッドの存在確認と権限チェック
+        const thread = await ctx.prisma.messageThread.findUnique({
+          where: { id: threadId },
+        });
+
+        if (!thread) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "スレッドが見つかりません",
+          });
+        }
+
+        // ユーザーがスレッドの参加者であることを確認
+        if (thread.ordererId !== userId && thread.casterId !== userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "このスレッドにアクセスする権限がありません",
+          });
+        }
+
+        // 契約条件提示一覧を取得
+        const proposals = await ctx.prisma.contractProposal.findMany({
+          where: { threadId },
+          include: {
+            proposer: {
+              select: {
+                id: true,
+                email: true,
+                casterProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+                ordererProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        });
+
+        return proposals;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("契約条件提示一覧取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "契約条件提示一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 契約条件提示に合意
+   */
+  agreeToProposal: publicProcedure
+    .input(
+      z.object({
+        proposalId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { proposalId, userId } = input;
+
+      try {
+        // 提案の存在確認
+        const proposal = await ctx.prisma.contractProposal.findUnique({
+          where: { id: proposalId },
+          include: {
+            thread: true,
+          },
+        });
+
+        if (!proposal) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "契約条件提示が見つかりません",
+          });
+        }
+
+        // ユーザーがスレッドの参加者であることを確認
+        if (proposal.thread.ordererId !== userId && proposal.thread.casterId !== userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "この条件に合意する権限がありません",
+          });
+        }
+
+        // 自分自身の提案には合意できない
+        if (proposal.proposerId === userId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "自分自身の提案には合意できません",
+          });
+        }
+
+        // 既に合意済みの場合はエラー
+        if (proposal.isAgreed) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "この提案は既に合意済みです",
+          });
+        }
+
+        // 合意を記録
+        const updatedProposal = await ctx.prisma.contractProposal.update({
+          where: { id: proposalId },
+          data: {
+            isAgreed: true,
+            agreedAt: new Date(),
+            agreedBy: userId,
+          },
+        });
+
+        // スレッドのステータスをagreedに更新
+        await ctx.prisma.messageThread.update({
+          where: { id: proposal.threadId },
+          data: { 
+            status: "agreed",
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          proposal: updatedProposal,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("契約条件合意エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "契約条件合意中にエラーが発生しました",
         });
       }
     }),

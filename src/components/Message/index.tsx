@@ -52,6 +52,33 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
         },
     });
 
+    // 契約条件提示を作成
+    const { mutate: createProposal, isPending: isProposalPending } = trpc.message.createContractProposal.useMutation({
+        onSuccess: () => {
+            setContractAmount("");
+            setProjectContent("");
+            setCompletionYear("");
+            setCompletionMonth("");
+            setCompletionDay("");
+            refetch();
+        },
+        onError: (error) => {
+            console.error("契約条件提示エラー:", error);
+            alert("契約条件提示に失敗しました: " + error.message);
+        },
+    });
+
+    // 契約条件に合意
+    const { mutate: agreeToProposal, isPending: isAgreeingPending } = trpc.message.agreeToProposal.useMutation({
+        onSuccess: () => {
+            refetch();
+        },
+        onError: (error) => {
+            console.error("契約条件合意エラー:", error);
+            alert("契約条件合意に失敗しました: " + error.message);
+        },
+    });
+
     const handleSendMessage = () => {
         if (!messageContent.trim() || isSending) {
             return;
@@ -81,8 +108,17 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             return;
         }
 
-        // 新しい条件を提示する処理（今後実装）
-        console.log("新しい条件を提示");
+        // 完了予定日をISO形式に変換
+        const completionDateStr = `${completionYear}-${completionMonth.padStart(2, "0")}-${completionDay.padStart(2, "0")}`;
+
+        // 契約条件提示を作成
+        createProposal({
+            threadId,
+            proposerId: userId,
+            contractAmount: parseInt(contractAmount, 10),
+            projectContent,
+            completionDate: completionDateStr,
+        });
     };
 
     // 年、月、日の選択肢を生成
@@ -123,7 +159,57 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
         );
     }
 
-    const status = "status" in thread ? (thread.status as string) : "scout";
+    // 型ガード: threadが必要なプロパティを持っているか確認
+    const hasRequiredProps = (obj: unknown): obj is {
+        status: string;
+        ordererId: string;
+        casterId: string;
+        orderer: { id: string; email: string; ordererProfile: { fullName: string } | null };
+        caster: { id: string; email: string; casterProfile: { fullName: string } | null };
+        messages: Array<{ id: string; senderId: string; content: string; createdAt: Date }>;
+        contractProposals?: Array<{
+            id: string;
+            proposerId: string;
+            contractAmount: number;
+            projectContent: string;
+            completionDate: Date;
+            isAgreed: boolean;
+            proposer: {
+                id: string;
+                casterProfile: { fullName: string } | null;
+                ordererProfile: { fullName: string } | null;
+            };
+        }>;
+    } => {
+        return (
+            typeof obj === "object" &&
+            obj !== null &&
+            "status" in obj &&
+            "ordererId" in obj &&
+            "casterId" in obj &&
+            "orderer" in obj &&
+            "caster" in obj &&
+            "messages" in obj
+        );
+    };
+
+    if (!hasRequiredProps(thread)) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    fontFamily: "'Noto Sans JP', sans-serif",
+                }}
+            >
+                スレッドデータが不正です
+            </div>
+        );
+    }
+
+    const status = thread.status;
     const isOrderer = thread.ordererId === userId;
     const otherUser = isOrderer ? thread.caster : thread.orderer;
 
@@ -133,7 +219,8 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
         projectContent.trim() &&
         completionYear &&
         completionMonth &&
-        completionDay;
+        completionDay &&
+        !isProposalPending;
 
     return (
         <div
@@ -294,9 +381,34 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             whiteSpace: "nowrap",
                         }}
                     >
+                        {status === "scout" && (
+                            <>
                         {otherUserName || "○○"}さんからメッセージが届いています。
                         <br />
-                        あなたがクライアントへを条件を提示すると、「条件交渉」のステップに進みます！
+                                あなたがクライアントへ条件を提示すると、「条件交渉」のステップに進みます！
+                            </>
+                        )}
+                        {status === "negotiation" && (
+                            <>
+                                {otherUserName || "○○"}さんから「条件交渉」が届いています。
+                                <br />
+                                あなたが条件に合意すると、「条件合意」のステップに進みます！
+                            </>
+                        )}
+                        {status === "agreed" && (
+                            <>
+                                条件に合意しました。
+                                <br />
+                                次は「契約」のステップに進みます！
+                            </>
+                        )}
+                        {status === "completed" && (
+                            <>
+                                お仕事が完了しました。
+                                <br />
+                                お疲れ様でした！
+                            </>
+                        )}
                     </p>
                 </div>
             </div>
@@ -416,6 +528,316 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                     </div>
                 )}
             </div>
+
+            {/* 契約条件提示履歴 */}
+            {thread.contractProposals && thread.contractProposals.length > 0 && (
+                <div
+                    style={{
+                        padding: "0 282px",
+                        paddingTop: "15px",
+                        paddingBottom: "0",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "20px",
+                    }}
+                >
+                    {thread.contractProposals.map((proposal) => {
+                        const proposerName = proposal.proposer.casterProfile?.fullName || proposal.proposer.ordererProfile?.fullName || "ユーザー";
+                        const isOwnProposal = proposal.proposerId === userId;
+                        const canAgree = !isOwnProposal && !proposal.isAgreed;
+                        const completionDate = new Date(proposal.completionDate);
+                        const year = completionDate.getFullYear();
+                        const month = completionDate.getMonth() + 1;
+                        const day = completionDate.getDate();
+                        
+                        return (
+                            <div key={proposal.id}>
+                                {/* 区切り線 */}
+                                <div
+                                    style={{
+                                        width: "100%",
+                                        height: "1px",
+                                        backgroundColor: "#000",
+                                        marginBottom: "20px",
+                                    }}
+                                />
+                                
+                                {/* 条件提示メッセージ */}
+                                <div
+                                    style={{
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        color: "#000",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        marginBottom: "20px",
+                                        lineHeight: "1.8",
+                                    }}
+                                >
+                                    {proposerName}さんが条件の提示を行いました。
+                                    <br />
+                                    条件をご確認いただき、合意をお願いいたします。
+                                </div>
+
+                                {/* 条件表示カード */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        gap: "20px",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            backgroundColor: "#FFFEDB",
+                                            borderRadius: "10px",
+                                            padding: "33px 0",
+                                            width: "800px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "20px",
+                                        }}
+                                    >
+                                        {/* 契約金額 */}
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                paddingLeft: "88px",
+                                                gap: "250px",
+                                            }}
+                                        >
+                                            <p
+                                                style={{
+                                                    margin: 0,
+                                                    fontSize: "13px",
+                                                    fontWeight: "700",
+                                                    color: "#000",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                }}
+                                            >
+                                                契約金額（税込み）
+                                            </p>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "5px",
+                                                }}
+                                            >
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    {proposal.contractAmount.toLocaleString()}
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    円
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* 案件内容 */}
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                paddingLeft: "88px",
+                                                gap: "250px",
+                                            }}
+                                        >
+                                            <p
+                                                style={{
+                                                    margin: 0,
+                                                    fontSize: "13px",
+                                                    fontWeight: "700",
+                                                    color: "#000",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                }}
+                                            >
+                                                案件内容
+                                            </p>
+                                            <p
+                                                style={{
+                                                    margin: 0,
+                                                    fontSize: "13px",
+                                                    fontWeight: "400",
+                                                    color: "#000",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                }}
+                                            >
+                                                {proposal.projectContent}
+                                            </p>
+                                        </div>
+
+                                        {/* 完了予定日 */}
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                paddingLeft: "88px",
+                                                gap: "250px",
+                                            }}
+                                        >
+                                            <p
+                                                style={{
+                                                    margin: 0,
+                                                    fontSize: "13px",
+                                                    fontWeight: "700",
+                                                    color: "#000",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                }}
+                                            >
+                                                完了予定日
+                                            </p>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "5px",
+                                                }}
+                                            >
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    {year}
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    年
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    {month}
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    月
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    {day}
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: "13px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    日
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* 条件に合意するボタン */}
+                                        {canAgree && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    paddingTop: "20px",
+                                                }}
+                                            >
+                                                <button
+                                                    onClick={() => agreeToProposal({ proposalId: proposal.id, userId })}
+                                                    disabled={isAgreeingPending}
+                                                    style={{
+                                                        backgroundColor: "#fead50",
+                                                        border: "none",
+                                                        borderRadius: "10px",
+                                                        padding: "10px 46px",
+                                                        fontSize: "16px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                        cursor: isAgreeingPending ? "not-allowed" : "pointer",
+                                                        height: "39px",
+                                                        width: "250px",
+                                                    }}
+                                                >
+                                                    条件に合意する
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* 合意済みの場合 */}
+                                        {proposal.isAgreed && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    paddingTop: "20px",
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        fontSize: "16px",
+                                                        fontWeight: "700",
+                                                        color: "#4CAF50",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                    }}
+                                                >
+                                                    ✓ 合意済み
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* メッセージ入力エリア */}
             <div
@@ -762,9 +1184,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             {/* ガイドラインと新しい条件を提示するボタン */}
             <div
                 style={{
-                    padding: "30px 282px",
-                    paddingTop: "20px",
-                    paddingBottom: "0",
+                    padding: "40px 282px",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "flex-start",
