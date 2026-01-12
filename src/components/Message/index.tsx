@@ -1711,7 +1711,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                     value={completionYear}
                                     onChange={(e) => setCompletionYear(e.target.value)}
                                     style={{
-                                        width: "56px",
+                                        width: "70px",
                                         height: "25px",
                                         border: "1px solid #000",
                                         borderRadius: "5px",
@@ -1722,7 +1722,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                         backgroundColor: "white",
                                     }}
                                 >
-                                    <option value="">年</option>
+                                    <option value=""></option>
                                     {years.map((year) => (
                                         <option key={year} value={year.toString()}>
                                             {year}
@@ -1763,7 +1763,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                         backgroundColor: "white",
                                     }}
                                 >
-                                    <option value="">月</option>
+                                    <option value=""></option>
                                     {months.map((month) => (
                                         <option key={month} value={month.toString()}>
                                             {month}
@@ -1804,7 +1804,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                         backgroundColor: "white",
                                     }}
                                 >
-                                    <option value="">日</option>
+                                    <option value=""></option>
                                     {days.map((day) => (
                                         <option key={day} value={day.toString()}>
                                             {day}
