@@ -59,6 +59,9 @@ const LoginedNavBar = () => {
         }
     }, [pathname, userData]);
 
+    // orderとしてログインしているかどうかを判定
+    const isOrderer = userData?.hasOrdererProfile ?? false;
+
     return (
         <div
             style={{
@@ -71,6 +74,32 @@ const LoginedNavBar = () => {
                 gap: "clamp(20px, 3vw, 40px)",
             }}
         >
+            {isOrderer && (
+                <Link
+                    href="/order/new_job_request"
+                    style={{
+                        color: "white",
+                        textDecoration: "none",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        lineHeight: "normal",
+                        textAlign: "center",
+                        whiteSpace: "pre-wrap",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
+                    }}
+                >
+                    新しい仕事を依頼
+                </Link>
+            )}
             <Link
                 href="#"
                 style={{
