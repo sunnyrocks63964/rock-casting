@@ -465,7 +465,7 @@ function AddProjectContent() {
                                     fontFamily: "'Noto Sans JP', sans-serif",
                                 }}
                             >
-                                案件を登録する
+                                新しい仕事を登録する
                             </Button>
                         </div>
                     </Form>
