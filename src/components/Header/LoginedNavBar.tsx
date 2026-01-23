@@ -140,7 +140,7 @@ const LoginedNavBar = () => {
                     target.style.opacity = "1";
                 }}
             >
-                案件管理
+                契約一覧
             </Link>
             <Link
                 href="#"
