@@ -76,7 +76,7 @@ const LoginedNavBar = () => {
         >
             {isOrderer && (
                 <Link
-                    href="/order/new_job_request"
+                    href="/order/add_project"
                     style={{
                         color: "white",
                         textDecoration: "none",
