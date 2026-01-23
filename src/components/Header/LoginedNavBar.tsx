@@ -1,10 +1,64 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { trpc } from "@/lib/trpc/client";
 import notificationBell from "./images/notification_bell.png";
 
 const LoginedNavBar = () => {
+    const pathname = usePathname();
+    const [messageListPath, setMessageListPath] = useState("/order/message_list");
+    const [userId, setUserId] = useState<string | null>(null);
+
+    // 現在のユーザー情報を取得
+    const { data: userData } = trpc.auth.getCurrentUser.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId,
+            retry: false,
+        }
+    );
+
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
+
+    // メッセージ一覧のパスを決定
+    useEffect(() => {
+        // パスベースの判定（優先度：高）
+        if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+            setMessageListPath("/caster/message_list");
+            return;
+        }
+        if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+            setMessageListPath("/order/message_list");
+            return;
+        }
+
+        // ユーザーデータベースの判定（フォールバック）
+        if (userData) {
+            if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
+                setMessageListPath("/caster/message_list");
+            } else if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
+                setMessageListPath("/order/message_list");
+            } else if (userData.hasCasterProfile && userData.hasOrdererProfile) {
+                // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
+                setMessageListPath("/order/message_list");
+            }
+        }
+    }, [pathname, userData]);
+
     return (
         <div
             style={{
@@ -42,7 +96,7 @@ const LoginedNavBar = () => {
                 キャスト検索
             </Link>
             <Link
-                href="#"
+                href={messageListPath}
                 style={{
                     color: "white",
                     textDecoration: "none",

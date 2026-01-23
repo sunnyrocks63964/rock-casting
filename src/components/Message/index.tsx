@@ -502,40 +502,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             </div>
                         );
                     })
-                ) : (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            width: "100%",
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: "55px",
-                                height: "55px",
-                                borderRadius: "10px",
-                                backgroundColor: "#d9d9d9",
-                                marginRight: "15px",
-                                flexShrink: 0,
-                            }}
-                        />
-                        <div
-                            style={{
-                                backgroundColor: "white",
-                                border: "1px solid #bababa",
-                                padding: "15px",
-                                borderRadius: "10px",
-                                fontSize: "18px",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                color: "#000",
-                                width: "830px",
-                            }}
-                        >
-                            スカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージスカウトメッセージ
-                        </div>
-                    </div>
-                )}
+                ) : null}
             </div>
 
             {/* 契約条件提示履歴 */}

@@ -547,6 +547,75 @@ export const messageRouter = createTRPCRouter({
         });
       }
     }),
+
+  /**
+   * ユーザーのメッセージスレッド一覧取得（ステータスフィルタリング対応）
+   */
+  getThreadsByStatus: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        status: z.enum(["all", "scout", "negotiation", "agreed"]).optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { userId, status } = input;
+
+      try {
+        const whereCondition = {
+          OR: [
+            { ordererId: userId },
+            { casterId: userId },
+          ],
+          ...(status && status !== "all" ? { status } : {}),
+        };
+
+        const threads = await ctx.prisma.messageThread.findMany({
+          where: whereCondition,
+          include: {
+            orderer: {
+              select: {
+                id: true,
+                email: true,
+                ordererProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
+            caster: {
+              select: {
+                id: true,
+                email: true,
+                casterProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
+            messages: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return threads;
+      } catch (error) {
+        console.error("スレッド一覧取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "スレッド一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
 });
 
 
