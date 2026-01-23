@@ -83,6 +83,8 @@ model User {
   casterMessageThreads  MessageThread[] @relation("CasterMessageThreads")
   sentMessages          Message[]
   contractProposals     ContractProposal[] @relation("ProposedContracts")
+  // 案件関連
+  orderProjects         OrderProject[] @relation("OrderProjects")
 
   @@index([email])
   @@index([organizationId])
@@ -409,4 +411,33 @@ model ContractProposal {
   @@index([proposerId])
   @@index([createdAt])
   @@map("contract_proposals")
+}
+
+/// 案件登録
+/// 発注者が登録した案件情報
+model OrderProject {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid // 発注者のユーザーID
+  
+  // Step1: カテゴリ選択
+  category  JobType  // カテゴリ（photographer, model, artist, creator）
+  
+  // Step2: 依頼内容
+  title     String   // 依頼タイトル
+  detail    String   @db.Text // 依頼詳細
+  
+  // Step3: 報酬額設定
+  minBudget Int      @map("min_budget") // 最低報酬額（税抜）
+  maxBudget Int      @map("max_budget") // 最高報酬額（税抜）
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  user User @relation("OrderProjects", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("order_projects")
 }
