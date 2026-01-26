@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown, FaRegBookmark } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import img11 from "../TopOrder/images/search_magnifying_glass.png";
 import JobTypeFilterDetail, {
     JobType,
     jobTypeFilterData,
 } from "../TopOrder/JobTypeFilterDetail";
 import { trpc } from "@/lib/trpc/client";
+import { supabase } from "@/lib/supabase";
 
 const TopCaster = () => {
     const router = useRouter();
@@ -31,9 +32,131 @@ const TopCaster = () => {
     const [gender, setGender] = useState<string[]>([]);
     // 活動可能日のstate
     const [availableDays, setAvailableDays] = useState<string[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [addingFavorites, setAddingFavorites] = useState<Set<string>>(new Set());
+    const [removingFavorites, setRemovingFavorites] = useState<Set<string>>(new Set());
+
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
 
     // 全ての案件を取得
     const { data: projects, isLoading: isLoadingProjects } = trpc.project.getAllProjects.useQuery();
+
+    // お気に入り一覧を取得（全ての案件のお気に入り状態を確認するため）
+    const { data: favoriteProjectsData, refetch: refetchFavorites } = trpc.favorite.getFavoriteProjects.useQuery(
+        {
+            casterId: userId!,
+            page: 1,
+            limit: 100,
+        },
+        {
+            enabled: !!userId,
+        }
+    );
+
+    // お気に入り追加のmutation
+    const addFavoriteMutation = trpc.favorite.addFavoriteProject.useMutation({
+        onSuccess: () => {
+            void refetchFavorites();
+        },
+    });
+
+    // お気に入り削除のmutation
+    const removeFavoriteMutation = trpc.favorite.removeFavoriteProject.useMutation({
+        onSuccess: () => {
+            void refetchFavorites();
+        },
+    });
+
+    // お気に入りIDのセットを作成
+    const favoriteProjectIds = useMemo(
+        () => new Set(favoriteProjectsData?.projects.map((project: { id: string }) => project.id) || []),
+        [favoriteProjectsData?.projects]
+    );
+
+    // お気に入り登録されているかチェック
+    const isFavorite = (projectId: string): boolean => {
+        return favoriteProjectIds.has(projectId);
+    };
+
+    // お気に入り追加/削除処理
+    const handleAddFavorite = async (projectId: string) => {
+        if (!userId) {
+            return;
+        }
+
+        if (isFavorite(projectId)) {
+            // お気に入り済みの場合は削除
+            setRemovingFavorites((prev) => new Set(prev).add(projectId));
+
+            try {
+                await removeFavoriteMutation.mutateAsync({
+                    casterId: userId,
+                    projectId,
+                });
+            } catch (error) {
+                console.error("お気に入り削除エラー:", error);
+            } finally {
+                setRemovingFavorites((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(projectId);
+                    return newSet;
+                });
+            }
+        } else {
+            // お気に入りに追加
+            setAddingFavorites((prev) => new Set(prev).add(projectId));
+
+            try {
+                await addFavoriteMutation.mutateAsync({
+                    casterId: userId,
+                    projectId,
+                });
+            } catch (error) {
+                console.error("お気に入り追加エラー:", error);
+            } finally {
+                setAddingFavorites((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(projectId);
+                    return newSet;
+                });
+            }
+        }
+    };
+
+    // お気に入り追加中かチェック
+    const isAdding = (projectId: string): boolean => {
+        return addingFavorites.has(projectId);
+    };
+
+    // お気に入り削除中かチェック
+    const isRemoving = (projectId: string): boolean => {
+        return removingFavorites.has(projectId);
+    };
+
+    // お気に入りボタンのテキストを取得
+    const getFavoriteButtonText = (projectId: string): string => {
+        if (isRemoving(projectId)) {
+            return "お気に入り解除中";
+        }
+        if (isAdding(projectId)) {
+            return "お気に入り追加中";
+        }
+        if (isFavorite(projectId)) {
+            return "お気に入り済み";
+        }
+        return "お気に入りに追加";
+    };
 
     const jobTypeLabels: Record<JobType, string> = {
         photographer: "フォトグラファー",
@@ -1002,6 +1125,7 @@ const TopCaster = () => {
                                                 詳細を確認
                                             </button>
                                             <button
+                                                onClick={() => handleAddFavorite(project.id)}
                                                 style={{
                                                     backgroundColor: "white",
                                                     color: "black",
@@ -1011,21 +1135,33 @@ const TopCaster = () => {
                                                     fontSize: "12px",
                                                     fontWeight: "400",
                                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
+                                                    cursor: isAdding(project.id) || isRemoving(project.id) ? "not-allowed" : "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",
                                                     gap: "8px",
                                                     width: "100%",
+                                                    opacity: isAdding(project.id) || isRemoving(project.id) ? 0.6 : 1,
                                                 }}
                                             >
-                                                <FaRegBookmark
-                                                    style={{
-                                                        width: "14px",
-                                                        height: "14px",
-                                                    }}
-                                                />
-                                                お気に入りに追加
+                                                {isFavorite(project.id) ? (
+                                                    <FaBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                            fill: "#ff6d00",
+                                                            color: "#ff6d00",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <FaRegBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                        }}
+                                                    />
+                                                )}
+                                                {getFavoriteButtonText(project.id)}
                                             </button>
                                         </div>
                                     </div>

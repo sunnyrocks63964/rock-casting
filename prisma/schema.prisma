@@ -45,6 +45,7 @@ model User {
   // お気に入り関連
   ordererFavorites      OrdererFavoriteCaster[] @relation("OrdererFavorites")
   casterFavorites       OrdererFavoriteCaster[] @relation("CasterFavorites")
+  casterFavoriteProjects CasterFavoriteOrderProject[] @relation("CasterFavoriteProjects")
 
   @@index([email])
   @@index([organizationId])
@@ -312,7 +313,28 @@ model OrderProject {
   @@index([userId])
   @@index([category])
   @@index([createdAt])
+  casterFavorites CasterFavoriteOrderProject[] @relation("CasterFavoriteOrderProjects")
   @@map("order_projects")
+}
+
+/// キャストのお気に入り案件
+/// キャストがお気に入り登録した案件を管理
+model CasterFavoriteOrderProject {
+  id        String   @id @default(uuid()) @db.Uuid
+  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
+  projectId String   @map("project_id") @db.Uuid  // 案件のID
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  caster  User        @relation("CasterFavoriteProjects", fields: [casterId], references: [id], onDelete: Cascade)
+  project OrderProject @relation("CasterFavoriteOrderProjects", fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([casterId, projectId]) // 同じキャストと案件の組み合わせは1つのみ
+  @@index([casterId])
+  @@index([projectId])
+  @@map("caster_favorite_order_projects")
 }
 
 /// 発注者のお気に入りキャスト

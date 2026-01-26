@@ -61,6 +61,11 @@ const LoginedNavBar = () => {
 
     // orderとしてログインしているかどうかを判定
     const isOrderer = userData?.hasOrdererProfile ?? false;
+    // casterとしてログインしているかどうかを判定
+    const isCaster = userData?.hasCasterProfile ?? false;
+
+    // お気に入りページのパスを決定
+    const favoritePath = isCaster ? "/caster/favorite" : "/order/favorite";
 
     return (
         <div
@@ -195,7 +200,7 @@ const LoginedNavBar = () => {
                 パッケージ予約
             </Link>
             <Link
-                href="/order/favorite"
+                href={favoritePath}
                 style={{
                     color: "white",
                     textDecoration: "none",
