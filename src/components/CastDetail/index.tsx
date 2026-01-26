@@ -78,7 +78,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             return "お気に入り追加中";
         }
         if (isFavorite(castProfile.user.id)) {
-            return "お気に入り追加済み";
+            return "お気に入り済み";
         }
         return "お気に入りに追加";
     };
