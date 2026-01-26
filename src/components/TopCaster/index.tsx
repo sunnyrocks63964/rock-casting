@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaRegBookmark } from "react-icons/fa";
 import img11 from "../TopOrder/images/search_magnifying_glass.png";
-import favoriteIcon from "../TopOrder/images/favorite.png";
 import JobTypeFilterDetail, {
     JobType,
     jobTypeFilterData,
@@ -977,9 +976,7 @@ const TopCaster = () => {
                                             width: "100%",
                                         }}
                                     >
-                                        <img
-                                            src={favoriteIcon.src}
-                                            alt="お気に入り"
+                                        <FaRegBookmark
                                             style={{
                                                 width: "14px",
                                                 height: "14px",

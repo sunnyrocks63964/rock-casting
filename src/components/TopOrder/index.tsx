@@ -2,10 +2,9 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown, FaUser } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import img11 from "./images/search_magnifying_glass.png";
-import favoriteIcon from "./images/favorite.png";
 import topOrderBgIcon from "./images/top_order_bg.png";
 import JobTypeFilterDetail, {
     JobType,
@@ -13,6 +12,8 @@ import JobTypeFilterDetail, {
 } from "./JobTypeFilterDetail";
 import { trpc } from "@/lib/trpc/client";
 import { type AppRouter } from "@/server/routers/_app";
+import { supabase } from "@/lib/supabase";
+import { useFavoriteCasters } from "@/hooks/useFavoriteCasters";
 
 // tRPC の型推論を使用して型を取得
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -27,6 +28,7 @@ const TopOrder = () => {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [openJobType, setOpenJobType] = useState<JobType | null>(null);
+    const [ordererId, setOrdererId] = useState<string | null>(null);
     const [selectedFilters, setSelectedFilters] = useState<
         Record<JobType, Record<string, string[]>>
     >({
@@ -55,6 +57,22 @@ const TopOrder = () => {
         creator: "クリエイター",
     };
 
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setOrdererId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
+
+    // お気に入り管理フック
+    const { isFavorite, addFavorite, removeFavorite, isAdding, isRemoving } = useFavoriteCasters({ ordererId });
+
     // キャスト一覧を取得
     const { data: casterListData, isLoading: isLoadingCasters } = trpc.profile.getCasterList.useQuery({
         page: currentPage,
@@ -62,6 +80,42 @@ const TopOrder = () => {
         searchKeyword: searchKeyword || undefined,
         jobTypeFilters: appliedFilters,
     });
+
+    // お気に入り追加/削除処理
+    const handleAddFavorite = async (casterId: string) => {
+        if (!ordererId) {
+            return;
+        }
+
+        try {
+            if (isFavorite(casterId)) {
+                await removeFavorite(casterId);
+            } else {
+                await addFavorite(casterId);
+            }
+        } catch (error) {
+            console.error("お気に入り操作エラー:", error);
+        }
+    };
+
+    // お気に入り状態を判定（追加中または削除中）
+    const isFavoriteOrAdding = (casterId: string): boolean => {
+        return isAdding(casterId) || isRemoving(casterId);
+    };
+
+    // お気に入りボタンのテキストを取得
+    const getFavoriteButtonText = (casterId: string): string => {
+        if (isRemoving(casterId)) {
+            return "お気に入り解除中";
+        }
+        if (isAdding(casterId)) {
+            return "お気に入り追加中";
+        }
+        if (isFavorite(casterId)) {
+            return "お気に入り追加済み";
+        }
+        return "お気に入りに追加";
+    };
 
     // キャストデータを取得
     const casters = useMemo(() => {
@@ -1189,6 +1243,8 @@ const TopOrder = () => {
                                                 詳細を確認
                                             </button>
                                             <button
+                                                onClick={() => handleAddFavorite(user.id)}
+                                                disabled={isFavoriteOrAdding(user.id) || !ordererId}
                                                 style={{
                                                     backgroundColor: "white",
                                                     color: "black",
@@ -1198,21 +1254,31 @@ const TopOrder = () => {
                                                     fontSize: "12px",
                                                     fontWeight: "400",
                                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
+                                                    cursor: isFavoriteOrAdding(user.id) || !ordererId ? "not-allowed" : "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     gap: "8px",
+                                                    opacity: isFavoriteOrAdding(user.id) || !ordererId ? 0.6 : 1,
                                                 }}
                                             >
-                                                <img
-                                                    src={favoriteIcon.src}
-                                                    alt="お気に入り"
-                                                    style={{
-                                                        width: "14px",
-                                                        height: "14px",
-                                                    }}
-                                                />
-                                                お気に入りに追加
+                                                {isFavorite(user.id) ? (
+                                                    <FaBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                            fill: "#ff6d00",
+                                                            color: "#ff6d00",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <FaRegBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                        }}
+                                                    />
+                                                )}
+                                                {getFavoriteButtonText(user.id)}
                                             </button>
                                         </div>
                                     </div>

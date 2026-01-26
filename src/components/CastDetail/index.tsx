@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
-import favoriteIcon from "../TopOrder/images/favorite.png";
 import { type AppRouter } from "@/server/routers/_app";
 import { trpc } from "@/lib/trpc/client";
+import { useFavoriteCasters } from "@/hooks/useFavoriteCasters";
 
 // tRPC の型推論を使用して型を取得
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -36,6 +36,52 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             alert("スカウトに失敗しました: " + error.message);
         },
     });
+
+    // お気に入り管理フック
+    const { isFavorite, addFavorite, removeFavorite, isAdding, isRemoving } = useFavoriteCasters({ ordererId: ordererUserId });
+
+    // お気に入り追加/削除処理
+    const handleAddFavorite = async () => {
+        if (!ordererUserId || !castProfile.user?.id) {
+            return;
+        }
+
+        try {
+            if (isFavorite(castProfile.user.id)) {
+                await removeFavorite(castProfile.user.id);
+            } else {
+                await addFavorite(castProfile.user.id);
+            }
+        } catch (error) {
+            console.error("お気に入り操作エラー:", error);
+            alert("お気に入り操作に失敗しました");
+        }
+    };
+
+    // お気に入り状態を判定（追加中または削除中）
+    const isFavoriteOrAdding = (): boolean => {
+        if (!castProfile.user?.id) {
+            return false;
+        }
+        return isAdding(castProfile.user.id) || isRemoving(castProfile.user.id);
+    };
+
+    // お気に入りボタンのテキストを取得
+    const getFavoriteButtonText = (): string => {
+        if (!castProfile.user?.id) {
+            return "お気に入りに追加";
+        }
+        if (isRemoving(castProfile.user.id)) {
+            return "お気に入り解除中";
+        }
+        if (isAdding(castProfile.user.id)) {
+            return "お気に入り追加中";
+        }
+        if (isFavorite(castProfile.user.id)) {
+            return "お気に入り追加済み";
+        }
+        return "お気に入りに追加";
+    };
 
     // 職種名を取得（複数の場合はカンマ区切り）
     const getJobTypeNames = (): string => {
@@ -508,9 +554,8 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     {isCreatingThread ? "処理中..." : "キャストをスカウトする"}
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        // お気に入り機能の実装
-                                    }}
+                                    onClick={handleAddFavorite}
+                                    disabled={isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id}
                                     style={{
                                         backgroundColor: "white",
                                         color: "black",
@@ -520,24 +565,34 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         fontSize: "14px",
                                         fontWeight: "700",
                                         fontFamily: "'Noto Sans JP', sans-serif",
-                                        cursor: "pointer",
+                                        cursor: isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id ? "not-allowed" : "pointer",
                                         width: "262px",
                                         height: "40px",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         gap: "8px",
+                                        opacity: isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id ? 0.6 : 1,
                                     }}
                                 >
-                                    <img
-                                        src={favoriteIcon.src}
-                                        alt="お気に入り"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                        }}
-                                    />
-                                    お気に入りに追加
+                                    {castProfile.user?.id && isFavorite(castProfile.user.id) ? (
+                                        <FaBookmark
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                                fill: "#ff6d00",
+                                                color: "#ff6d00",
+                                            }}
+                                        />
+                                    ) : (
+                                        <FaRegBookmark
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                            }}
+                                        />
+                                    )}
+                                    {getFavoriteButtonText()}
                                 </button>
                             </div>
                         </div>

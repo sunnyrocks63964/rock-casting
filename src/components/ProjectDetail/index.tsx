@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import favoriteIcon from "../TopOrder/images/favorite.png";
+import { FaRegBookmark } from "react-icons/fa";
 
 const ProjectDetail = () => {
     const router = useRouter();
@@ -487,9 +487,7 @@ const ProjectDetail = () => {
                                 gap: "8px",
                             }}
                         >
-                            <img
-                                src={favoriteIcon.src}
-                                alt="お気に入り"
+                            <FaRegBookmark
                                 style={{
                                     width: "14px",
                                     height: "14px",
