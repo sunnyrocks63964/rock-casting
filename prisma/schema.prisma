@@ -1,6 +1,3 @@
-// Rock Casting - Database Schema
-// 役割別プロフィール設計（キャスト/発注者）
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,9 +8,332 @@ datasource db {
   directUrl = env("DIRECT_DATABASE_URL")
 }
 
-// ===================================
-// Enums
-// ===================================
+/// 企業テーブル
+/// 企業として登録された組織の情報
+model Organization {
+  id                 String   @id @default(uuid()) @db.Uuid
+  companyName        String?  @map("company_name")
+  industry           String?
+  companyOverview    String?  @map("company_overview")
+  websiteUrl         String?  @map("website_url")
+  desiredWorkAreas   String[] @default([]) @map("desired_work_areas")
+  desiredOccupations String[] @default([]) @map("desired_occupations")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  users              User[]
+
+  @@map("organizations")
+}
+
+/// ユーザー認証テーブル（Supabase Authと連携）
+/// 1つのアカウントで複数の役割を持つことができる
+/// organizationIdがnullの場合は個人、nullでない場合は企業ユーザー
+model User {
+  id                    String             @id @default(uuid()) @db.Uuid
+  email                 String             @unique
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organizationId        String?            @map("organization_id") @db.Uuid
+  casterProfile         CasterProfile?
+  contractProposals     ContractProposal[] @relation("ProposedContracts")
+  casterMessageThreads  MessageThread[]    @relation("CasterMessageThreads")
+  ordererMessageThreads MessageThread[]    @relation("OrdererMessageThreads")
+  sentMessages          Message[]
+  orderProjects         OrderProject[]     @relation("OrderProjects")
+  ordererProfile        OrdererProfile?
+  organization          Organization?      @relation(fields: [organizationId], references: [id])
+  // お気に入り関連
+  ordererFavorites      OrdererFavoriteCaster[] @relation("OrdererFavorites")
+  casterFavorites       OrdererFavoriteCaster[] @relation("CasterFavorites")
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("users")
+}
+
+/// キャスト（受注者）プロフィール
+/// 個人として仕事を受注したい人の情報（すべて任意）
+/// 企業として受注する場合も、このプロフィールを使用（企業情報はOrganizationに保存）
+model CasterProfile {
+  id              String             @id @default(uuid()) @db.Uuid
+  userId          String             @unique @map("user_id") @db.Uuid
+  fullName        String?            @map("full_name")
+  area            String?
+  occupation      String?
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  onlineAvailable Boolean            @default(false) @map("online_available")
+  jobTypes        CasterJobType[]
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  travelAreas     CasterTravelArea[]
+  workAreas       CasterWorkArea[]
+
+  @@index([userId])
+  @@map("caster_profiles")
+}
+
+/// 発注者プロフィール
+/// 個人として仕事を依頼したい人の情報（すべて任意）
+/// 企業として発注する場合は、Organizationテーブルに企業情報を保存
+model OrdererProfile {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @unique @map("user_id") @db.Uuid
+  fullName           String?  @map("full_name")
+  websiteUrl         String[] @default([]) @map("website_url")
+  desiredWorkAreas   String[] @default([]) @map("desired_work_areas")
+  desiredOccupations String[] @default([]) @map("desired_occupations")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("orderer_profiles")
+}
+
+/// 地域ブロックマスター（関東、関西など）
+model Region {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        Int          @unique
+  name        String
+  nameKana    String?      @map("name_kana")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  prefectures Prefecture[]
+
+  @@index([code])
+  @@map("regions")
+}
+
+/// 都道府県マスター
+model Prefecture {
+  id                String             @id @default(uuid()) @db.Uuid
+  regionId          String             @map("region_id") @db.Uuid
+  code              Int                @unique
+  name              String
+  nameKana          String?            @map("name_kana")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  casterTravelAreas CasterTravelArea[] @relation("PrefectureTravelAreas")
+  casterWorkAreas   CasterWorkArea[]   @relation("PrefectureWorkAreas")
+  cities            City[]
+  region            Region             @relation(fields: [regionId], references: [id])
+
+  @@index([code])
+  @@index([regionId])
+  @@map("prefectures")
+}
+
+/// 市区町村マスター
+model City {
+  id                String             @id @default(uuid()) @db.Uuid
+  prefectureId      String             @map("prefecture_id") @db.Uuid
+  code              String
+  name              String
+  nameKana          String?            @map("name_kana")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  casterTravelAreas CasterTravelArea[] @relation("CityTravelAreas")
+  casterWorkAreas   CasterWorkArea[]   @relation("CityWorkAreas")
+  prefecture        Prefecture         @relation(fields: [prefectureId], references: [id], onDelete: Cascade)
+
+  @@index([prefectureId])
+  @@index([code])
+  @@map("cities")
+}
+
+/// 東京23区マスター
+model TokyoWard {
+  id                String             @id @default(uuid()) @db.Uuid
+  code              Int                @unique
+  name              String
+  nameKana          String?            @map("name_kana")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  casterTravelAreas CasterTravelArea[] @relation("TokyoWardTravelAreas")
+  casterWorkAreas   CasterWorkArea[]   @relation("TokyoWardWorkAreas")
+
+  @@index([code])
+  @@map("tokyo_wards")
+}
+
+/// キャストの稼働エリア
+/// 都道府県全体、特定の市区町村、または東京23区を指定可能
+/// 複数のエリアを登録できる
+model CasterWorkArea {
+  id              String        @id @default(uuid()) @db.Uuid
+  casterProfileId String        @map("caster_profile_id") @db.Uuid
+  prefectureId    String        @map("prefecture_id") @db.Uuid
+  cityId          String?       @map("city_id") @db.Uuid
+  tokyoWardId     String?       @map("tokyo_ward_id") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  casterProfile   CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+  city            City?         @relation("CityWorkAreas", fields: [cityId], references: [id], onDelete: Cascade)
+  prefecture      Prefecture    @relation("PrefectureWorkAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
+  tokyoWard       TokyoWard?    @relation("TokyoWardWorkAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([prefectureId])
+  @@index([cityId])
+  @@index([tokyoWardId])
+  @@map("caster_work_areas")
+}
+
+/// キャストの出張対応可能範囲
+/// 稼働エリアと同様の構造で、出張で対応可能な範囲を指定
+model CasterTravelArea {
+  id              String        @id @default(uuid()) @db.Uuid
+  casterProfileId String        @map("caster_profile_id") @db.Uuid
+  prefectureId    String        @map("prefecture_id") @db.Uuid
+  cityId          String?       @map("city_id") @db.Uuid
+  tokyoWardId     String?       @map("tokyo_ward_id") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  casterProfile   CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+  city            City?         @relation("CityTravelAreas", fields: [cityId], references: [id], onDelete: Cascade)
+  prefecture      Prefecture    @relation("PrefectureTravelAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
+  tokyoWard       TokyoWard?    @relation("TokyoWardTravelAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([prefectureId])
+  @@index([cityId])
+  @@index([tokyoWardId])
+  @@map("caster_travel_areas")
+}
+
+/// キャストの職種情報
+/// 1人のキャストが複数の職種を持つことができる（例: フォトグラファー兼モデル）
+model CasterJobType {
+  id              String           @id @default(uuid()) @db.Uuid
+  casterProfileId String           @map("caster_profile_id") @db.Uuid
+  jobType         JobType          @map("job_type")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  skills          CasterJobSkill[]
+  casterProfile   CasterProfile    @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([jobType])
+  @@map("caster_job_types")
+}
+
+/// キャストの職種ごとのスキル/属性
+/// 各職種に対して、カテゴリと値のペアで柔軟にスキル情報を保存
+/// 例: カテゴリ="撮影ジャンル", 値="ポートレート撮影"
+model CasterJobSkill {
+  id        String        @id @default(uuid()) @db.Uuid
+  jobTypeId String        @map("job_type_id") @db.Uuid
+  category  String
+  value     String
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  jobType   CasterJobType @relation(fields: [jobTypeId], references: [id], onDelete: Cascade)
+
+  @@index([jobTypeId])
+  @@index([category])
+  @@map("caster_job_skills")
+}
+
+/// メッセージスレッド（会話）
+/// 発注者とキャストの間の会話スレッド
+model MessageThread {
+  id                String              @id @default(uuid()) @db.Uuid
+  ordererId         String              @map("orderer_id") @db.Uuid
+  casterId          String              @map("caster_id") @db.Uuid
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  status            MessageThreadStatus @default(scout) @map("status")
+  contractProposals ContractProposal[]
+  caster            User                @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
+  orderer           User                @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
+  messages          Message[]
+
+  @@unique([ordererId, casterId])
+  @@index([ordererId])
+  @@index([casterId])
+  @@map("message_threads")
+}
+
+/// メッセージ
+/// スレッド内の個々のメッセージ
+model Message {
+  id        String        @id @default(uuid()) @db.Uuid
+  threadId  String        @map("thread_id") @db.Uuid
+  senderId  String        @map("sender_id") @db.Uuid
+  content   String
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sender    User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+/// 契約条件提示
+/// メッセージスレッド内での契約条件の提示を記録
+model ContractProposal {
+  id             String        @id @default(uuid()) @db.Uuid
+  threadId       String        @map("thread_id") @db.Uuid
+  proposerId     String        @map("proposer_id") @db.Uuid
+  contractAmount Int           @map("contract_amount")
+  projectContent String        @map("project_content")
+  completionDate DateTime      @map("completion_date") @db.Date
+  isAgreed       Boolean       @default(false) @map("is_agreed")
+  agreedAt       DateTime?     @map("agreed_at") @db.Timestamptz(6)
+  agreedBy       String?       @map("agreed_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  proposer       User          @relation("ProposedContracts", fields: [proposerId], references: [id], onDelete: Cascade)
+  thread         MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([proposerId])
+  @@index([createdAt])
+  @@map("contract_proposals")
+}
+
+/// 案件登録
+/// 発注者が登録した案件情報
+model OrderProject {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  category  JobType
+  title     String
+  detail    String
+  minBudget Int      @map("min_budget")
+  maxBudget Int      @map("max_budget")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation("OrderProjects", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("order_projects")
+}
+
+/// 発注者のお気に入りキャスト
+/// 発注者がお気に入り登録したキャストを管理
+model OrdererFavoriteCaster {
+  id        String   @id @default(uuid()) @db.Uuid
+  ordererId String   @map("orderer_id") @db.Uuid // 発注者のユーザーID
+  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relations
+  orderer User @relation("OrdererFavorites", fields: [ordererId], references: [id], onDelete: Cascade)
+  caster  User @relation("CasterFavorites", fields: [casterId], references: [id], onDelete: Cascade)
+  
+  @@unique([ordererId, casterId]) // 同じ発注者とキャストの組み合わせは1つのみ
+  @@index([ordererId])
+  @@index([casterId])
+  @@map("orderer_favorite_casters")
+}
 
 enum Gender {
   male
@@ -30,414 +350,9 @@ enum JobType {
 }
 
 enum MessageThreadStatus {
-  scout          // 応募・スカウト
-  negotiation    // 条件交渉
-  agreed         // 条件合意
-  completed      // 完了
-  cancelled      // キャンセル
-}
-
-// ===================================
-// Models
-// ===================================
-
-/// 企業テーブル
-/// 企業として登録された組織の情報
-model Organization {
-  id        String   @id @default(uuid()) @db.Uuid
-  // 企業情報（任意）
-  companyName      String?   @map("company_name") // 会社名
-  industry         String?   // 業種
-  companyOverview  String?   @map("company_overview") @db.Text // 会社概要
-  websiteUrl       String?   @map("website_url") // サイトURL
-  
-  // 発注者としての企業情報（任意）
-  desiredWorkAreas   String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア
-  desiredOccupations String[] @default([]) @map("desired_occupations") // 求めている業種
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  users User[] // 企業に紐づくユーザー（複数）
-
-  @@map("organizations")
-}
-
-/// ユーザー認証テーブル（Supabase Authと連携）
-/// 1つのアカウントで複数の役割を持つことができる
-/// organizationIdがnullの場合は個人、nullでない場合は企業ユーザー
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  organizationId String? @map("organization_id") @db.Uuid // 企業に紐づく場合は設定、個人の場合はnull
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations（どちらか、または両方を持つことができる）
-  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  casterProfile   CasterProfile?  // キャスト（受注者）として活動
-  ordererProfile  OrdererProfile? // 発注者として活動
-  // メッセージ関連
-  ordererMessageThreads MessageThread[] @relation("OrdererMessageThreads")
-  casterMessageThreads  MessageThread[] @relation("CasterMessageThreads")
-  sentMessages          Message[]
-  contractProposals     ContractProposal[] @relation("ProposedContracts")
-  // 案件関連
-  orderProjects         OrderProject[] @relation("OrderProjects")
-
-  @@index([email])
-  @@index([organizationId])
-  @@map("users")
-}
-
-/// キャスト（受注者）プロフィール
-/// 個人として仕事を受注したい人の情報（すべて任意）
-/// 企業として受注する場合も、このプロフィールを使用（企業情報はOrganizationに保存）
-model CasterProfile {
-  id     String @id @default(uuid()) @db.Uuid
-  userId String @unique @map("user_id") @db.Uuid
-  // 基本情報（任意）
-  fullName     String?   @map("full_name")
-  // 住所情報（後方互換性のため残す）
-  area         String?
-  // 職業・スキル
-  occupation String?
-  // オンライン対応可能かどうか
-  onlineAvailable Boolean @default(false) @map("online_available")
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // 稼働エリアと出張対応可能範囲のリレーション
-  workAreas CasterWorkArea[]
-  travelAreas CasterTravelArea[]
-  // 職種情報
-  jobTypes CasterJobType[]
-
-  @@index([userId])
-  @@map("caster_profiles")
-}
-
-/// 発注者プロフィール
-/// 個人として仕事を依頼したい人の情報（すべて任意）
-/// 企業として発注する場合は、Organizationテーブルに企業情報を保存
-model OrdererProfile {
-  id     String @id @default(uuid()) @db.Uuid
-  userId String @unique @map("user_id") @db.Uuid
-
-  // 基本情報（任意）
-  fullName     String? @map("full_name")
-
-  // 発注者固有情報（任意）
-  websiteUrl           String[] @default([]) @map("website_url") // 関連webサイトURL
-  desiredWorkAreas     String[] @default([]) @map("desired_work_areas") // キャストへの希望稼働エリア（後方互換性のため残す）
-  desiredOccupations   String[] @default([]) @map("desired_occupations") // 求めている職種
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@index([userId])
-  @@map("orderer_profiles")
-}
-
-// ===================================
-// マスターデータテーブル
-// ===================================
-
-/// 地域ブロックマスター（関東、関西など）
-model Region {
-  id        String   @id @default(uuid()) @db.Uuid
-  code      Int      @unique // 地域コード（1-8: 北海道、東北、関東、中部、近畿、中国、四国、九州・沖縄）
-  name      String   // 地域名（例: "関東", "関西"）
-  nameKana  String?  @map("name_kana") // かな読み
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  prefectures Prefecture[]
-
-  @@index([code])
-  @@map("regions")
-}
-
-/// 都道府県マスター
-model Prefecture {
-  id        String   @id @default(uuid()) @db.Uuid
-  regionId  String   @map("region_id") @db.Uuid // 所属する地域ブロック
-  code      Int      @unique // 都道府県コード（1-47）
-  name      String   // 都道府県名（例: "東京都", "大阪府"）
-  nameKana  String?  @map("name_kana") // かな読み（例: "とうきょうと"）
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  region              Region                @relation(fields: [regionId], references: [id], onDelete: Restrict)
-  cities              City[]
-  casterWorkAreas     CasterWorkArea[]     @relation("PrefectureWorkAreas")
-  casterTravelAreas   CasterTravelArea[]   @relation("PrefectureTravelAreas")
-
-  @@index([code])
-  @@index([regionId])
-  @@map("prefectures")
-}
-
-/// 市区町村マスター
-model City {
-  id            String   @id @default(uuid()) @db.Uuid
-  prefectureId  String   @map("prefecture_id") @db.Uuid
-  code          String   // 市区町村コード（5桁または6桁）
-  name          String   // 市区町村名（例: "渋谷区", "横浜市"）
-  nameKana      String?  @map("name_kana") // かな読み
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  prefecture         Prefecture            @relation(fields: [prefectureId], references: [id], onDelete: Cascade)
-  casterWorkAreas    CasterWorkArea[]      @relation("CityWorkAreas")
-  casterTravelAreas  CasterTravelArea[]    @relation("CityTravelAreas")
-
-  @@index([prefectureId])
-  @@index([code])
-  @@map("cities")
-}
-
-/// 東京23区マスター
-model TokyoWard {
-  id        String   @id @default(uuid()) @db.Uuid
-  code      Int      @unique // 23区コード（1-23）
-  name      String   // 区名（例: "千代田区", "中央区"）
-  nameKana  String?  @map("name_kana") // かな読み
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  casterWorkAreas    CasterWorkArea[]      @relation("TokyoWardWorkAreas")
-  casterTravelAreas  CasterTravelArea[]    @relation("TokyoWardTravelAreas")
-
-  @@index([code])
-  @@map("tokyo_wards")
-}
-
-// ===================================
-// キャストの稼働エリア関連テーブル
-// ===================================
-
-/// キャストの稼働エリア
-/// 都道府県全体、特定の市区町村、または東京23区を指定可能
-/// 複数のエリアを登録できる
-model CasterWorkArea {
-  id            String   @id @default(uuid()) @db.Uuid
-  casterProfileId String  @map("caster_profile_id") @db.Uuid
-  
-  // 都道府県（必須）- 都道府県全体を選ぶ場合はこれのみ設定
-  prefectureId  String   @map("prefecture_id") @db.Uuid
-  
-  // 市区町村（任意）- 特定の市区町村を選ぶ場合に設定
-  cityId        String?  @map("city_id") @db.Uuid
-  
-  // 東京23区（任意）- 東京23区を選ぶ場合に設定（prefectureIdが東京都の場合のみ有効）
-  tokyoWardId   String?  @map("tokyo_ward_id") @db.Uuid
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
-  prefecture    Prefecture    @relation("PrefectureWorkAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
-  city          City?         @relation("CityWorkAreas", fields: [cityId], references: [id], onDelete: Cascade)
-  tokyoWard     TokyoWard?    @relation("TokyoWardWorkAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
-
-  @@index([casterProfileId])
-  @@index([prefectureId])
-  @@index([cityId])
-  @@index([tokyoWardId])
-  @@map("caster_work_areas")
-}
-
-/// キャストの出張対応可能範囲
-/// 稼働エリアと同様の構造で、出張で対応可能な範囲を指定
-model CasterTravelArea {
-  id            String   @id @default(uuid()) @db.Uuid
-  casterProfileId String  @map("caster_profile_id") @db.Uuid
-  
-  // 都道府県（必須）
-  prefectureId  String   @map("prefecture_id") @db.Uuid
-  
-  // 市区町村（任意）
-  cityId        String?  @map("city_id") @db.Uuid
-  
-  // 東京23区（任意）
-  tokyoWardId   String?  @map("tokyo_ward_id") @db.Uuid
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  // Relations
-  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
-  prefecture    Prefecture    @relation("PrefectureTravelAreas", fields: [prefectureId], references: [id], onDelete: Cascade)
-  city          City?         @relation("CityTravelAreas", fields: [cityId], references: [id], onDelete: Cascade)
-  tokyoWard     TokyoWard?    @relation("TokyoWardTravelAreas", fields: [tokyoWardId], references: [id], onDelete: Cascade)
-
-  @@index([casterProfileId])
-  @@index([prefectureId])
-  @@index([cityId])
-  @@index([tokyoWardId])
-  @@map("caster_travel_areas")
-}
-
-// ===================================
-// キャストの職種・スキル関連テーブル
-// ===================================
-
-/// キャストの職種情報
-/// 1人のキャストが複数の職種を持つことができる（例: フォトグラファー兼モデル）
-model CasterJobType {
-  id              String   @id @default(uuid()) @db.Uuid
-  casterProfileId String   @map("caster_profile_id") @db.Uuid
-  jobType         JobType  @map("job_type")
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
-  skills        CasterJobSkill[]
-  
-  @@index([casterProfileId])
-  @@index([jobType])
-  @@map("caster_job_types")
-}
-
-/// キャストの職種ごとのスキル/属性
-/// 各職種に対して、カテゴリと値のペアで柔軟にスキル情報を保存
-/// 例: カテゴリ="撮影ジャンル", 値="ポートレート撮影"
-model CasterJobSkill {
-  id        String @id @default(uuid()) @db.Uuid
-  jobTypeId String @map("job_type_id") @db.Uuid
-  category  String // カテゴリ名（例: "撮影ジャンル", "経験年数", "料金帯"）
-  value     String // 選択された値（例: "ポートレート撮影", "5年以上10年未満"）
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  jobType CasterJobType @relation(fields: [jobTypeId], references: [id], onDelete: Cascade)
-  
-  @@index([jobTypeId])
-  @@index([category])
-  @@map("caster_job_skills")
-}
-
-// ===================================
-// メッセージ関連テーブル
-// ===================================
-
-/// メッセージスレッド（会話）
-/// 発注者とキャストの間の会話スレッド
-model MessageThread {
-  id        String   @id @default(uuid()) @db.Uuid
-  ordererId String   @map("orderer_id") @db.Uuid // 発注者のユーザーID
-  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
-  status    MessageThreadStatus @default(scout) @map("status") // スレッドのステータス
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  orderer User      @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
-  caster  User      @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
-  messages Message[]
-  contractProposals ContractProposal[]
-  
-  @@unique([ordererId, casterId]) // 同じ発注者とキャストの組み合わせは1つのスレッドのみ
-  @@index([ordererId])
-  @@index([casterId])
-  @@map("message_threads")
-}
-
-/// メッセージ
-/// スレッド内の個々のメッセージ
-model Message {
-  id        String   @id @default(uuid()) @db.Uuid
-  threadId  String   @map("thread_id") @db.Uuid
-  senderId  String   @map("sender_id") @db.Uuid // 送信者のユーザーID
-  content   String   @db.Text // メッセージ内容
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  sender User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  
-  @@index([threadId])
-  @@index([senderId])
-  @@index([createdAt])
-  @@map("messages")
-}
-
-/// 契約条件提示
-/// メッセージスレッド内での契約条件の提示を記録
-model ContractProposal {
-  id        String   @id @default(uuid()) @db.Uuid
-  threadId  String   @map("thread_id") @db.Uuid
-  proposerId String  @map("proposer_id") @db.Uuid // 提案者のユーザーID
-  
-  // 提案内容
-  contractAmount  Int      @map("contract_amount") // 契約金額（税抜）
-  projectContent  String   @map("project_content") @db.Text // 案件内容
-  completionDate  DateTime @map("completion_date") @db.Date // 完了予定日
-  
-  // 合意状態
-  isAgreed       Boolean  @default(false) @map("is_agreed") // 合意済みかどうか
-  agreedAt       DateTime? @map("agreed_at") @db.Timestamptz(6) // 合意日時
-  agreedBy       String?  @map("agreed_by") @db.Uuid // 合意したユーザーID
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  proposer User          @relation("ProposedContracts", fields: [proposerId], references: [id], onDelete: Cascade)
-  
-  @@index([threadId])
-  @@index([proposerId])
-  @@index([createdAt])
-  @@map("contract_proposals")
-}
-
-/// 案件登録
-/// 発注者が登録した案件情報
-model OrderProject {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid // 発注者のユーザーID
-  
-  // Step1: カテゴリ選択
-  category  JobType  // カテゴリ（photographer, model, artist, creator）
-  
-  // Step2: 依頼内容
-  title     String   // 依頼タイトル
-  detail    String   @db.Text // 依頼詳細
-  
-  // Step3: 報酬額設定
-  minBudget Int      @map("min_budget") // 最低報酬額（税抜）
-  maxBudget Int      @map("max_budget") // 最高報酬額（税抜）
-  
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  // Relations
-  user User @relation("OrderProjects", fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([category])
-  @@index([createdAt])
-  @@map("order_projects")
+  scout
+  negotiation
+  agreed
+  completed
+  cancelled
 }

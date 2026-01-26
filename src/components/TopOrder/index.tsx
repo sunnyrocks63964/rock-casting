@@ -13,6 +13,8 @@ import JobTypeFilterDetail, {
 } from "./JobTypeFilterDetail";
 import { trpc } from "@/lib/trpc/client";
 import { type AppRouter } from "@/server/routers/_app";
+import { supabase } from "@/lib/supabase";
+import { useFavoriteCasters } from "@/hooks/useFavoriteCasters";
 
 // tRPC の型推論を使用して型を取得
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -27,6 +29,7 @@ const TopOrder = () => {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [openJobType, setOpenJobType] = useState<JobType | null>(null);
+    const [ordererId, setOrdererId] = useState<string | null>(null);
     const [selectedFilters, setSelectedFilters] = useState<
         Record<JobType, Record<string, string[]>>
     >({
@@ -55,6 +58,22 @@ const TopOrder = () => {
         creator: "クリエイター",
     };
 
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setOrdererId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
+
+    // お気に入り管理フック
+    const { isFavorite, addFavorite, isAdding } = useFavoriteCasters({ ordererId });
+
     // キャスト一覧を取得
     const { data: casterListData, isLoading: isLoadingCasters } = trpc.profile.getCasterList.useQuery({
         page: currentPage,
@@ -62,6 +81,35 @@ const TopOrder = () => {
         searchKeyword: searchKeyword || undefined,
         jobTypeFilters: appliedFilters,
     });
+
+    // お気に入り追加処理
+    const handleAddFavorite = async (casterId: string) => {
+        if (!ordererId) {
+            return;
+        }
+
+        try {
+            await addFavorite(casterId);
+        } catch (error) {
+            console.error("お気に入り追加エラー:", error);
+        }
+    };
+
+    // お気に入り状態を判定（既に登録済みまたは追加中）
+    const isFavoriteOrAdding = (casterId: string): boolean => {
+        return isFavorite(casterId) || isAdding(casterId);
+    };
+
+    // お気に入りボタンのテキストを取得
+    const getFavoriteButtonText = (casterId: string): string => {
+        if (isFavorite(casterId)) {
+            return "お気に入り追加済み";
+        }
+        if (isAdding(casterId)) {
+            return "お気に入り追加中";
+        }
+        return "お気に入りに追加";
+    };
 
     // キャストデータを取得
     const casters = useMemo(() => {
@@ -1189,19 +1237,22 @@ const TopOrder = () => {
                                                 詳細を確認
                                             </button>
                                             <button
+                                                onClick={() => handleAddFavorite(user.id)}
+                                                disabled={isFavoriteOrAdding(user.id) || !ordererId}
                                                 style={{
                                                     backgroundColor: "white",
-                                                    color: "black",
+                                                    color: isFavoriteOrAdding(user.id) ? "#999" : "black",
                                                     border: "1px solid black",
                                                     borderRadius: "90px",
                                                     padding: "8px 24px",
                                                     fontSize: "12px",
                                                     fontWeight: "400",
                                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
+                                                    cursor: isFavoriteOrAdding(user.id) ? "not-allowed" : "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     gap: "8px",
+                                                    opacity: isFavoriteOrAdding(user.id) ? 0.6 : 1,
                                                 }}
                                             >
                                                 <img
@@ -1212,7 +1263,7 @@ const TopOrder = () => {
                                                         height: "14px",
                                                     }}
                                                 />
-                                                お気に入りに追加
+                                                {getFavoriteButtonText(user.id)}
                                             </button>
                                         </div>
                                     </div>

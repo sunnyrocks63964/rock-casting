@@ -195,7 +195,7 @@ const LoginedNavBar = () => {
                 パッケージ予約
             </Link>
             <Link
-                href="#"
+                href="/order/favorite"
                 style={{
                     color: "white",
                     textDecoration: "none",
