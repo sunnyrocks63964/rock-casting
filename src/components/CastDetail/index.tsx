@@ -38,28 +38,32 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
     });
 
     // お気に入り管理フック
-    const { isFavorite, addFavorite, isAdding } = useFavoriteCasters({ ordererId: ordererUserId });
+    const { isFavorite, addFavorite, removeFavorite, isAdding, isRemoving } = useFavoriteCasters({ ordererId: ordererUserId });
 
-    // お気に入り追加処理
+    // お気に入り追加/削除処理
     const handleAddFavorite = async () => {
         if (!ordererUserId || !castProfile.user?.id) {
             return;
         }
 
         try {
-            await addFavorite(castProfile.user.id);
+            if (isFavorite(castProfile.user.id)) {
+                await removeFavorite(castProfile.user.id);
+            } else {
+                await addFavorite(castProfile.user.id);
+            }
         } catch (error) {
-            console.error("お気に入り追加エラー:", error);
-            alert("お気に入り追加に失敗しました");
+            console.error("お気に入り操作エラー:", error);
+            alert("お気に入り操作に失敗しました");
         }
     };
 
-    // お気に入り状態を判定（既に登録済みまたは追加中）
+    // お気に入り状態を判定（追加中または削除中）
     const isFavoriteOrAdding = (): boolean => {
         if (!castProfile.user?.id) {
             return false;
         }
-        return isFavorite(castProfile.user.id) || isAdding(castProfile.user.id);
+        return isAdding(castProfile.user.id) || isRemoving(castProfile.user.id);
     };
 
     // お気に入りボタンのテキストを取得
@@ -67,11 +71,14 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
         if (!castProfile.user?.id) {
             return "お気に入りに追加";
         }
-        if (isFavorite(castProfile.user.id)) {
-            return "お気に入り追加済み";
+        if (isRemoving(castProfile.user.id)) {
+            return "お気に入り解除中";
         }
         if (isAdding(castProfile.user.id)) {
             return "お気に入り追加中";
+        }
+        if (isFavorite(castProfile.user.id)) {
+            return "お気に入り追加済み";
         }
         return "お気に入りに追加";
     };
@@ -551,21 +558,21 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     disabled={isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id}
                                     style={{
                                         backgroundColor: "white",
-                                        color: isFavoriteOrAdding() ? "#999" : "black",
+                                        color: "black",
                                         border: "1px solid black",
                                         borderRadius: "90px",
                                         padding: "8px 24px",
                                         fontSize: "14px",
                                         fontWeight: "700",
                                         fontFamily: "'Noto Sans JP', sans-serif",
-                                        cursor: isFavoriteOrAdding() ? "not-allowed" : "pointer",
+                                        cursor: isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id ? "not-allowed" : "pointer",
                                         width: "262px",
                                         height: "40px",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         gap: "8px",
-                                        opacity: isFavoriteOrAdding() ? 0.6 : 1,
+                                        opacity: isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id ? 0.6 : 1,
                                     }}
                                 >
                                     {castProfile.user?.id && isFavorite(castProfile.user.id) ? (

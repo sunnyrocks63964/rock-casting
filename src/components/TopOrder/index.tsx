@@ -71,7 +71,7 @@ const TopOrder = () => {
     }, []);
 
     // お気に入り管理フック
-    const { isFavorite, addFavorite, isAdding } = useFavoriteCasters({ ordererId });
+    const { isFavorite, addFavorite, removeFavorite, isAdding, isRemoving } = useFavoriteCasters({ ordererId });
 
     // キャスト一覧を取得
     const { data: casterListData, isLoading: isLoadingCasters } = trpc.profile.getCasterList.useQuery({
@@ -81,31 +81,38 @@ const TopOrder = () => {
         jobTypeFilters: appliedFilters,
     });
 
-    // お気に入り追加処理
+    // お気に入り追加/削除処理
     const handleAddFavorite = async (casterId: string) => {
         if (!ordererId) {
             return;
         }
 
         try {
-            await addFavorite(casterId);
+            if (isFavorite(casterId)) {
+                await removeFavorite(casterId);
+            } else {
+                await addFavorite(casterId);
+            }
         } catch (error) {
-            console.error("お気に入り追加エラー:", error);
+            console.error("お気に入り操作エラー:", error);
         }
     };
 
-    // お気に入り状態を判定（既に登録済みまたは追加中）
+    // お気に入り状態を判定（追加中または削除中）
     const isFavoriteOrAdding = (casterId: string): boolean => {
-        return isFavorite(casterId) || isAdding(casterId);
+        return isAdding(casterId) || isRemoving(casterId);
     };
 
     // お気に入りボタンのテキストを取得
     const getFavoriteButtonText = (casterId: string): string => {
-        if (isFavorite(casterId)) {
-            return "お気に入り追加済み";
+        if (isRemoving(casterId)) {
+            return "お気に入り解除中";
         }
         if (isAdding(casterId)) {
             return "お気に入り追加中";
+        }
+        if (isFavorite(casterId)) {
+            return "お気に入り追加済み";
         }
         return "お気に入りに追加";
     };
@@ -1240,18 +1247,18 @@ const TopOrder = () => {
                                                 disabled={isFavoriteOrAdding(user.id) || !ordererId}
                                                 style={{
                                                     backgroundColor: "white",
-                                                    color: isFavoriteOrAdding(user.id) ? "#999" : "black",
+                                                    color: "black",
                                                     border: "1px solid black",
                                                     borderRadius: "90px",
                                                     padding: "8px 24px",
                                                     fontSize: "12px",
                                                     fontWeight: "400",
                                                     fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: isFavoriteOrAdding(user.id) ? "not-allowed" : "pointer",
+                                                    cursor: isFavoriteOrAdding(user.id) || !ordererId ? "not-allowed" : "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     gap: "8px",
-                                                    opacity: isFavoriteOrAdding(user.id) ? 0.6 : 1,
+                                                    opacity: isFavoriteOrAdding(user.id) || !ordererId ? 0.6 : 1,
                                                 }}
                                             >
                                                 {isFavorite(user.id) ? (
