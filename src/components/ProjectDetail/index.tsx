@@ -1,11 +1,116 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaRegBookmark } from "react-icons/fa";
+import { trpc } from "@/lib/trpc/client";
 
 const ProjectDetail = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const projectId = searchParams.get("id");
+
+    // 案件データを取得
+    const { data: project, isLoading: isLoadingProject } = trpc.project.getProjectById.useQuery(
+        { projectId: projectId! },
+        {
+            enabled: !!projectId,
+            retry: false,
+        }
+    );
+
+    // JobTypeの日本語ラベル
+    const jobTypeLabels: Record<string, string> = {
+        photographer: "フォトグラファー",
+        model: "モデル",
+        artist: "アーティスト",
+        creator: "クリエイター",
+    };
+
+    // 読み込み中またはデータがない場合
+    if (isLoadingProject) {
+        return (
+            <div
+                style={{
+                    backgroundColor: "#060606",
+                    minHeight: "0",
+                    paddingTop: "120px",
+                    paddingBottom: "0",
+                }}
+            >
+                <div
+                    style={{
+                        backgroundColor: "white",
+                        minHeight: "calc(100vh - 126px - 376px)",
+                        paddingTop: "74px",
+                        paddingBottom: "74px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <p
+                        style={{
+                            fontSize: "16px",
+                            color: "black",
+                            fontFamily: "'Noto Sans JP', sans-serif",
+                        }}
+                    >
+                        読み込み中...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!project) {
+        return (
+            <div
+                style={{
+                    backgroundColor: "#060606",
+                    minHeight: "0",
+                    paddingTop: "120px",
+                    paddingBottom: "0",
+                }}
+            >
+                <div
+                    style={{
+                        backgroundColor: "white",
+                        minHeight: "calc(100vh - 126px - 376px)",
+                        paddingTop: "74px",
+                        paddingBottom: "74px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <p
+                        style={{
+                            fontSize: "16px",
+                            color: "black",
+                            fontFamily: "'Noto Sans JP', sans-serif",
+                        }}
+                    >
+                        案件が見つかりませんでした
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // organizationが含まれているかチェック
+    const userWithOrg = project.user as typeof project.user & {
+        organization?: { companyName: string | null } | null;
+    };
+    const companyName =
+        userWithOrg.organization?.companyName ||
+        project.user.ordererProfile?.fullName ||
+        "未設定";
+
+    const budgetText =
+        project.minBudget === project.maxBudget
+            ? `${project.minBudget.toLocaleString()}円`
+            : `${project.minBudget.toLocaleString()}円～${project.maxBudget.toLocaleString()}円`;
 
     return (
         <div
@@ -44,7 +149,7 @@ const ProjectDetail = () => {
                             margin: "0 0 20px 0",
                         }}
                     >
-                        七五三祝いの写真撮影をお願いします
+                        {project.title}
                     </h1>
 
                     {/* 会社名 */}
@@ -56,7 +161,7 @@ const ProjectDetail = () => {
                             margin: "0 0 20px 0",
                         }}
                     >
-                        株式会社○○
+                        {companyName}
                     </p>
 
                     {/* ステータス表示 */}
@@ -209,7 +314,7 @@ const ProjectDetail = () => {
                                             margin: "0",
                                         }}
                                     >
-                                        3,000円～
+                                        {budgetText}
                                     </p>
                                 </div>
                                 {/* 区切り線 */}
@@ -245,21 +350,11 @@ const ProjectDetail = () => {
                                         whiteSpace: "pre-wrap",
                                     }}
                                 >
-                                    <p style={{ margin: "0 0 16px 0" }}>##案件概要</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>
-                                        例）七五三撮影を行ってくださるカメラマンを募集しております。
-                                    </p>
-                                    <p style={{ margin: "0 0 16px 0" }}>&nbsp;</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>##開催日時・場所</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>
-                                        例）未定・東京都新宿区付近
-                                    </p>
-                                    <p style={{ margin: "0 0 16px 0" }}>&nbsp;</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>##募集人数</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>例）一人</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>&nbsp;</p>
-                                    <p style={{ margin: "0 0 16px 0" }}>##その他要望</p>
-                                    <p style={{ margin: "0" }}>ポートフォリオを提出ください。</p>
+                                    {project.detail.split("\n").map((line, index) => (
+                                        <p key={index} style={{ margin: "0 0 16px 0" }}>
+                                            {line || "\u00A0"}
+                                        </p>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -328,100 +423,7 @@ const ProjectDetail = () => {
                                             flex: 1,
                                         }}
                                     >
-                                        カメラマン
-                                    </p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            width: "120px",
-                                        }}
-                                    >
-                                        年齢
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            textAlign: "center",
-                                            flex: 1,
-                                        }}
-                                    >
-                                        22歳~30歳
-                                    </p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            width: "120px",
-                                        }}
-                                    >
-                                        性別
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            textAlign: "center",
-                                            flex: 1,
-                                        }}
-                                    >
-                                        女性
-                                    </p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            width: "120px",
-                                        }}
-                                    >
-                                        撮影ジャンル
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            textAlign: "center",
-                                            flex: 1,
-                                        }}
-                                    >
-                                        七五三撮影
+                                        {jobTypeLabels[project.category] || project.category}
                                     </p>
                                 </div>
                             </div>

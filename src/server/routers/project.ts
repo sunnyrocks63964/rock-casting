@@ -85,7 +85,16 @@ export const projectRouter = createTRPCRouter({
                         select: {
                             id: true,
                             email: true,
-                            ordererProfile: true,
+                            organization: {
+                                select: {
+                                    companyName: true,
+                                },
+                            },
+                            ordererProfile: {
+                                select: {
+                                    fullName: true,
+                                },
+                            },
                         },
                     },
                 },
