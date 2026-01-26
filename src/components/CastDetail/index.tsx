@@ -7,6 +7,7 @@ import { inferRouterOutputs } from "@trpc/server";
 import favoriteIcon from "../TopOrder/images/favorite.png";
 import { type AppRouter } from "@/server/routers/_app";
 import { trpc } from "@/lib/trpc/client";
+import { useFavoriteCasters } from "@/hooks/useFavoriteCasters";
 
 // tRPC の型推論を使用して型を取得
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -36,6 +37,45 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             alert("スカウトに失敗しました: " + error.message);
         },
     });
+
+    // お気に入り管理フック
+    const { isFavorite, addFavorite, isAdding } = useFavoriteCasters({ ordererId: ordererUserId });
+
+    // お気に入り追加処理
+    const handleAddFavorite = async () => {
+        if (!ordererUserId || !castProfile.user?.id) {
+            return;
+        }
+
+        try {
+            await addFavorite(castProfile.user.id);
+        } catch (error) {
+            console.error("お気に入り追加エラー:", error);
+            alert("お気に入り追加に失敗しました");
+        }
+    };
+
+    // お気に入り状態を判定（既に登録済みまたは追加中）
+    const isFavoriteOrAdding = (): boolean => {
+        if (!castProfile.user?.id) {
+            return false;
+        }
+        return isFavorite(castProfile.user.id) || isAdding(castProfile.user.id);
+    };
+
+    // お気に入りボタンのテキストを取得
+    const getFavoriteButtonText = (): string => {
+        if (!castProfile.user?.id) {
+            return "お気に入りに追加";
+        }
+        if (isFavorite(castProfile.user.id)) {
+            return "お気に入り追加済み";
+        }
+        if (isAdding(castProfile.user.id)) {
+            return "お気に入り追加中";
+        }
+        return "お気に入りに追加";
+    };
 
     // 職種名を取得（複数の場合はカンマ区切り）
     const getJobTypeNames = (): string => {
@@ -508,25 +548,25 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     {isCreatingThread ? "処理中..." : "キャストをスカウトする"}
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        // お気に入り機能の実装
-                                    }}
+                                    onClick={handleAddFavorite}
+                                    disabled={isFavoriteOrAdding() || !ordererUserId || !castProfile.user?.id}
                                     style={{
                                         backgroundColor: "white",
-                                        color: "black",
+                                        color: isFavoriteOrAdding() ? "#999" : "black",
                                         border: "1px solid black",
                                         borderRadius: "90px",
                                         padding: "8px 24px",
                                         fontSize: "14px",
                                         fontWeight: "700",
                                         fontFamily: "'Noto Sans JP', sans-serif",
-                                        cursor: "pointer",
+                                        cursor: isFavoriteOrAdding() ? "not-allowed" : "pointer",
                                         width: "262px",
                                         height: "40px",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         gap: "8px",
+                                        opacity: isFavoriteOrAdding() ? 0.6 : 1,
                                     }}
                                 >
                                     <img
@@ -537,7 +577,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             height: "14px",
                                         }}
                                     />
-                                    お気に入りに追加
+                                    {getFavoriteButtonText()}
                                 </button>
                             </div>
                         </div>
