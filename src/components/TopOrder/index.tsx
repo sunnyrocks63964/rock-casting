@@ -2,10 +2,9 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown, FaUser } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import img11 from "./images/search_magnifying_glass.png";
-import favoriteIcon from "./images/favorite.png";
 import topOrderBgIcon from "./images/top_order_bg.png";
 import JobTypeFilterDetail, {
     JobType,
@@ -1255,14 +1254,23 @@ const TopOrder = () => {
                                                     opacity: isFavoriteOrAdding(user.id) ? 0.6 : 1,
                                                 }}
                                             >
-                                                <img
-                                                    src={favoriteIcon.src}
-                                                    alt="お気に入り"
-                                                    style={{
-                                                        width: "14px",
-                                                        height: "14px",
-                                                    }}
-                                                />
+                                                {isFavorite(user.id) ? (
+                                                    <FaBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                            fill: "#ff6d00",
+                                                            color: "#ff6d00",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <FaRegBookmark
+                                                        style={{
+                                                            width: "14px",
+                                                            height: "14px",
+                                                        }}
+                                                    />
+                                                )}
                                                 {getFavoriteButtonText(user.id)}
                                             </button>
                                         </div>

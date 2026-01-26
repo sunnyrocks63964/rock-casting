@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
-import favoriteIcon from "../TopOrder/images/favorite.png";
 import { type AppRouter } from "@/server/routers/_app";
 import { trpc } from "@/lib/trpc/client";
 import { useFavoriteCasters } from "@/hooks/useFavoriteCasters";
@@ -569,14 +568,23 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         opacity: isFavoriteOrAdding() ? 0.6 : 1,
                                     }}
                                 >
-                                    <img
-                                        src={favoriteIcon.src}
-                                        alt="お気に入り"
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                        }}
-                                    />
+                                    {castProfile.user?.id && isFavorite(castProfile.user.id) ? (
+                                        <FaBookmark
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                                fill: "#ff6d00",
+                                                color: "#ff6d00",
+                                            }}
+                                        />
+                                    ) : (
+                                        <FaRegBookmark
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                            }}
+                                        />
+                                    )}
                                     {getFavoriteButtonText()}
                                 </button>
                             </div>
