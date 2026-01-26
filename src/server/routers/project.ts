@@ -100,4 +100,33 @@ export const projectRouter = createTRPCRouter({
 
             return project;
         }),
+
+    // 全ての案件を取得
+    getAllProjects: publicProcedure.query(async ({ ctx }) => {
+        const projects = await ctx.prisma.orderProject.findMany({
+            orderBy: {
+                createdAt: "desc",
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        organization: {
+                            select: {
+                                companyName: true,
+                            },
+                        },
+                        ordererProfile: {
+                            select: {
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        return projects;
+    }),
 });

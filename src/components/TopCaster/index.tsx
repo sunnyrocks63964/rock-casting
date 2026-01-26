@@ -8,6 +8,7 @@ import JobTypeFilterDetail, {
     JobType,
     jobTypeFilterData,
 } from "../TopOrder/JobTypeFilterDetail";
+import { trpc } from "@/lib/trpc/client";
 
 const TopCaster = () => {
     const router = useRouter();
@@ -30,6 +31,9 @@ const TopCaster = () => {
     const [gender, setGender] = useState<string[]>([]);
     // 活動可能日のstate
     const [availableDays, setAvailableDays] = useState<string[]>([]);
+
+    // 全ての案件を取得
+    const { data: projects, isLoading: isLoadingProjects } = trpc.project.getAllProjects.useQuery();
 
     const jobTypeLabels: Record<JobType, string> = {
         photographer: "フォトグラファー",
@@ -835,7 +839,11 @@ const TopCaster = () => {
                         marginBottom: "20px",
                     }}
                 >
-                    100件のうち、1~15件を表示
+                    {isLoadingProjects
+                        ? "読み込み中..."
+                        : projects
+                        ? `${projects.length}件のうち、1~${Math.min(15, projects.length)}件を表示`
+                        : "0件"}
                 </p>
 
                 {/* 案件一覧 */}
@@ -846,148 +854,185 @@ const TopCaster = () => {
                         gap: "20px",
                     }}
                 >
-                    {Array.from({ length: 15 }).map((_, index) => (
+                    {isLoadingProjects ? (
                         <div
-                            key={index}
                             style={{
-                                backgroundColor: "white",
-                                borderRadius: "10px",
-                                padding: "20px",
-                                display: "flex",
-                                gap: "20px",
+                                textAlign: "center",
+                                padding: "40px",
+                                color: "white",
+                                fontFamily: "'Noto Sans JP', sans-serif",
                             }}
                         >
-                            {/* 左側: 案件情報 */}
-                            <div
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "8px",
-                                }}
-                            >
-                                <p
-                                    style={{
-                                        fontSize: "16px",
-                                        color: "#333",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: 0,
-                                    }}
-                                >
-                                    株式会社○○
-                                </p>
-                                <h3
-                                    style={{
-                                        fontSize: "20px",
-                                        fontWeight: "700",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: 0,
-                                    }}
-                                >
-                                    七五三祝いの写真撮影をお願いします
-                                </h3>
-                                <p
-                                    style={{
-                                        fontSize: "16px",
-                                        color: "#333",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: 0,
-                                        lineHeight: "1.6",
-                                    }}
-                                >
-                                    依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依頼内容依
-                                </p>
-                            </div>
-
-                            {/* 右側: 価格とボタン */}
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-end",
-                                    gap: "12px",
-                                    minWidth: "200px",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        backgroundColor: "#cf8080",
-                                        color: "white",
-                                        padding: "4px 12px",
-                                        borderRadius: "3px",
-                                        fontSize: "14px",
-                                        fontWeight: "700",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    固定報酬制
-                                </div>
-                                <p
-                                    style={{
-                                        fontSize: "16px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: 0,
-                                    }}
-                                >
-                                    3,000円～
-                                </p>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "8px",
-                                        width: "100%",
-                                    }}
-                                >
-                                    <button
-                                        onClick={() => router.push("/project/detail")}
-                                        style={{
-                                            backgroundColor: "#d70202",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "90px",
-                                            padding: "8px 24px",
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            cursor: "pointer",
-                                            width: "100%",
-                                        }}
-                                    >
-                                        詳細を確認
-                                    </button>
-                                    <button
-                                        style={{
-                                            backgroundColor: "white",
-                                            color: "black",
-                                            border: "1px solid black",
-                                            borderRadius: "90px",
-                                            padding: "8px 24px",
-                                            fontSize: "12px",
-                                            fontWeight: "400",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            cursor: "pointer",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "8px",
-                                            width: "100%",
-                                        }}
-                                    >
-                                        <FaRegBookmark
-                                            style={{
-                                                width: "14px",
-                                                height: "14px",
-                                            }}
-                                        />
-                                        お気に入りに追加
-                                    </button>
-                                </div>
-                            </div>
+                            読み込み中...
                         </div>
-                    ))}
+                    ) : !projects || projects.length === 0 ? (
+                        <div
+                            style={{
+                                textAlign: "center",
+                                padding: "40px",
+                                color: "white",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            案件が見つかりませんでした
+                        </div>
+                    ) : (
+                        projects.map((project) => {
+                            const companyName =
+                                project.user.organization?.companyName ||
+                                project.user.ordererProfile?.fullName ||
+                                "未設定";
+                            const budgetText =
+                                project.minBudget === project.maxBudget
+                                    ? `${project.minBudget.toLocaleString()}円`
+                                    : `${project.minBudget.toLocaleString()}円～${project.maxBudget.toLocaleString()}円`;
+
+                            return (
+                                <div
+                                    key={project.id}
+                                    style={{
+                                        backgroundColor: "white",
+                                        borderRadius: "10px",
+                                        padding: "20px",
+                                        display: "flex",
+                                        gap: "20px",
+                                    }}
+                                >
+                                    {/* 左側: 案件情報 */}
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "8px",
+                                        }}
+                                    >
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "#333",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {companyName}
+                                        </p>
+                                        <h3
+                                            style={{
+                                                fontSize: "20px",
+                                                fontWeight: "700",
+                                                color: "black",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {project.title}
+                                        </h3>
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "#333",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: 0,
+                                                lineHeight: "1.6",
+                                            }}
+                                        >
+                                            {project.detail}
+                                        </p>
+                                    </div>
+
+                                    {/* 右側: 価格とボタン */}
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-end",
+                                            gap: "12px",
+                                            minWidth: "200px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                backgroundColor: "#cf8080",
+                                                color: "white",
+                                                padding: "4px 12px",
+                                                borderRadius: "3px",
+                                                fontSize: "14px",
+                                                fontWeight: "700",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                            }}
+                                        >
+                                            固定報酬制
+                                        </div>
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "black",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {budgetText}
+                                        </p>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "8px",
+                                                width: "100%",
+                                            }}
+                                        >
+                                            <button
+                                                onClick={() =>
+                                                    router.push(`/project/detail?id=${project.id}`)
+                                                }
+                                                style={{
+                                                    backgroundColor: "#d70202",
+                                                    color: "white",
+                                                    border: "none",
+                                                    borderRadius: "90px",
+                                                    padding: "8px 24px",
+                                                    fontSize: "16px",
+                                                    fontWeight: "700",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                    cursor: "pointer",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                詳細を確認
+                                            </button>
+                                            <button
+                                                style={{
+                                                    backgroundColor: "white",
+                                                    color: "black",
+                                                    border: "1px solid black",
+                                                    borderRadius: "90px",
+                                                    padding: "8px 24px",
+                                                    fontSize: "12px",
+                                                    fontWeight: "400",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                    cursor: "pointer",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    gap: "8px",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <FaRegBookmark
+                                                    style={{
+                                                        width: "14px",
+                                                        height: "14px",
+                                                    }}
+                                                />
+                                                お気に入りに追加
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
 
                 {/* ページネーション */}
