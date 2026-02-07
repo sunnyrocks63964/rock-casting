@@ -29,26 +29,28 @@ model Organization {
 /// 1つのアカウントで複数の役割を持つことができる
 /// organizationIdがnullの場合は個人、nullでない場合は企業ユーザー
 model User {
-  id                    String             @id @default(uuid()) @db.Uuid
-  email                 String             @unique
-  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
-  organizationId        String?            @map("organization_id") @db.Uuid
-  casterProfile         CasterProfile?
-  contractProposals     ContractProposal[] @relation("ProposedContracts")
-  casterMessageThreads  MessageThread[]    @relation("CasterMessageThreads")
-  ordererMessageThreads MessageThread[]    @relation("OrdererMessageThreads")
-  sentMessages          Message[]
-  orderProjects         OrderProject[]     @relation("OrderProjects")
-  ordererProfile        OrdererProfile?
-  organization          Organization?      @relation(fields: [organizationId], references: [id])
+  id                     String                       @id @default(uuid()) @db.Uuid
+  email                  String                       @unique
+  createdAt              DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organizationId         String?                      @map("organization_id") @db.Uuid
+  stripeCustomerId       String?                      @unique @map("stripe_customer_id") // Stripe Customer ID（支払い方法保存用）
+  casterProfile          CasterProfile?
+  contractProposals      ContractProposal[]           @relation("ProposedContracts")
+  casterMessageThreads   MessageThread[]              @relation("CasterMessageThreads")
+  ordererMessageThreads  MessageThread[]              @relation("OrdererMessageThreads")
+  sentMessages           Message[]
+  orderProjects          OrderProject[]               @relation("OrderProjects")
+  ordererProfile         OrdererProfile?
+  organization           Organization?                @relation(fields: [organizationId], references: [id])
   // お気に入り関連
-  ordererFavorites      OrdererFavoriteCaster[] @relation("OrdererFavorites")
-  casterFavorites       OrdererFavoriteCaster[] @relation("CasterFavorites")
+  ordererFavorites       OrdererFavoriteCaster[]      @relation("OrdererFavorites")
+  casterFavorites        OrdererFavoriteCaster[]      @relation("CasterFavorites")
   casterFavoriteProjects CasterFavoriteOrderProject[] @relation("CasterFavoriteProjects")
 
   @@index([email])
   @@index([organizationId])
+  @@index([stripeCustomerId])
   @@map("users")
 }
 
@@ -56,18 +58,19 @@ model User {
 /// 個人として仕事を受注したい人の情報（すべて任意）
 /// 企業として受注する場合も、このプロフィールを使用（企業情報はOrganizationに保存）
 model CasterProfile {
-  id              String             @id @default(uuid()) @db.Uuid
-  userId          String             @unique @map("user_id") @db.Uuid
-  fullName        String?            @map("full_name")
+  id              String               @id @default(uuid()) @db.Uuid
+  userId          String               @unique @map("user_id") @db.Uuid
+  fullName        String?              @map("full_name")
   area            String?
   occupation      String?
-  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
-  onlineAvailable Boolean            @default(false) @map("online_available")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  onlineAvailable Boolean              @default(false) @map("online_available")
   jobTypes        CasterJobType[]
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   travelAreas     CasterTravelArea[]
   workAreas       CasterWorkArea[]
+  stripeAccount   CasterStripeAccount?
 
   @@index([userId])
   @@map("caster_profiles")
@@ -238,16 +241,18 @@ model CasterJobSkill {
 /// メッセージスレッド（会話）
 /// 発注者とキャストの間の会話スレッド
 model MessageThread {
-  id                String              @id @default(uuid()) @db.Uuid
-  ordererId         String              @map("orderer_id") @db.Uuid
-  casterId          String              @map("caster_id") @db.Uuid
-  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
-  status            MessageThreadStatus @default(scout) @map("status")
-  contractProposals ContractProposal[]
-  caster            User                @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
-  orderer           User                @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
-  messages          Message[]
+  id                 String              @id @default(uuid()) @db.Uuid
+  ordererId          String              @map("orderer_id") @db.Uuid
+  casterId           String              @map("caster_id") @db.Uuid
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  status             MessageThreadStatus @default(scout) @map("status")
+  cancellationReason String?             @map("cancellation_reason")
+  contractProposals  ContractProposal[]
+  orderPayments      OrderPayment[]
+  caster             User                @relation("CasterMessageThreads", fields: [casterId], references: [id], onDelete: Cascade)
+  orderer            User                @relation("OrdererMessageThreads", fields: [ordererId], references: [id], onDelete: Cascade)
+  messages           Message[]
 
   @@unique([ordererId, casterId])
   @@index([ordererId])
@@ -276,19 +281,20 @@ model Message {
 /// 契約条件提示
 /// メッセージスレッド内での契約条件の提示を記録
 model ContractProposal {
-  id             String        @id @default(uuid()) @db.Uuid
-  threadId       String        @map("thread_id") @db.Uuid
-  proposerId     String        @map("proposer_id") @db.Uuid
-  contractAmount Int           @map("contract_amount")
-  projectContent String        @map("project_content")
-  completionDate DateTime      @map("completion_date") @db.Date
-  isAgreed       Boolean       @default(false) @map("is_agreed")
-  agreedAt       DateTime?     @map("agreed_at") @db.Timestamptz(6)
-  agreedBy       String?       @map("agreed_by") @db.Uuid
-  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  proposer       User          @relation("ProposedContracts", fields: [proposerId], references: [id], onDelete: Cascade)
-  thread         MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  id             String         @id @default(uuid()) @db.Uuid
+  threadId       String         @map("thread_id") @db.Uuid
+  proposerId     String         @map("proposer_id") @db.Uuid
+  contractAmount Int            @map("contract_amount")
+  projectContent String         @map("project_content")
+  completionDate DateTime       @map("completion_date") @db.Date
+  isAgreed       Boolean        @default(false) @map("is_agreed")
+  agreedAt       DateTime?      @map("agreed_at") @db.Timestamptz(6)
+  agreedBy       String?        @map("agreed_by") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  proposer       User           @relation("ProposedContracts", fields: [proposerId], references: [id], onDelete: Cascade)
+  thread         MessageThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  orderPayments  OrderPayment[]
 
   @@index([threadId])
   @@index([proposerId])
@@ -296,41 +302,150 @@ model ContractProposal {
   @@map("contract_proposals")
 }
 
+/// 発注者からの決済情報
+/// 発注者が弊社に仮払いする決済を管理
+model OrderPayment {
+  id                 String @id @default(uuid()) @db.Uuid
+  contractProposalId String @map("contract_proposal_id") @db.Uuid
+  threadId           String @map("thread_id") @db.Uuid
+  ordererId          String @map("orderer_id") @db.Uuid
+  casterId           String @map("caster_id") @db.Uuid
+
+  // Stripe関連のID
+  stripePaymentIntentId   String? @map("stripe_payment_intent_id")
+  stripeCheckoutSessionId String? @map("stripe_checkout_session_id")
+
+  // 金額情報（単位：円）
+  totalAmount  Int @map("total_amount") // 契約金額（仮払い）
+  platformFee  Int @map("platform_fee") // 手数料（20%）
+  casterAmount Int @map("caster_amount") // 受注者への支払額（80%）
+
+  // ステータス
+  status OrderPaymentStatus @default(pending)
+
+  // タイムスタンプ
+  paidAt DateTime? @map("paid_at") @db.Timestamptz(6) // 決済完了日時
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  contractProposal ContractProposal @relation(fields: [contractProposalId], references: [id], onDelete: Cascade)
+  thread           MessageThread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  casterPayout     CasterPayout? // 受注者への送金情報（1対1）
+
+  @@index([contractProposalId])
+  @@index([threadId])
+  @@index([ordererId])
+  @@index([casterId])
+  @@index([status])
+  @@index([stripePaymentIntentId])
+  @@index([stripeCheckoutSessionId])
+  @@map("order_payments")
+}
+
+/// 受注者への送金情報
+/// 納品後に受注者に送金する情報を管理
+model CasterPayout {
+  id             String @id @default(uuid()) @db.Uuid
+  orderPaymentId String @unique @map("order_payment_id") @db.Uuid
+  casterId       String @map("caster_id") @db.Uuid
+
+  // Stripe関連のID
+  stripeTransferId String? @map("stripe_transfer_id") // Stripe Transfer ID
+
+  // 金額情報（単位：円）
+  amount Int // 送金額（OrderPayment.casterAmountと同じ値）
+
+  // ステータス
+  status CasterPayoutStatus @default(pending)
+
+  // タイムスタンプ
+  deliveredAt   DateTime? @map("delivered_at") @db.Timestamptz(6) // 納品日時
+  transferredAt DateTime? @map("transferred_at") @db.Timestamptz(6) // 送金完了日時
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  orderPayment OrderPayment @relation(fields: [orderPaymentId], references: [id], onDelete: Cascade)
+
+  @@index([orderPaymentId])
+  @@index([casterId])
+  @@index([status])
+  @@index([stripeTransferId])
+  @@map("caster_payouts")
+}
+
+/// 受注者のStripe Connectアカウント情報
+/// Stripe Connectを使用して受注者に送金するためのアカウント情報を管理
+/// メールアドレスはUserテーブルから取得するため、ここには保存しない
+model CasterStripeAccount {
+  id              String @id @default(uuid()) @db.Uuid
+  casterProfileId String @unique @map("caster_profile_id") @db.Uuid
+  stripeAccountId String @unique @map("stripe_account_id") // Stripe ConnectアカウントID（acct_xxxxx）
+
+  // アカウント情報（Stripe APIから取得可能だが、パフォーマンスのためにキャッシュ）
+  businessType String? @map("business_type") // individual, company
+  country      String? // 国コード（例: JP）
+
+  // アカウントステータス
+  isActive       Boolean @default(false) @map("is_active") // アカウントが有効かどうか
+  isVerified     Boolean @default(false) @map("is_verified") // 本人確認が完了しているか
+  chargesEnabled Boolean @default(false) @map("charges_enabled") // 受金が有効か（通常はfalse、送金のみ）
+  payoutsEnabled Boolean @default(false) @map("payouts_enabled") // 送金が有効か
+
+  // 口座情報（Stripeが管理、ここでは参照のみ）
+  // 実際の口座情報はStripe APIで取得する
+
+  // タイムスタンプ
+  connectedAt DateTime? @map("connected_at") @db.Timestamptz(6) // Stripe Connectアカウント作成日時
+  verifiedAt  DateTime? @map("verified_at") @db.Timestamptz(6) // 本人確認完了日時
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  casterProfile CasterProfile @relation(fields: [casterProfileId], references: [id], onDelete: Cascade)
+
+  @@index([casterProfileId])
+  @@index([stripeAccountId])
+  @@index([isActive])
+  @@index([payoutsEnabled])
+  @@map("caster_stripe_accounts")
+}
+
 /// 案件登録
 /// 発注者が登録した案件情報
 model OrderProject {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  category  JobType
-  title     String
-  detail    String
-  minBudget Int      @map("min_budget")
-  maxBudget Int      @map("max_budget")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  user      User     @relation("OrderProjects", fields: [userId], references: [id], onDelete: Cascade)
+  id              String                       @id @default(uuid()) @db.Uuid
+  userId          String                       @map("user_id") @db.Uuid
+  category        JobType
+  title           String
+  detail          String
+  minBudget       Int                          @map("min_budget")
+  maxBudget       Int                          @map("max_budget")
+  createdAt       DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user            User                         @relation("OrderProjects", fields: [userId], references: [id], onDelete: Cascade)
+  casterFavorites CasterFavoriteOrderProject[] @relation("CasterFavoriteOrderProjects")
 
   @@index([userId])
   @@index([category])
   @@index([createdAt])
-  casterFavorites CasterFavoriteOrderProject[] @relation("CasterFavoriteOrderProjects")
   @@map("order_projects")
 }
 
 /// キャストのお気に入り案件
 /// キャストがお気に入り登録した案件を管理
 model CasterFavoriteOrderProject {
-  id        String   @id @default(uuid()) @db.Uuid
-  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
-  projectId String   @map("project_id") @db.Uuid  // 案件のID
-  
+  id        String @id @default(uuid()) @db.Uuid
+  casterId  String @map("caster_id") @db.Uuid // キャストのユーザーID
+  projectId String @map("project_id") @db.Uuid // 案件のID
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
+
   // Relations
-  caster  User        @relation("CasterFavoriteProjects", fields: [casterId], references: [id], onDelete: Cascade)
+  caster  User         @relation("CasterFavoriteProjects", fields: [casterId], references: [id], onDelete: Cascade)
   project OrderProject @relation("CasterFavoriteOrderProjects", fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   @@unique([casterId, projectId]) // 同じキャストと案件の組み合わせは1つのみ
   @@index([casterId])
   @@index([projectId])
@@ -340,17 +455,17 @@ model CasterFavoriteOrderProject {
 /// 発注者のお気に入りキャスト
 /// 発注者がお気に入り登録したキャストを管理
 model OrdererFavoriteCaster {
-  id        String   @id @default(uuid()) @db.Uuid
-  ordererId String   @map("orderer_id") @db.Uuid // 発注者のユーザーID
-  casterId  String   @map("caster_id") @db.Uuid  // キャストのユーザーID
-  
+  id        String @id @default(uuid()) @db.Uuid
+  ordererId String @map("orderer_id") @db.Uuid // 発注者のユーザーID
+  casterId  String @map("caster_id") @db.Uuid // キャストのユーザーID
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
+
   // Relations
   orderer User @relation("OrdererFavorites", fields: [ordererId], references: [id], onDelete: Cascade)
   caster  User @relation("CasterFavorites", fields: [casterId], references: [id], onDelete: Cascade)
-  
+
   @@unique([ordererId, casterId]) // 同じ発注者とキャストの組み合わせは1つのみ
   @@index([ordererId])
   @@index([casterId])
@@ -371,10 +486,31 @@ enum JobType {
   creator
 }
 
+/// メッセージスレッドのステータス
+/// 発注者と受注者の間の会話スレッドの進行状況を管理
 enum MessageThreadStatus {
-  scout
-  negotiation
-  agreed
-  completed
-  cancelled
+  scout // 応募・スカウト（初期状態）
+  negotiation // 条件交渉中
+  agreed // 条件合意済み
+  contract // 契約（決済完了後）
+  CasterCancelRequesting // キャスト側からの途中中断リクエスト中
+  OrderCancelRequesting // 発注者側からの途中中断リクエスト中
+  DeliveredAndReviewing // 納品済み・検収中
+  completed // 完了
+  cancelled // キャンセル
+}
+
+/// 発注者からの決済ステータス
+enum OrderPaymentStatus {
+  pending // 決済待ち
+  paid // 支払い完了（仮払い済み）
+  cancelled // キャンセル
+}
+
+/// 受注者への送金ステータス
+enum CasterPayoutStatus {
+  pending // 送金待ち（納品前）
+  delivered // 納品済み（送金可能）
+  transferred // 送金完了
+  cancelled // キャンセル
 }

@@ -9,6 +9,7 @@ import { profileRouter } from "./profile";
 import { messageRouter } from "./message";
 import { projectRouter } from "./project";
 import { favoriteRouter } from "./favorite";
+import { paymentRouter } from "./payment";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   message: messageRouter,
   project: projectRouter,
   favorite: favoriteRouter,
+  payment: paymentRouter,
 });
 
 export type AppRouter = typeof appRouter;
