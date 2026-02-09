@@ -303,13 +303,14 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
 
     // 新しい条件を提示するボタンの有効/無効判定
     const isFormValid =
-        contractAmount.trim() &&
-        projectContent.trim() &&
-        completionYear &&
-        completionMonth &&
-        completionDay &&
-        !isProposalPending;
-
+        status === "completed" ||
+        (contractAmount.trim() &&
+            projectContent.trim() &&
+            completionYear &&
+            completionMonth &&
+            completionDay &&
+            !isProposalPending);
+    
     return (
         <div
             style={{

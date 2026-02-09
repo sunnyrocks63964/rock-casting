@@ -759,6 +759,83 @@ export const messageRouter = createTRPCRouter({
         });
       }
     }),
+
+  /**
+   * 契約一覧取得（contract, CasterCancelRequesting, OrderCancelRequesting, DeliveredAndReviewing, completedステータスのみ）
+   */
+  getContractThreads: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        const threads = await ctx.prisma.messageThread.findMany({
+          where: {
+            OR: [
+              { ordererId: userId },
+              { casterId: userId },
+            ],
+            status: {
+              in: ["contract", "CasterCancelRequesting", "OrderCancelRequesting", "DeliveredAndReviewing", "completed"],
+            },
+          },
+          include: {
+            orderer: {
+              select: {
+                id: true,
+                email: true,
+                ordererProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
+            caster: {
+              select: {
+                id: true,
+                email: true,
+                casterProfile: {
+                  select: {
+                    fullName: true,
+                  },
+                },
+              },
+            },
+            messages: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+            contractProposals: {
+              where: {
+                isAgreed: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+        });
+
+        return threads;
+      } catch (error) {
+        console.error("契約一覧取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "契約一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
 });
 
 

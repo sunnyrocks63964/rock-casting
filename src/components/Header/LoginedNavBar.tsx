@@ -10,6 +10,7 @@ import notificationBell from "./images/notification_bell.png";
 const LoginedNavBar = () => {
     const pathname = usePathname();
     const [messageListPath, setMessageListPath] = useState("/order/message_list");
+    const [contractListPath, setContractListPath] = useState("/order/contracts");
     const [userId, setUserId] = useState<string | null>(null);
 
     // 現在のユーザー情報を取得
@@ -39,10 +40,12 @@ const LoginedNavBar = () => {
         // パスベースの判定（優先度：高）
         if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
             setMessageListPath("/caster/message_list");
+            setContractListPath("/caster/contracts");
             return;
         }
         if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
             setMessageListPath("/order/message_list");
+            setContractListPath("/order/contracts");
             return;
         }
 
@@ -50,11 +53,14 @@ const LoginedNavBar = () => {
         if (userData) {
             if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
                 setMessageListPath("/caster/message_list");
+                setContractListPath("/caster/contracts");
             } else if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
                 setMessageListPath("/order/message_list");
+                setContractListPath("/order/contracts");
             } else if (userData.hasCasterProfile && userData.hasOrdererProfile) {
                 // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
                 setMessageListPath("/order/message_list");
+                setContractListPath("/order/contracts");
             }
         }
     }, [pathname, userData]);
@@ -154,7 +160,7 @@ const LoginedNavBar = () => {
                 メッセージ
             </Link>
             <Link
-                href="#"
+                href={contractListPath}
                 style={{
                     color: "white",
                     textDecoration: "none",
