@@ -18,6 +18,10 @@ const statusLabels: Record<string, string> = {
     scout: "応募・スカウト",
     negotiation: "条件交渉",
     agreed: "条件合意",
+    contract: "契約完了",
+    CasterCancelRequesting: "依頼主が中断リクエスト中",
+    OrderCancelRequesting: "発注者が中断リクエスト中",
+    DeliveredAndReviewing: "納品済み・検収中",
     completed: "完了",
     cancelled: "キャンセル",
 };

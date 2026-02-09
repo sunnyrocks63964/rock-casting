@@ -215,8 +215,9 @@ export const messageRouter = createTRPCRouter({
                 },
               },
               orderBy: {
-                createdAt: "asc",
+                createdAt: "desc",
               },
+              take: 1,
             },
           },
         });
@@ -613,6 +614,148 @@ export const messageRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "スレッド一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 途中中断リクエスト送信
+   */
+  requestCancellation: publicProcedure
+    .input(
+      z.object({
+        threadId: z.string().uuid(),
+        userId: z.string().uuid(),
+        reason: z.string().min(1).max(1000),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { threadId, userId, reason } = input;
+
+      try {
+        const thread = await ctx.prisma.messageThread.findUnique({
+          where: { id: threadId },
+        });
+
+        if (!thread) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "スレッドが見つかりません",
+          });
+        }
+
+        if (thread.ordererId !== userId && thread.casterId !== userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "このスレッドへのアクセス権限がありません",
+          });
+        }
+
+        if (thread.status !== "contract") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "契約ステータスでない場合は中断リクエストを送信できません",
+          });
+        }
+
+        const isCaster = thread.casterId === userId;
+        const newStatus = isCaster ? "CasterCancelRequesting" : "OrderCancelRequesting";
+
+        const updatedThread = await ctx.prisma.messageThread.update({
+          where: { id: threadId },
+          data: {
+            status: newStatus,
+            cancellationReason: reason,
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          thread: updatedThread,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("途中中断リクエストエラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "途中中断リクエスト送信中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 途中中断リクエストに同意
+   */
+  agreeToCancellation: publicProcedure
+    .input(
+      z.object({
+        threadId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { threadId, userId } = input;
+
+      try {
+        const thread = await ctx.prisma.messageThread.findUnique({
+          where: { id: threadId },
+        });
+
+        if (!thread) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "スレッドが見つかりません",
+          });
+        }
+
+        if (thread.ordererId !== userId && thread.casterId !== userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "このスレッドへのアクセス権限がありません",
+          });
+        }
+
+        if (thread.status !== "CasterCancelRequesting" && thread.status !== "OrderCancelRequesting") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "途中中断リクエスト中でない場合は同意できません",
+          });
+        }
+
+        const isCaster = thread.casterId === userId;
+        const isCasterRequesting = thread.status === "CasterCancelRequesting";
+        const isOrderRequesting = thread.status === "OrderCancelRequesting";
+
+        if ((isCaster && isCasterRequesting) || (!isCaster && isOrderRequesting)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "自分が送信したリクエストには同意できません",
+          });
+        }
+
+        const updatedThread = await ctx.prisma.messageThread.update({
+          where: { id: threadId },
+          data: {
+            status: "cancelled",
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          thread: updatedThread,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("途中中断同意エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "途中中断同意中にエラーが発生しました",
         });
       }
     }),
