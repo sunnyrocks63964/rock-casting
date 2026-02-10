@@ -5,12 +5,13 @@
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import {
   CasterProfileUpdateSchema,
   OrdererProfileUpdateSchema,
 } from "@/lib/validations/userSchema";
+import type { JobTypeSelectorData } from "@/components/JobTypeSelector";
 
 export const profileRouter = createTRPCRouter({
   // ===================================
@@ -79,10 +80,25 @@ export const profileRouter = createTRPCRouter({
       z.object({
         userId: z.string().uuid(),
         data: CasterProfileUpdateSchema,
+        jobTypeData: z
+          .object({
+            selectedJobTypes: z.array(
+              z.object({
+                jobType: z.enum(["photographer", "model", "artist", "creator"]),
+                skills: z.array(
+                  z.object({
+                    category: z.string(),
+                    values: z.array(z.string()),
+                  })
+                ),
+              })
+            ),
+          })
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { userId, data } = input;
+      const { userId, data, jobTypeData } = input;
 
       try {
         // プロフィールの存在確認
@@ -97,23 +113,100 @@ export const profileRouter = createTRPCRouter({
           });
         }
 
-        // プロフィール更新
-        const updatedProfile = await ctx.prisma.casterProfile.update({
-          where: { userId },
-          data,
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
+        // トランザクションでプロフィール更新と職種更新を実行
+        // タイムアウトを30秒に設定（デフォルトは5秒）
+        const result = await ctx.prisma.$transaction(
+          async (tx) => {
+            // プロフィール更新
+            const updatedProfile = await tx.casterProfile.update({
+              where: { userId },
+              data,
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                  },
+                },
               },
-            },
+            });
+
+            // 職種データが提供されている場合、既存の職種を削除して新規作成
+            if (jobTypeData) {
+              // 既存の職種とスキルを一括削除
+              const existingJobTypes = await tx.casterJobType.findMany({
+                where: { casterProfileId: existingProfile.id },
+                select: { id: true },
+              });
+
+              if (existingJobTypes.length > 0) {
+                const jobTypeIds = existingJobTypes.map((jt) => jt.id);
+                await tx.casterJobSkill.deleteMany({
+                  where: { jobTypeId: { in: jobTypeIds } },
+                });
+                await tx.casterJobType.deleteMany({
+                  where: { id: { in: jobTypeIds } },
+                });
+              }
+
+              // 新しい職種とスキルを作成（バッチ処理）
+              const jobTypeIds: string[] = [];
+              for (const selectedJobType of jobTypeData.selectedJobTypes) {
+                const casterJobType = await tx.casterJobType.create({
+                  data: {
+                    casterProfileId: existingProfile.id,
+                    jobType: selectedJobType.jobType,
+                  },
+                });
+                jobTypeIds.push(casterJobType.id);
+              }
+
+              // スキルを一括作成
+              const skillsToCreate: Array<{
+                jobTypeId: string;
+                category: string;
+                value: string;
+              }> = [];
+              let jobTypeIndex = 0;
+              for (const selectedJobType of jobTypeData.selectedJobTypes) {
+                const jobTypeId = jobTypeIds[jobTypeIndex];
+                for (const skill of selectedJobType.skills) {
+                  for (const value of skill.values) {
+                    skillsToCreate.push({
+                      jobTypeId,
+                      category: skill.category,
+                      value: value,
+                    });
+                  }
+                }
+                jobTypeIndex++;
+              }
+
+              // バッチでスキルを作成（100件ずつ）
+              const batchSize = 100;
+              for (let i = 0; i < skillsToCreate.length; i += batchSize) {
+                const batch = skillsToCreate.slice(i, i + batchSize);
+                await Promise.all(
+                  batch.map((skill) =>
+                    tx.casterJobSkill.create({
+                      data: skill,
+                    })
+                  )
+                );
+              }
+            }
+
+            return updatedProfile;
           },
-        });
+          {
+            maxWait: 10000, // 10秒待機
+            timeout: 30000, // 30秒タイムアウト
+          }
+        );
 
         return {
           success: true,
-          profile: updatedProfile,
+          profile: result,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -266,6 +359,75 @@ export const profileRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "ユーザー情報取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * キャストの売上管理データ取得
+   */
+  getCasterPayouts: publicProcedure
+    .input(
+      z.object({
+        casterId: z.string().uuid(),
+        year: z.number().int().min(2000).max(2100),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { casterId, year } = input;
+
+      try {
+        // 指定年の納品済みデータを取得（statusがdeliveredのみ）
+        const allPayouts = await ctx.prisma.casterPayout.findMany({
+          where: {
+            casterId,
+            status: "delivered",
+          },
+          select: {
+            amount: true,
+            deliveredAt: true,
+          },
+        });
+
+        // 指定年のデータのみをフィルタリング（deliveredAtを使用）
+        const yearStart = new Date(`${year}-01-01`);
+        const yearEnd = new Date(`${year + 1}-01-01`);
+        const payouts = allPayouts.filter((payout) => {
+          if (!payout.deliveredAt) {
+            return false;
+          }
+          return payout.deliveredAt >= yearStart && payout.deliveredAt < yearEnd;
+        });
+
+        // 月ごとに集計
+        const monthlyData: { month: number; amount: number }[] = [];
+        for (let month = 1; month <= 12; month++) {
+          const monthlyPayouts = payouts.filter((payout) => {
+            if (!payout.deliveredAt) {
+              return false;
+            }
+            const payoutMonth = payout.deliveredAt.getMonth() + 1;
+            return payoutMonth === month;
+          });
+
+          const totalAmount = monthlyPayouts.reduce(
+            (sum, payout) => sum + payout.amount,
+            0
+          );
+
+          monthlyData.push({ month, amount: totalAmount });
+        }
+
+        return {
+          year,
+          monthlyData,
+          totalAmount: monthlyData.reduce((sum, data) => sum + data.amount, 0),
+        };
+      } catch (error) {
+        console.error("売上データ取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "売上データ取得中にエラーが発生しました",
         });
       }
     }),

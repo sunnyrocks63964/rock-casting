@@ -307,7 +307,7 @@ const JobTypeSelector: React.FC<JobTypeSelectorProps> = ({
               cursor: "pointer",
             }}
           />
-          <span>{jobTypeLabels[activeJobType]}として活動する</span>
+          <span>{jobTypeLabels[activeJobType]}</span>
         </label>
         {isJobTypeSelected && (
           <div
@@ -484,7 +484,7 @@ const JobTypeSelector: React.FC<JobTypeSelectorProps> = ({
             fontSize: "15px",
           }}
         >
-          「{jobTypeLabels[activeJobType]}として活動する」にチェックを入れて、<br />
+          「{jobTypeLabels[activeJobType]}」にチェックを入れて、<br />
           詳細な職種情報を選択してください
         </div>
       )}

@@ -66,6 +66,24 @@ model CasterProfile {
   createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
   onlineAvailable Boolean              @default(false) @map("online_available")
+  // 新規追加フィールド
+  bio                String?              // 自己紹介
+  achievements       String?              // 実績
+  mainProfileImage   String?              @map("main_profile_image") // メインプロフィール画像URL
+  subProfileImages   String[]             @default([]) @map("sub_profile_images") // サブプロフィール画像URL配列（最大4枚）
+  residence          String?              // 居住地
+  birthdate          DateTime?            @db.Date // 生年月日
+  gender             Gender?              // 性別
+  height             Int?                 // 身長(cm)
+  weight             Int?                 // 体重(kg)
+  snsInstagram       String?              @map("sns_instagram") // Instagram URL
+  snsX               String?              @map("sns_x") // X URL
+  snsYoutube         String?              @map("sns_youtube") // YouTube URL
+  snsFacebook        String?              @map("sns_facebook") // Facebook URL
+  workStyle          String?              @map("work_style") // 活動形態（フリーランス、副業、その他）
+  minBudget          Int?                 @map("min_budget") // 最低報酬額（円）
+  maxBudget          Int?                 @map("max_budget") // 最高報酬額（円）
+  // リレーション
   jobTypes        CasterJobType[]
   user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   travelAreas     CasterTravelArea[]

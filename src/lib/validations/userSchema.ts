@@ -27,6 +27,22 @@ export const CasterProfileUpdateSchema = z.object({
   fullName: z.string().max(100).optional(),
   area: z.string().max(100).optional(),
   occupation: z.string().max(100).optional(),
+  bio: z.string().max(500).optional(),
+  achievements: z.string().max(2000).optional(),
+  mainProfileImage: z.string().url().optional().nullable(),
+  subProfileImages: z.array(z.string().url()).max(4).optional(),
+  residence: z.string().max(200).optional(),
+  birthdate: z.string().datetime().optional().nullable(),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().nullable(),
+  height: z.number().int().min(0).max(300).optional().nullable(),
+  weight: z.number().int().min(0).max(500).optional().nullable(),
+  snsInstagram: z.string().url().optional().nullable(),
+  snsX: z.string().url().optional().nullable(),
+  snsYoutube: z.string().url().optional().nullable(),
+  snsFacebook: z.string().url().optional().nullable(),
+  workStyle: z.string().max(50).optional(),
+  minBudget: z.number().int().min(0).optional().nullable(),
+  maxBudget: z.number().int().min(0).optional().nullable(),
 });
 
 // ===================================

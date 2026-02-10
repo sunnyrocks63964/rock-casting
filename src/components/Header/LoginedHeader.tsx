@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RocknRoll_One } from "next/font/google";
 import { trpc } from "@/lib/trpc/client";
+import { supabase } from "@/lib/supabase";
 import userPicture from "./images/user_picture.png";
 
 const rocknrollOne = RocknRoll_One({
@@ -15,6 +16,37 @@ const rocknrollOne = RocknRoll_One({
 
 const LoginedHeader = () => {
     const router = useRouter();
+    const [userId, setUserId] = useState<string | null>(null);
+
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
+
+    // キャストプロフィールを取得
+    const { data: profileData } = trpc.profile.getCasterProfile.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId,
+            retry: false,
+        }
+    );
+
+    // 表示する画像を決定（メイン画像があればそれを使用、なければデフォルト画像）
+    const mainProfileImage = profileData && "mainProfileImage" in profileData 
+        ? (profileData.mainProfileImage as string | null | undefined)
+        : null;
+    const displayImage: string = (mainProfileImage && typeof mainProfileImage === "string")
+        ? mainProfileImage
+        : userPicture.src;
 
     const logoutMutation = trpc.auth.logout.useMutation({
         onSuccess: () => {
@@ -172,8 +204,9 @@ const LoginedHeader = () => {
                 }}
             >
                 <img
-                    src={userPicture.src}
+                    src={displayImage}
                     alt="ユーザーアイコン"
+                    onClick={() => router.push("/caster/mypage")}
                     style={{
                         width: "47px",
                         height: "47px",
@@ -181,6 +214,15 @@ const LoginedHeader = () => {
                         cursor: "pointer",
                         objectFit: "cover",
                         marginRight: "clamp(15px, 1.6vw, 30px)",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.7";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
                     }}
                 />
                 <button
