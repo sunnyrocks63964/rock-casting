@@ -52,6 +52,8 @@ export const CasterProfileUpdateSchema = z.object({
 /// 発注者プロフィール更新（すべて任意）
 export const OrdererProfileUpdateSchema = z.object({
   fullName: z.string().max(100).optional(),
+  mainProfileImage: z.string().url().optional().nullable(),
+  industry: z.string().max(100).optional(),
   websiteUrl: z.array(urlSchema).optional(),
   desiredWorkAreas: z.array(z.string()).max(47).optional(),
   desiredOccupations: z.array(z.string()).max(20).optional(),

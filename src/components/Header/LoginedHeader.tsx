@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { RocknRoll_One } from "next/font/google";
 import { trpc } from "@/lib/trpc/client";
 import { supabase } from "@/lib/supabase";
@@ -16,6 +16,7 @@ const rocknrollOne = RocknRoll_One({
 
 const LoginedHeader = () => {
     const router = useRouter();
+    const pathname = usePathname();
     const [userId, setUserId] = useState<string | null>(null);
 
     // ユーザーIDを取得
@@ -31,8 +32,8 @@ const LoginedHeader = () => {
         getUserId();
     }, []);
 
-    // キャストプロフィールを取得
-    const { data: profileData } = trpc.profile.getCasterProfile.useQuery(
+    // 現在のユーザー情報を取得
+    const { data: userData } = trpc.auth.getCurrentUser.useQuery(
         { userId: userId! },
         {
             enabled: !!userId,
@@ -40,10 +41,65 @@ const LoginedHeader = () => {
         }
     );
 
+    // キャストプロフィールを取得
+    const { data: casterProfileData } = trpc.profile.getCasterProfile.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId && (userData?.hasCasterProfile ?? false),
+            retry: false,
+        }
+    );
+
+    // 発注者プロフィールを取得
+    const { data: ordererProfileData } = trpc.profile.getOrdererProfile.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId && (userData?.hasOrdererProfile ?? false),
+            retry: false,
+        }
+    );
+
+    // マイページへの遷移先を決定
+    const getMyPagePath = (): string => {
+        // パスベースの判定（優先度：高）
+        if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+            return "/caster/mypage";
+        }
+        if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+            return "/order/mypage";
+        }
+
+        // ユーザーデータベースの判定（フォールバック）
+        if (userData) {
+            if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
+                return "/caster/mypage";
+            }
+            if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
+                return "/order/mypage";
+            }
+            if (userData.hasCasterProfile && userData.hasOrdererProfile) {
+                // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
+                return "/order/mypage";
+            }
+        }
+
+        // デフォルト
+        return "/order/mypage";
+    };
+
     // 表示する画像を決定（メイン画像があればそれを使用、なければデフォルト画像）
-    const mainProfileImage = profileData && "mainProfileImage" in profileData 
-        ? (profileData.mainProfileImage as string | null | undefined)
+    const casterMainProfileImage = casterProfileData && "mainProfileImage" in casterProfileData 
+        ? (casterProfileData.mainProfileImage as string | null | undefined)
         : null;
+    const ordererMainProfileImage = ordererProfileData && "mainProfileImage" in ordererProfileData
+        ? (ordererProfileData.mainProfileImage as string | null | undefined)
+        : null;
+    
+    // 現在のパスに応じて適切なプロフィール画像を選択
+    const mainProfileImage = (pathname.startsWith("/caster") || pathname.startsWith("/top/caster"))
+        ? casterMainProfileImage
+        : ordererMainProfileImage || casterMainProfileImage;
+    
     const displayImage: string = (mainProfileImage && typeof mainProfileImage === "string")
         ? mainProfileImage
         : userPicture.src;
@@ -206,7 +262,7 @@ const LoginedHeader = () => {
                 <img
                     src={displayImage}
                     alt="ユーザーアイコン"
-                    onClick={() => router.push("/caster/mypage")}
+                    onClick={() => router.push(getMyPagePath())}
                     style={{
                         width: "47px",
                         height: "47px",

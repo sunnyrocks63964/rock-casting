@@ -101,6 +101,8 @@ model OrdererProfile {
   id                 String   @id @default(uuid()) @db.Uuid
   userId             String   @unique @map("user_id") @db.Uuid
   fullName           String?  @map("full_name")
+  mainProfileImage   String?  @map("main_profile_image") // メインプロフィール画像URL
+  industry           String?  // 業種
   websiteUrl         String[] @default([]) @map("website_url")
   desiredWorkAreas   String[] @default([]) @map("desired_work_areas")
   desiredOccupations String[] @default([]) @map("desired_occupations")

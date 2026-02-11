@@ -433,6 +433,107 @@ export const profileRouter = createTRPCRouter({
     }),
 
   /**
+   * 発注者の支払い管理データ取得
+   */
+  getOrdererPayments: publicProcedure
+    .input(
+      z.object({
+        ordererId: z.string().uuid(),
+        year: z.number().int().min(2000).max(2100),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { ordererId, year } = input;
+
+      try {
+        // 指定年の支払い済みデータを取得（statusがpaidのみ）
+        const allPayments = await ctx.prisma.orderPayment.findMany({
+          where: {
+            ordererId,
+            status: "paid",
+          },
+          select: {
+            totalAmount: true,
+            paidAt: true,
+          },
+        });
+
+        // 指定年のデータのみをフィルタリング
+        const yearStart = new Date(`${year}-01-01`);
+        const yearEnd = new Date(`${year + 1}-01-01`);
+        const payments = allPayments.filter((payment) => {
+          if (!payment.paidAt) {
+            return false;
+          }
+          return payment.paidAt >= yearStart && payment.paidAt < yearEnd;
+        });
+
+        // 月ごとに集計
+        const monthlyData: { month: number; amount: number }[] = [];
+        for (let month = 1; month <= 12; month++) {
+          const monthlyPayments = payments.filter((payment) => {
+            if (!payment.paidAt) {
+              return false;
+            }
+            const paymentMonth = payment.paidAt.getMonth() + 1;
+            return paymentMonth === month;
+          });
+
+          const totalAmount = monthlyPayments.reduce(
+            (sum, payment) => sum + payment.totalAmount,
+            0
+          );
+
+          monthlyData.push({ month, amount: totalAmount });
+        }
+
+        return {
+          year,
+          monthlyData,
+          totalAmount: monthlyData.reduce((sum, data) => sum + data.amount, 0),
+        };
+      } catch (error) {
+        console.error("支払いデータ取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "支払いデータ取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * 発注者の募集中案件取得
+   */
+  getOrdererProjects: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        const projects = await ctx.prisma.orderProject.findMany({
+          where: {
+            userId,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return projects;
+      } catch (error) {
+        console.error("案件取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "案件取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
    * キャスト一覧取得
    */
   getCasterList: publicProcedure
