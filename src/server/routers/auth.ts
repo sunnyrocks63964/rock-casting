@@ -275,51 +275,57 @@ const createCompanyRegistration = async ({
   workAreaData?: BaseRegisterInput["workAreaData"];
   jobTypeData?: BaseRegisterInput["jobTypeData"];
 }) => {
-  return await prisma.$transaction(async (tx) => {
-    const orgDataForCreate = prepareOrganizationData({ registrationType, filteredOrgData });
-    const organization = await tx.organization.create({
-      data: orgDataForCreate,
-    });
+  return await prisma.$transaction(
+    async (tx) => {
+      const orgDataForCreate = prepareOrganizationData({ registrationType, filteredOrgData });
+      const organization = await tx.organization.create({
+        data: orgDataForCreate,
+      });
 
-    const userData = prepareCompanyUserData({
-      authUserId,
-      email,
-      registrationType,
-      filteredOrgData,
-      organizationId: organization.id,
-      workAreaData,
-    });
+      const userData = prepareCompanyUserData({
+        authUserId,
+        email,
+        registrationType,
+        filteredOrgData,
+        organizationId: organization.id,
+        workAreaData,
+      });
 
-    const user = await tx.user.create({
-      data: userData,
-      include: {
-        organization: true,
-        casterProfile: true,
-        ordererProfile: true,
-      },
-    });
+      const user = await tx.user.create({
+        data: userData,
+        include: {
+          organization: true,
+          casterProfile: true,
+          ordererProfile: true,
+        },
+      });
 
-    // 企業として受注する場合、活動エリアと職種情報を作成
-    if (registrationType === "company-receive" && user.casterProfile) {
-      if (workAreaData) {
-        await createWorkAreas({
-          prisma: tx,
-          casterProfileId: user.casterProfile.id,
-          workAreas: workAreaData.workAreas,
-          travelAreas: workAreaData.travelAreas,
-        });
+      // 企業として受注する場合、活動エリアと職種情報を作成
+      if (registrationType === "company-receive" && user.casterProfile) {
+        if (workAreaData) {
+          await createWorkAreas({
+            prisma: tx,
+            casterProfileId: user.casterProfile.id,
+            workAreas: workAreaData.workAreas,
+            travelAreas: workAreaData.travelAreas,
+          });
+        }
+        if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
+          await createJobTypes({
+            prisma: tx,
+            casterProfileId: user.casterProfile.id,
+            jobTypeData,
+          });
+        }
       }
-      if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
-        await createJobTypes({
-          prisma: tx,
-          casterProfileId: user.casterProfile.id,
-          jobTypeData,
-        });
-      }
+
+      return { user, organization };
+    },
+    {
+      maxWait: 10000, // 10秒
+      timeout: 30000, // 30秒
     }
-
-    return { user, organization };
-  });
+  );
 };
 
 // 個人登録の処理
@@ -338,50 +344,56 @@ const createIndividualRegistration = async ({
   workAreaData?: BaseRegisterInput["workAreaData"];
   jobTypeData?: BaseRegisterInput["jobTypeData"];
 }) => {
-  return await prisma.$transaction(async (tx) => {
-    const isCaster = role === "caster" || role === "both";
-    const casterProfileData = isCaster
-      ? {
-          create: {
-            onlineAvailable: workAreaData?.onlineAvailable ?? false,
-          },
+  return await prisma.$transaction(
+    async (tx) => {
+      const isCaster = role === "caster" || role === "both";
+      const casterProfileData = isCaster
+        ? {
+            create: {
+              onlineAvailable: workAreaData?.onlineAvailable ?? false,
+            },
+          }
+        : undefined;
+
+      const user = await tx.user.create({
+        data: {
+          id: authUserId,
+          email,
+          ...(casterProfileData ? { casterProfile: casterProfileData } : {}),
+          ...(role === "orderer" || role === "both" ? { ordererProfile: { create: {} } } : {}),
+        },
+        include: {
+          casterProfile: true,
+          ordererProfile: true,
+        },
+      });
+
+      // キャストプロフィールが作成された場合、活動エリアと職種情報を作成
+      if (isCaster && user.casterProfile) {
+        if (workAreaData) {
+          await createWorkAreas({
+            prisma: tx,
+            casterProfileId: user.casterProfile.id,
+            workAreas: workAreaData.workAreas,
+            travelAreas: workAreaData.travelAreas,
+          });
         }
-      : undefined;
-
-    const user = await tx.user.create({
-      data: {
-        id: authUserId,
-        email,
-        ...(casterProfileData ? { casterProfile: casterProfileData } : {}),
-        ...(role === "orderer" || role === "both" ? { ordererProfile: { create: {} } } : {}),
-      },
-      include: {
-        casterProfile: true,
-        ordererProfile: true,
-      },
-    });
-
-    // キャストプロフィールが作成された場合、活動エリアと職種情報を作成
-    if (isCaster && user.casterProfile) {
-      if (workAreaData) {
-        await createWorkAreas({
-          prisma: tx,
-          casterProfileId: user.casterProfile.id,
-          workAreas: workAreaData.workAreas,
-          travelAreas: workAreaData.travelAreas,
-        });
+        if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
+          await createJobTypes({
+            prisma: tx,
+            casterProfileId: user.casterProfile.id,
+            jobTypeData,
+          });
+        }
       }
-      if (jobTypeData && jobTypeData.selectedJobTypes.length > 0) {
-        await createJobTypes({
-          prisma: tx,
-          casterProfileId: user.casterProfile.id,
-          jobTypeData,
-        });
-      }
+
+      return user;
+    },
+    {
+      maxWait: 10000, // 10秒
+      timeout: 30000, // 30秒
     }
-
-    return user;
-  });
+  );
 };
 
 export const authRouter = createTRPCRouter({

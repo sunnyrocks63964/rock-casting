@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 
 interface MessageProps {
@@ -45,6 +46,7 @@ const getStatusBadges = (currentStatus: string) => {
 };
 
 const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
+    const router = useRouter();
     const [messageContent, setMessageContent] = useState("");
     const [contractAmount, setContractAmount] = useState("");
     const [projectContent, setProjectContent] = useState("");
@@ -60,6 +62,16 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
         threadId,
         userId,
     });
+
+    // Caster側の場合のみStripeアカウント情報を取得
+    const isCaster = thread ? thread.casterId === userId : false;
+    const { data: stripeAccountData } = trpc.profile.getCasterStripeAccount.useQuery(
+        { userId },
+        { enabled: isCaster && !!thread }
+    );
+    
+    // Caster側でpayoutsEnabledがfalseの場合の判定（stripeAccountDataがundefinedの場合も含む）
+    const needsPayoutRegistration = isCaster && (!stripeAccountData || !stripeAccountData.payoutsEnabled);
 
     // Stripe決済処理
     const { mutate: createCheckout, isPending: isCreatingCheckout } = trpc.payment.createCheckoutSession.useMutation({
@@ -257,6 +269,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             isAgreed: boolean;
             proposer: {
                 id: string;
+                email: string;
                 casterProfile: { fullName: string } | null;
                 ordererProfile: { fullName: string } | null;
             };
@@ -724,7 +737,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                 }
                 
                 const proposal = latestProposal;
-                const proposerName = proposal.proposer.casterProfile?.fullName || proposal.proposer.ordererProfile?.fullName || "ユーザー";
+                const proposerName = proposal.proposer.casterProfile?.fullName || proposal.proposer.ordererProfile?.fullName || proposal.proposer.email;
                 const isOwnProposal = proposal.proposerId === userId;
                 const canAgree = !isOwnProposal && !proposal.isAgreed;
                 const completionDate = new Date(proposal.completionDate);
@@ -980,25 +993,46 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                                                 paddingTop: "20px",
                                             }}
                                         >
-                                            <button
-                                                onClick={() => agreeToProposal({ proposalId: proposal.id, userId })}
-                                                disabled={isAgreeingPending}
-                                                style={{
-                                                    backgroundColor: "#fead50",
-                                                    border: "none",
-                                                    borderRadius: "10px",
-                                                    padding: "10px 46px",
-                                                    fontSize: "16px",
-                                                    fontWeight: "400",
-                                                    color: "#000",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: isAgreeingPending ? "not-allowed" : "pointer",
-                                                    height: "39px",
-                                                    width: "250px",
-                                                }}
-                                            >
-                                                条件に合意する
-                                            </button>
+                                            {needsPayoutRegistration ? (
+                                                <button
+                                                    onClick={() => router.push("/caster/mypage#payout")}
+                                                    style={{
+                                                        backgroundColor: "#fead50",
+                                                        border: "none",
+                                                        borderRadius: "10px",
+                                                        padding: "10px 46px",
+                                                        fontSize: "16px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                        cursor: "pointer",
+                                                        height: "45px",
+                                                        width: "350px",
+                                                    }}
+                                                >
+                                                    まずは入金口座を登録しましょう
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => agreeToProposal({ proposalId: proposal.id, userId })}
+                                                    disabled={isAgreeingPending}
+                                                    style={{
+                                                        backgroundColor: "#fead50",
+                                                        border: "none",
+                                                        borderRadius: "10px",
+                                                        padding: "10px 46px",
+                                                        fontSize: "16px",
+                                                        fontWeight: "400",
+                                                        color: "#000",
+                                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                                        cursor: isAgreeingPending ? "not-allowed" : "pointer",
+                                                        height: "39px",
+                                                        width: "250px",
+                                                    }}
+                                                >
+                                                    条件に合意する
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 
@@ -1057,7 +1091,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             return null;
                         }
 
-                        const proposerName = agreedProposal.proposer.casterProfile?.fullName || agreedProposal.proposer.ordererProfile?.fullName || "ユーザー";
+                        const proposerName = agreedProposal.proposer.casterProfile?.fullName || agreedProposal.proposer.ordererProfile?.fullName || agreedProposal.proposer.email;
                         const completionDate = new Date(agreedProposal.completionDate);
                         const year = completionDate.getFullYear();
                         const month = completionDate.getMonth() + 1;
@@ -3148,27 +3182,48 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                     <span style={{ color: "#035bde" }}>サービス外連絡申請</span>
                     を行い、事務局に承認を得てください。
                 </p>
-                <button
-                    onClick={handleProposeNewTerms}
-                    disabled={!isFormValid}
-                    style={{
-                        backgroundColor: !isFormValid ? "#d9d9d9" : "#fead50",
-                        border: "none",
-                        borderRadius: "10px",
-                        padding: "10px 46px",
-                        fontSize: "16px",
-                        fontWeight: "400",
-                        color: "#000",
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        cursor: !isFormValid ? "not-allowed" : "pointer",
-                        height: "39px",
-                        width: "250px",
-                        flexShrink: 0,
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    新しい条件を提示する
-                </button>
+                {needsPayoutRegistration ? (
+                    <button
+                        onClick={() => router.push("/caster/mypage#payout")}
+                        style={{
+                            backgroundColor: "#fead50",
+                            border: "none",
+                            borderRadius: "10px",
+                            padding: "10px 46px",
+                            fontSize: "16px",
+                            fontWeight: "400",
+                            color: "#000",
+                            fontFamily: "'Noto Sans JP', sans-serif",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        まずは入金口座を登録しましょう
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleProposeNewTerms}
+                        disabled={!isFormValid}
+                        style={{
+                            backgroundColor: !isFormValid ? "#d9d9d9" : "#fead50",
+                            border: "none",
+                            borderRadius: "10px",
+                            padding: "10px 46px",
+                            fontSize: "16px",
+                            fontWeight: "400",
+                            color: "#000",
+                            fontFamily: "'Noto Sans JP', sans-serif",
+                            cursor: !isFormValid ? "not-allowed" : "pointer",
+                            height: "39px",
+                            width: "250px",
+                            flexShrink: 0,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        新しい条件を提示する
+                    </button>
+                )}
             </div>
         </div>
     );
