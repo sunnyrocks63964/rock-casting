@@ -269,6 +269,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
             isAgreed: boolean;
             proposer: {
                 id: string;
+                email: string;
                 casterProfile: { fullName: string } | null;
                 ordererProfile: { fullName: string } | null;
             };
@@ -736,7 +737,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                 }
                 
                 const proposal = latestProposal;
-                const proposerName = proposal.proposer.casterProfile?.fullName || proposal.proposer.ordererProfile?.fullName || "ユーザー";
+                const proposerName = proposal.proposer.casterProfile?.fullName || proposal.proposer.ordererProfile?.fullName || proposal.proposer.email;
                 const isOwnProposal = proposal.proposerId === userId;
                 const canAgree = !isOwnProposal && !proposal.isAgreed;
                 const completionDate = new Date(proposal.completionDate);
@@ -1090,7 +1091,7 @@ const Message = ({ threadId, userId, otherUserName }: MessageProps) => {
                             return null;
                         }
 
-                        const proposerName = agreedProposal.proposer.casterProfile?.fullName || agreedProposal.proposer.ordererProfile?.fullName || "ユーザー";
+                        const proposerName = agreedProposal.proposer.casterProfile?.fullName || agreedProposal.proposer.ordererProfile?.fullName || agreedProposal.proposer.email;
                         const completionDate = new Date(agreedProposal.completionDate);
                         const year = completionDate.getFullYear();
                         const month = completionDate.getMonth() + 1;
