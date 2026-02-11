@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc/client";
 import LoginedHeader from "@/components/Header/LoginedHeader";
@@ -10,37 +10,23 @@ import Footer from "@/components/Footer";
 import { Form, Button, message } from "antd";
 import ProjectForm, { type ProjectFormValues } from "@/components/ProjectForm";
 
-const DEFAULT_DETAIL_TEMPLATE = `【 概要 】 
-採用サイトおよび会社紹介パンフレットに使用する、スチール写真の撮影をお願いいたします。
-
-【 依頼内容 】 
-弊社オフィス内での業務風景や、社員のポートレート、集合写真などの撮影（計100枚程度を想定）
-・執務エリアでの作業風景
-・会議・打ち合わせの様子
-・社員のプロフィール写真
-・オフィス外観・内装のイメージカット
-
-【 納期 】
- ◯月◯日ごろ（詳細は打ち合わせにて決定）
-
-【 契約金額(税抜) 】
- ◯◯円〜（ご提案内容や実績に応じて相談させてください）
-
-【 重視する点・経験 】
-・人物の自然な表情を引き出せる方
-・ビジネスシーンにふさわしい明るさ・色調のレタッチスキル（Photoshop等）
-・企業の広報用写真の撮影実績がある方
-
-【 応募方法 】
-・簡単な自己紹介と、過去のポートフォリオ（WebサイトやSNSでも可）をご提示ください。
-・条件提示にてお見積もり金額の入力をお願いします。`;
-
-function AddProjectContent() {
+function EditProjectContent() {
     const router = useRouter();
+    const params = useParams();
+    const projectId = params?.project_id as string;
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [form] = Form.useForm();
+
+    // 案件データを取得
+    const { data: projectData, isLoading: isLoadingProject, error: projectError } = trpc.project.getProjectById.useQuery(
+        { projectId },
+        {
+            enabled: !!projectId,
+            retry: false,
+        }
+    );
 
     // 現在のユーザー情報を取得
     const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
@@ -51,8 +37,8 @@ function AddProjectContent() {
         }
     );
 
-    // 案件登録のmutation
-    const createProjectMutation = trpc.project.createProject.useMutation();
+    // 案件更新のmutation
+    const updateProjectMutation = trpc.project.updateProject.useMutation();
 
     // 認証チェック
     useEffect(() => {
@@ -91,14 +77,47 @@ function AddProjectContent() {
                 return;
             }
             setIsAuthorized(true);
-            setIsLoading(false);
         }
     }, [userData, isLoadingUser, userError, router]);
 
+    // 案件データ取得後の権限チェックとフォーム初期化
+    useEffect(() => {
+        if (isLoadingProject) {
+            return;
+        }
+
+        if (projectError) {
+            console.error("案件情報取得エラー:", projectError);
+            message.error("案件情報の取得に失敗しました");
+            router.push("/order/mypage");
+            return;
+        }
+
+        if (projectData && userId) {
+            // 案件の所有者か確認
+            if (projectData.userId !== userId) {
+                message.error("この案件を編集する権限がありません");
+                router.push("/order/mypage");
+                return;
+            }
+
+            // フォームに初期値を設定
+            form.setFieldsValue({
+                category: projectData.category,
+                title: projectData.title,
+                detail: projectData.detail,
+                minBudget: projectData.minBudget,
+                maxBudget: projectData.maxBudget,
+            });
+
+            setIsLoading(false);
+        }
+    }, [projectData, isLoadingProject, projectError, userId, form, router]);
+
     // フォーム送信処理
     const handleSubmit = async (values: ProjectFormValues) => {
-        if (!userId) {
-            message.error("ユーザー情報が取得できませんでした");
+        if (!userId || !projectId) {
+            message.error("ユーザー情報または案件情報が取得できませんでした");
             return;
         }
 
@@ -108,7 +127,8 @@ function AddProjectContent() {
         }
 
         try {
-            const result = await createProjectMutation.mutateAsync({
+            const result = await updateProjectMutation.mutateAsync({
+                projectId,
                 userId,
                 category: values.category,
                 title: values.title,
@@ -118,16 +138,16 @@ function AddProjectContent() {
             });
 
             if (result.success) {
-                message.success("案件を登録しました");
+                message.success("案件を更新しました");
                 router.push("/order/mypage");
             }
         } catch (error) {
-            console.error("案件登録エラー:", error);
-            message.error("案件の登録に失敗しました");
+            console.error("案件更新エラー:", error);
+            message.error("案件の更新に失敗しました");
         }
     };
 
-    if (isLoading) {
+    if (isLoading || isLoadingProject || isLoadingUser) {
         return (
             <div
                 style={{
@@ -142,7 +162,7 @@ function AddProjectContent() {
         );
     }
 
-    if (!isAuthorized || !userId) {
+    if (!isAuthorized || !userId || !projectData) {
         return null;
     }
 
@@ -174,7 +194,7 @@ function AddProjectContent() {
                             fontFamily: "'Noto Sans JP', sans-serif",
                         }}
                     >
-                        新しい仕事を依頼
+                        案件を編集
                     </h1>
 
                     <Form
@@ -183,15 +203,13 @@ function AddProjectContent() {
                         onFinish={handleSubmit}
                         style={{ width: "100%" }}
                     >
-                        <ProjectForm
-                            form={form}
-                            defaultDetailTemplate={DEFAULT_DETAIL_TEMPLATE}
-                        />
+                        <ProjectForm form={form} />
                         {/* 送信ボタン */}
                         <div style={{ textAlign: "center" }}>
                             <Button
                                 type="primary"
                                 htmlType="submit"
+                                loading={updateProjectMutation.isPending}
                                 style={{
                                     backgroundColor: "#d70202",
                                     borderColor: "#d70202",
@@ -203,7 +221,7 @@ function AddProjectContent() {
                                     fontFamily: "'Noto Sans JP', sans-serif",
                                 }}
                             >
-                                新しい仕事を登録する
+                                変更を保存する
                             </Button>
                         </div>
                     </Form>
@@ -214,7 +232,7 @@ function AddProjectContent() {
     );
 }
 
-export default function AddProjectPage() {
+export default function EditProjectPage() {
     return (
         <Suspense
             fallback={
@@ -230,7 +248,7 @@ export default function AddProjectPage() {
                 </div>
             }
         >
-            <AddProjectContent />
+            <EditProjectContent />
         </Suspense>
     );
 }
