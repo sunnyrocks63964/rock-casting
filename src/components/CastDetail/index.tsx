@@ -95,6 +95,9 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
 
     // 居住地を取得
     const getResidence = (): string => {
+        if (castProfile.residence) {
+            return castProfile.residence;
+        }
         if (castProfile.area) {
             return castProfile.area;
         }
@@ -105,6 +108,50 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             }
         }
         return "-";
+    };
+
+    // 性別を日本語に変換するヘルパー関数
+    const getGenderLabel = (): string => {
+        if (!castProfile.gender) return "-";
+        if (castProfile.gender === "female") return "女性";
+        if (castProfile.gender === "male") return "男性";
+        if (castProfile.gender === "other") return "その他";
+        if (castProfile.gender === "prefer_not_to_say") return "回答しない";
+        return "-";
+    };
+
+    // 生年月日をフォーマットするヘルパー関数
+    const formatBirthdate = (): string => {
+        if (!castProfile.birthdate) return "-";
+        const birth = new Date(castProfile.birthdate);
+        const year = birth.getFullYear();
+        const month = String(birth.getMonth() + 1).padStart(2, "0");
+        const day = String(birth.getDate()).padStart(2, "0");
+        return `${year}年${month}月${day}日`;
+    };
+
+    // SNSリンクを取得するヘルパー関数
+    const getSNSLinks = (): Array<{ name: string; url: string }> => {
+        const links: Array<{ name: string; url: string }> = [];
+        if (castProfile.snsInstagram) {
+            links.push({ name: "Instagram", url: castProfile.snsInstagram });
+        }
+        if (castProfile.snsX) {
+            links.push({ name: "X", url: castProfile.snsX });
+        }
+        if (castProfile.snsYoutube) {
+            links.push({ name: "YouTube", url: castProfile.snsYoutube });
+        }
+        if (castProfile.snsFacebook) {
+            links.push({ name: "Facebook", url: castProfile.snsFacebook });
+        }
+        return links;
+    };
+
+    // 活動形態を取得するヘルパー関数
+    const getWorkStyle = (): string => {
+        if (!castProfile.workStyle) return "-";
+        return castProfile.workStyle;
     };
 
     return (
@@ -161,15 +208,28 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    overflow: "hidden",
                                 }}
                             >
-                                <FaUser
-                                    style={{
-                                        width: "200px",
-                                        height: "200px",
-                                        color: "#999999",
-                                    }}
-                                />
+                                {castProfile.mainProfileImage ? (
+                                    <img
+                                        src={castProfile.mainProfileImage}
+                                        alt="メインプロフィール画像"
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : (
+                                    <FaUser
+                                        style={{
+                                            width: "200px",
+                                            height: "200px",
+                                            color: "#999999",
+                                        }}
+                                    />
+                                )}
                             </div>
                             {/* サムネイル画像 */}
                             <div
@@ -178,28 +238,51 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     gap: "13px",
                                 }}
                             >
-                                {Array.from({ length: 5 }).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        style={{
-                                            width: "130px",
-                                            height: "87px",
-                                            borderRadius: "10px",
-                                            backgroundColor: "#e5e5e5",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                    >
-                                        <FaUser
-                                            style={{
-                                                width: "40px",
-                                                height: "40px",
-                                                color: "#999999",
-                                            }}
-                                        />
-                                    </div>
-                                ))}
+                                {castProfile.subProfileImages && castProfile.subProfileImages.length > 0
+                                    ? castProfile.subProfileImages.slice(0, 5).map((imageUrl, index) => (
+                                          <div
+                                              key={index}
+                                              style={{
+                                                  width: "130px",
+                                                  height: "87px",
+                                                  borderRadius: "10px",
+                                                  backgroundColor: "#e5e5e5",
+                                                  overflow: "hidden",
+                                              }}
+                                          >
+                                              <img
+                                                  src={imageUrl}
+                                                  alt={`サブプロフィール画像${index + 1}`}
+                                                  style={{
+                                                      width: "100%",
+                                                      height: "100%",
+                                                      objectFit: "cover",
+                                                  }}
+                                              />
+                                          </div>
+                                      ))
+                                    : Array.from({ length: 5 }).map((_, index) => (
+                                          <div
+                                              key={index}
+                                              style={{
+                                                  width: "130px",
+                                                  height: "87px",
+                                                  borderRadius: "10px",
+                                                  backgroundColor: "#e5e5e5",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                              }}
+                                          >
+                                              <FaUser
+                                                  style={{
+                                                      width: "40px",
+                                                      height: "40px",
+                                                      color: "#999999",
+                                                  }}
+                                              />
+                                          </div>
+                                      ))}
                             </div>
                         </div>
 
@@ -236,7 +319,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     margin: "0",
                                 }}
                             >
-                                {castProfile.occupation || "-"}
+                                {castProfile.bio || "-"}
                             </p>
 
                             {/* 区切り線 */}
@@ -347,7 +430,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        -
+                                        {formatBirthdate()}
                                     </p>
                                 </div>
                                 <div
@@ -378,7 +461,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        -
+                                        {getGenderLabel()}
                                     </p>
                                 </div>
                                 <div
@@ -409,7 +492,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        -
+                                        {castProfile.height ? `${castProfile.height}cm` : "-"}
                                     </p>
                                 </div>
                                 <div
@@ -440,7 +523,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        -
+                                        {castProfile.weight ? `${castProfile.weight}kg` : "-"}
                                     </p>
                                 </div>
                                 <div
@@ -461,7 +544,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     >
                                         SNS
                                     </p>
-                                    <p
+                                    <div
                                         style={{
                                             fontSize: "16px",
                                             color: "black",
@@ -469,10 +552,30 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             margin: "0",
                                             textAlign: "center",
                                             flex: 1,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "4px",
                                         }}
                                     >
-                                        -
-                                    </p>
+                                        {getSNSLinks().length > 0 ? (
+                                            getSNSLinks().map((link, index) => (
+                                                <a
+                                                    key={index}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{
+                                                        color: "#0066cc",
+                                                        textDecoration: "underline",
+                                                    }}
+                                                >
+                                                    {link.name}
+                                                </a>
+                                            ))
+                                        ) : (
+                                            <span>-</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div
                                     style={{
@@ -502,7 +605,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        -
+                                        {getWorkStyle()}
                                     </p>
                                 </div>
                             </div>
@@ -715,9 +818,10 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         fontFamily: "'Noto Sans JP', sans-serif",
                                         margin: "0",
                                         lineHeight: "1.6",
+                                        whiteSpace: "pre-wrap",
                                     }}
                                 >
-                                    {castProfile.occupation || "-"}
+                                    {castProfile.bio || "-"}
                                 </p>
                             </div>
 
@@ -839,22 +943,32 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         gap: "20px",
                                     }}
                                 >
-                                    {Array.from({ length: 3 }).map((_, index) => (
-                                        <div key={index}>
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "black",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    margin: "0",
-                                                    lineHeight: "1.6",
-                                                }}
-                                            >
-                                                振袖新ブランド「FURICO」<br />
-                                                Hermes / Magic Snowflakes
-                                            </p>
-                                        </div>
-                                    ))}
+                                    {castProfile.achievements ? (
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "black",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: "0",
+                                                lineHeight: "1.6",
+                                                whiteSpace: "pre-wrap",
+                                            }}
+                                        >
+                                            {castProfile.achievements}
+                                        </p>
+                                    ) : (
+                                        <p
+                                            style={{
+                                                fontSize: "16px",
+                                                color: "black",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                margin: "0",
+                                                lineHeight: "1.6",
+                                            }}
+                                        >
+                                            -
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 

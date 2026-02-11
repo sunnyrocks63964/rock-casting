@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { RocknRoll_One } from "next/font/google";
 import { trpc } from "@/lib/trpc/client";
+import { supabase } from "@/lib/supabase";
 import userPicture from "./images/user_picture.png";
 
 const rocknrollOne = RocknRoll_One({
@@ -15,6 +16,93 @@ const rocknrollOne = RocknRoll_One({
 
 const LoginedHeader = () => {
     const router = useRouter();
+    const pathname = usePathname();
+    const [userId, setUserId] = useState<string | null>(null);
+
+    // ユーザーIDを取得
+    useEffect(() => {
+        const getUserId = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        getUserId();
+    }, []);
+
+    // 現在のユーザー情報を取得
+    const { data: userData } = trpc.auth.getCurrentUser.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId,
+            retry: false,
+        }
+    );
+
+    // キャストプロフィールを取得
+    const { data: casterProfileData } = trpc.profile.getCasterProfile.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId && (userData?.hasCasterProfile ?? false),
+            retry: false,
+        }
+    );
+
+    // 発注者プロフィールを取得
+    const { data: ordererProfileData } = trpc.profile.getOrdererProfile.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId && (userData?.hasOrdererProfile ?? false),
+            retry: false,
+        }
+    );
+
+    // マイページへの遷移先を決定
+    const getMyPagePath = (): string => {
+        // パスベースの判定（優先度：高）
+        if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+            return "/caster/mypage";
+        }
+        if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+            return "/order/mypage";
+        }
+
+        // ユーザーデータベースの判定（フォールバック）
+        if (userData) {
+            if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
+                return "/caster/mypage";
+            }
+            if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
+                return "/order/mypage";
+            }
+            if (userData.hasCasterProfile && userData.hasOrdererProfile) {
+                // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
+                return "/order/mypage";
+            }
+        }
+
+        // デフォルト
+        return "/order/mypage";
+    };
+
+    // 表示する画像を決定（メイン画像があればそれを使用、なければデフォルト画像）
+    const casterMainProfileImage = casterProfileData && "mainProfileImage" in casterProfileData 
+        ? (casterProfileData.mainProfileImage as string | null | undefined)
+        : null;
+    const ordererMainProfileImage = ordererProfileData && "mainProfileImage" in ordererProfileData
+        ? (ordererProfileData.mainProfileImage as string | null | undefined)
+        : null;
+    
+    // 現在のパスに応じて適切なプロフィール画像を選択
+    const mainProfileImage = (pathname.startsWith("/caster") || pathname.startsWith("/top/caster"))
+        ? casterMainProfileImage
+        : ordererMainProfileImage || casterMainProfileImage;
+    
+    const displayImage: string = (mainProfileImage && typeof mainProfileImage === "string")
+        ? mainProfileImage
+        : userPicture.src;
 
     const logoutMutation = trpc.auth.logout.useMutation({
         onSuccess: () => {
@@ -172,8 +260,9 @@ const LoginedHeader = () => {
                 }}
             >
                 <img
-                    src={userPicture.src}
+                    src={displayImage}
                     alt="ユーザーアイコン"
+                    onClick={() => router.push(getMyPagePath())}
                     style={{
                         width: "47px",
                         height: "47px",
@@ -181,6 +270,15 @@ const LoginedHeader = () => {
                         cursor: "pointer",
                         objectFit: "cover",
                         marginRight: "clamp(15px, 1.6vw, 30px)",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.7";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
                     }}
                 />
                 <button

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown, FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import img11 from "./images/search_magnifying_glass.png";
 import topOrderBgIcon from "./images/top_order_bg.png";
@@ -145,6 +145,29 @@ const TopOrder = () => {
         }).filter(Boolean);
         return areas.length > 0 ? areas[0] : "";
     };
+
+    // 年齢を計算するヘルパー関数
+    const calculateAge = (birthdate: Date | null | undefined): number | null => {
+        if (!birthdate) return null;
+        const today = new Date();
+        const birth = new Date(birthdate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    // 性別を日本語に変換するヘルパー関数
+    const getGenderLabel = (gender: string | null | undefined): string => {
+        if (!gender) return "性別未設定";
+        if (gender === "female") return "女性";
+        if (gender === "male") return "男性";
+        return "性別未設定";
+    };
+
+    const currentYear = new Date().getFullYear();
 
     // 検索キーワードが変更されたときにページをリセット
     useEffect(() => {
@@ -1100,187 +1123,129 @@ const TopOrder = () => {
 
                             const jobTypeNames = getJobTypeNames(profile.jobTypes || []);
                             const areaInfo = getAreaInfo(profile.workAreas || []);
+                            const age = calculateAge(profile.birthdate);
+                            const residence = profile.residence || areaInfo || profile.area || "";
 
                             return (
                                 <div
                                     key={user.id}
                                     style={{
-                                        backgroundColor: "white",
+                                        border: "1px solid #000",
                                         borderRadius: "10px",
                                         padding: "20px",
                                         display: "flex",
                                         gap: "20px",
+                                        backgroundColor: "#fff",
                                     }}
                                 >
-                                    {/* キャスト画像 */}
+                                    {/* プレビュー画像 */}
                                     <div
                                         style={{
                                             width: "204px",
                                             height: "136px",
                                             borderRadius: "10px",
-                                            backgroundColor: "#e5e5e5",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
+                                            backgroundColor: "#f0f0f0",
+                                            overflow: "hidden",
                                             flexShrink: 0,
                                         }}
                                     >
-                                        <FaUser
-                                            style={{
-                                                width: "80px",
-                                                height: "80px",
-                                                color: "#999999",
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* キャスト情報 */}
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "8px",
-                                        }}
-                                    >
-                                        <h3
-                                            style={{
-                                                fontSize: "20px",
-                                                fontWeight: "700",
-                                                color: "black",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
-                                            }}
-                                        >
-                                            {profile.fullName || "名前未設定"}
-                                        </h3>
-                                        {jobTypeNames && (
-                                            <p
+                                        {profile.mainProfileImage ? (
+                                            <img
+                                                src={profile.mainProfileImage}
+                                                alt="プロフィール画像"
+                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                            />
+                                        ) : (
+                                            <div
                                                 style={{
-                                                    fontSize: "16px",
-                                                    color: "black",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {jobTypeNames}
-                                            </p>
-                                        )}
-                                        {profile.occupation && (
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "#333",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {profile.occupation}
-                                            </p>
-                                        )}
-                                        {(areaInfo || profile.area) && (
-                                            <p
-                                                style={{
-                                                    fontSize: "16px",
-                                                    color: "#333",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                }}
-                                            >
-                                                {areaInfo || profile.area}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* 右側: 価格とボタン */}
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-end",
-                                            gap: "12px",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                backgroundColor: "#cf8080",
-                                                color: "white",
-                                                padding: "4px 12px",
-                                                borderRadius: "3px",
-                                                fontSize: "14px",
-                                                fontWeight: "700",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
-                                            }}
-                                        >
-                                            固定報酬制
-                                        </div>
-                                        <p
-                                            style={{
-                                                fontSize: "16px",
-                                                color: "black",
-                                                fontFamily: "'Noto Sans JP', sans-serif",
-                                            }}
-                                        >
-                                            3,000円～
-                                        </p>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "8px",
-                                            }}
-                                        >
-                                            <button
-                                                onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
-                                                style={{
-                                                    backgroundColor: "#d70202",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "90px",
-                                                    padding: "8px 24px",
-                                                    fontSize: "16px",
-                                                    fontWeight: "700",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                詳細を確認
-                                            </button>
-                                            <button
-                                                onClick={() => handleAddFavorite(user.id)}
-                                                disabled={isFavoriteOrAdding(user.id) || !ordererId}
-                                                style={{
-                                                    backgroundColor: "white",
-                                                    color: "black",
-                                                    border: "1px solid black",
-                                                    borderRadius: "90px",
-                                                    padding: "8px 24px",
-                                                    fontSize: "12px",
-                                                    fontWeight: "400",
-                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                    cursor: isFavoriteOrAdding(user.id) || !ordererId ? "not-allowed" : "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    gap: "8px",
-                                                    opacity: isFavoriteOrAdding(user.id) || !ordererId ? 0.6 : 1,
+                                                    justifyContent: "center",
+                                                    height: "100%",
+                                                    color: "#999",
                                                 }}
                                             >
-                                                {isFavorite(user.id) ? (
-                                                    <FaBookmark
-                                                        style={{
-                                                            width: "14px",
-                                                            height: "14px",
-                                                            fill: "#ff6d00",
-                                                            color: "#ff6d00",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <FaRegBookmark
-                                                        style={{
-                                                            width: "14px",
-                                                            height: "14px",
-                                                        }}
-                                                    />
-                                                )}
-                                                {getFavoriteButtonText(user.id)}
-                                            </button>
+                                                画像なし
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* プレビュー情報 */}
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: "16px", marginBottom: "10px", color: "#000" }}>
+                                            {jobTypeNames || "職種未設定"}
                                         </div>
+                                        <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "10px", color: "#000" }}>
+                                            {profile.fullName || "名前未設定"}
+                                        </div>
+                                        <div style={{ fontSize: "14px", color: "#333", marginBottom: "10px", lineHeight: "1.5" }}>
+                                            {profile.bio || "自己紹介未設定"}
+                                        </div>
+                                        <div style={{ fontSize: "16px", color: "#333" }}>
+                                            {residence ? residence.split(/[都道府県]/)[0] : "地域未設定"}/
+                                            {age !== null ? `${age}歳` : "年齢未設定"}
+                                            /{getGenderLabel(profile.gender || null)}
+                                            /{profile.height ? `${profile.height}cm` : "身長未設定"}
+                                        </div>
+                                    </div>
+
+                                    {/* アクションボタン */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
+                                        <button
+                                            onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
+                                            style={{
+                                                backgroundColor: "#d70202",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: "90px",
+                                                height: "31px",
+                                                fontSize: "16px",
+                                                fontWeight: "bold",
+                                                padding: "0 30px",
+                                                cursor: "pointer",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                            }}
+                                        >
+                                            詳細を確認
+                                        </button>
+                                        <button
+                                            onClick={() => handleAddFavorite(user.id)}
+                                            disabled={isFavoriteOrAdding(user.id) || !ordererId}
+                                            style={{
+                                                backgroundColor: "white",
+                                                color: "black",
+                                                border: "1px solid #000",
+                                                borderRadius: "90px",
+                                                height: "31px",
+                                                fontSize: "12px",
+                                                padding: "0 30px",
+                                                cursor: isFavoriteOrAdding(user.id) || !ordererId ? "not-allowed" : "pointer",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px",
+                                                opacity: isFavoriteOrAdding(user.id) || !ordererId ? 0.6 : 1,
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                            }}
+                                        >
+                                            {isFavorite(user.id) ? (
+                                                <FaBookmark
+                                                    style={{
+                                                        width: "14px",
+                                                        height: "14px",
+                                                        fill: "#ff6d00",
+                                                        color: "#ff6d00",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <FaRegBookmark
+                                                    style={{
+                                                        width: "14px",
+                                                        height: "14px",
+                                                    }}
+                                                />
+                                            )}
+                                            {getFavoriteButtonText(user.id)}
+                                        </button>
                                     </div>
                                 </div>
                             );
