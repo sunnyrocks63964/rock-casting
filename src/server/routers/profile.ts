@@ -12,6 +12,12 @@ import {
   OrdererProfileUpdateSchema,
 } from "@/lib/validations/userSchema";
 import type { JobTypeSelectorData } from "@/components/JobTypeSelector";
+import Stripe from "stripe";
+
+// Stripeクライアントの初期化
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2026-01-28.clover",
+});
 
 export const profileRouter = createTRPCRouter({
   // ===================================
@@ -701,6 +707,75 @@ export const profileRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "キャスト一覧取得中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
+   * キャストのStripeアカウント情報取得
+   * Stripe APIから最新の情報を取得してデータベースを更新する
+   */
+  getCasterStripeAccount: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        // ユーザーのCasterProfileを取得
+        const casterProfile = await ctx.prisma.casterProfile.findUnique({
+          where: { userId },
+        });
+
+        if (!casterProfile) {
+          return null;
+        }
+
+        // Stripeアカウント情報を取得
+        const stripeAccount = await ctx.prisma.casterStripeAccount.findUnique({
+          where: { casterProfileId: casterProfile.id },
+        });
+
+        if (!stripeAccount) {
+          return null;
+        }
+
+        // Stripe APIから最新のアカウント情報を取得
+        try {
+          const stripeAccountInfo = await stripe.accounts.retrieve(
+            stripeAccount.stripeAccountId
+          );
+
+          // データベースを更新
+          const updatedAccount = await ctx.prisma.casterStripeAccount.update({
+            where: { id: stripeAccount.id },
+            data: {
+              businessType: stripeAccountInfo.business_type || null,
+              country: stripeAccountInfo.country || null,
+              isActive: stripeAccountInfo.details_submitted || false,
+              isVerified:
+                stripeAccountInfo.charges_enabled ||
+                stripeAccountInfo.payouts_enabled ||
+                false,
+              chargesEnabled: stripeAccountInfo.charges_enabled || false,
+              payoutsEnabled: stripeAccountInfo.payouts_enabled || false,
+              verifiedAt:
+                stripeAccountInfo.payouts_enabled && !stripeAccount.verifiedAt
+                  ? new Date()
+                  : stripeAccount.verifiedAt,
+            },
+          });
+
+          return updatedAccount;
+        } catch (stripeError) {
+          // Stripe APIエラーの場合、データベースの情報を返す
+          console.error("Stripe API取得エラー:", stripeError);
+          return stripeAccount;
+        }
+      } catch (error) {
+        console.error("Stripeアカウント情報取得エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Stripeアカウント情報取得中にエラーが発生しました",
         });
       }
     }),

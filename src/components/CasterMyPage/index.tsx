@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Select, InputNumber, Button, message, Checkbox, Space } from "antd";
 import dayjs from "dayjs";
@@ -22,6 +23,8 @@ interface CasterMyPageProps {
 }
 
 const CasterMyPage: React.FC<CasterMyPageProps> = ({ userId }) => {
+    const searchParams = useSearchParams();
+
     // データ取得
     const { data: profileData, isLoading, refetch } = trpc.profile.getCasterProfile.useQuery({
         userId,
@@ -32,6 +35,46 @@ const CasterMyPage: React.FC<CasterMyPageProps> = ({ userId }) => {
     const { data: payoutData } = trpc.profile.getCasterPayouts.useQuery({
         casterId: userId,
         year: selectedYear,
+    });
+
+    // Stripeアカウント情報を取得
+    const { data: stripeAccountData, refetch: refetchStripeAccount } = trpc.profile.getCasterStripeAccount.useQuery({
+        userId,
+    });
+
+    // URLパラメータでStripeから戻ってきた場合、アカウント情報を再取得
+    useEffect(() => {
+        const success = searchParams.get("success");
+        const refresh = searchParams.get("refresh");
+        if (success === "true" || refresh === "true") {
+            refetchStripeAccount();
+            // URLパラメータをクリア
+            window.history.replaceState({}, "", window.location.pathname);
+        }
+    }, [searchParams, refetchStripeAccount]);
+
+    // Stripe Connectアカウントリンク作成
+    const createAccountLinkMutation = trpc.payment.createStripeConnectAccountLink.useMutation({
+        onSuccess: (data) => {
+            if (data.url) {
+                window.open(data.url, "_blank");
+            }
+        },
+        onError: (error) => {
+            message.error(`アカウントリンクの作成に失敗しました: ${error.message}`);
+        },
+    });
+
+    // Stripe Connectログインリンク作成（口座情報変更用）
+    const createLoginLinkMutation = trpc.payment.createStripeConnectLoginLink.useMutation({
+        onSuccess: (data) => {
+            if (data.url) {
+                window.open(data.url, "_blank");
+            }
+        },
+        onError: (error) => {
+            message.error(`ログインリンクの作成に失敗しました: ${error.message}`);
+        },
     });
 
     // 状態管理
@@ -1367,6 +1410,105 @@ const CasterMyPage: React.FC<CasterMyPageProps> = ({ userId }) => {
                                 お気に入りに追加
                             </Button>
                         </div>
+                    </div>
+                </div>
+
+                {/* 入金口座登録セクション */}
+                <div
+                    style={{
+                        marginBottom: "40px",
+                        backgroundColor: "#fff",
+                        borderRadius: "10px",
+                        padding: "30px",
+                    }}
+                >
+                    <h2 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "20px", color: "#000" }}>
+                        入金口座登録
+                    </h2>
+                    <div
+                        style={{
+                            border: "1px solid #000",
+                            borderRadius: "10px",
+                            padding: "20px",
+                            backgroundColor: "#fff",
+                        }}
+                    >
+                        {!stripeAccountData ? (
+                            // Stripeアカウント未登録
+                            <div>
+                                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#333" }}>
+                                    入金を受け取るために、Stripeアカウントの登録と口座情報の登録が必要です。
+                                </p>
+                                <Button
+                                    type="primary"
+                                    danger
+                                    size="large"
+                                    loading={createAccountLinkMutation.isPending}
+                                    onClick={() => {
+                                        createAccountLinkMutation.mutate({ userId });
+                                    }}
+                                    style={{
+                                        borderRadius: "90px",
+                                        height: "40px",
+                                        fontWeight: "bold",
+                                        backgroundColor: "#d70202",
+                                        border: "none",
+                                    }}
+                                >
+                                    入金口座登録のためにStripeアカウントの登録をしてください
+                                </Button>
+                            </div>
+                        ) : !stripeAccountData.payoutsEnabled ? (
+                            // Stripeアカウント登録済みだが口座未登録
+                            <div>
+                                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#333" }}>
+                                    入金を受け取るために、口座情報の登録が必要です。
+                                </p>
+                                <Button
+                                    type="primary"
+                                    danger
+                                    size="large"
+                                    loading={createAccountLinkMutation.isPending}
+                                    onClick={() => {
+                                        createAccountLinkMutation.mutate({ userId });
+                                    }}
+                                    style={{
+                                        borderRadius: "90px",
+                                        height: "40px",
+                                        fontWeight: "bold",
+                                        backgroundColor: "#d70202",
+                                        border: "none",
+                                    }}
+                                >
+                                    入金口座登録をしてください
+                                </Button>
+                            </div>
+                        ) : (
+                            // 両方登録済み
+                            <div>
+                                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#333" }}>
+                                    入金口座情報の登録が完了しています。口座情報を変更する場合は、以下のボタンから変更できます。
+                                </p>
+                                <Button
+                                    type="primary"
+                                    danger
+                                    size="large"
+                                    loading={createLoginLinkMutation.isPending}
+                                    onClick={() => {
+                                        createLoginLinkMutation.mutate({ userId });
+                                    }}
+                                    style={{
+                                        borderRadius: "90px",
+                                        height: "40px",
+                                        fontWeight: "bold",
+                                        backgroundColor: "#d70202",
+                                        border: "none",
+                                    }}
+                                >
+                                    入金口座情報の変更
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

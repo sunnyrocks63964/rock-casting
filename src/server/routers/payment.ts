@@ -408,4 +408,159 @@ export const paymentRouter = createTRPCRouter({
         });
       }
     }),
+
+  /**
+   * Stripe Connectアカウント作成とAccount Link生成
+   * 受注者がStripe Connectアカウントを作成し、オンボーディングを開始する
+   */
+  createStripeConnectAccountLink: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        // ユーザーのCasterProfileを取得
+        const casterProfile = await ctx.prisma.casterProfile.findUnique({
+          where: { userId },
+        });
+
+        if (!casterProfile) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "キャストプロフィールが見つかりません",
+          });
+        }
+
+        // 既存のStripeアカウントを確認
+        const existingStripeAccount = await ctx.prisma.casterStripeAccount.findUnique({
+          where: { casterProfileId: casterProfile.id },
+        });
+
+        const stripeAccount = existingStripeAccount ?? await (async () => {
+          // 新しいStripe Connectアカウントを作成
+          const user = await ctx.prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true },
+          });
+
+          const account = await stripe.accounts.create({
+            type: "express",
+            country: "JP",
+            email: user?.email,
+          });
+
+          // データベースに保存
+          return await ctx.prisma.casterStripeAccount.create({
+            data: {
+              casterProfileId: casterProfile.id,
+              stripeAccountId: account.id,
+              country: account.country || "JP",
+              connectedAt: new Date(),
+            },
+          });
+        })();
+
+        const stripeAccountId = stripeAccount.stripeAccountId;
+
+        // Account Linkを作成（オンボーディング用）
+        const accountLink = await stripe.accountLinks.create({
+          account: stripeAccountId,
+          refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/caster/mypage?refresh=true`,
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/caster/mypage?success=true`,
+          type: "account_onboarding",
+        });
+
+        return {
+          success: true,
+          url: accountLink.url,
+        };
+      } catch (error) {
+        console.error("Stripe Connect Account Link creation error:", error);
+
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        // Stripeエラーの詳細を確認
+        if (error && typeof error === "object" && "type" in error) {
+          const stripeError = error as { type?: string; message?: string };
+          if (stripeError.type === "StripeInvalidRequestError") {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: stripeError.message || "Stripe Connectにサインアップが必要です。StripeダッシュボードでConnectを有効にしてください。",
+            });
+          }
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Stripeアカウントリンクの作成に失敗しました",
+        });
+      }
+    }),
+
+  /**
+   * Stripe Connectアカウントの入金口座変更リンク生成
+   * 既にオンボーディングが完了しているアカウントの口座情報を変更する
+   */
+  createStripeConnectLoginLink: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { userId } = input;
+
+      try {
+        // ユーザーのCasterProfileを取得
+        const casterProfile = await ctx.prisma.casterProfile.findUnique({
+          where: { userId },
+        });
+
+        if (!casterProfile) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "キャストプロフィールが見つかりません",
+          });
+        }
+
+        // Stripeアカウントを取得
+        const stripeAccount = await ctx.prisma.casterStripeAccount.findUnique({
+          where: { casterProfileId: casterProfile.id },
+        });
+
+        if (!stripeAccount) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Stripeアカウントが見つかりません",
+          });
+        }
+
+        // Login Linkを作成（口座情報変更用）
+        const loginLink = await stripe.accounts.createLoginLink(
+          stripeAccount.stripeAccountId
+        );
+
+        return {
+          success: true,
+          url: loginLink.url,
+        };
+      } catch (error) {
+        console.error("Stripe Connect Login Link creation error:", error);
+
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Stripeログインリンクの作成に失敗しました",
+        });
+      }
+    }),
 });
