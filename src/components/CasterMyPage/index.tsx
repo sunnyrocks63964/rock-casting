@@ -53,6 +53,17 @@ const CasterMyPage: React.FC<CasterMyPageProps> = ({ userId }) => {
         }
     }, [searchParams, refetchStripeAccount]);
 
+    // URLハッシュでスクロール処理
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash === "#payout" && payoutSectionRef.current) {
+            setTimeout(() => {
+                payoutSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                setActiveTab("payout");
+            }, 100);
+        }
+    }, []);
+
     // Stripe Connectアカウントリンク作成
     const createAccountLinkMutation = trpc.payment.createStripeConnectAccountLink.useMutation({
         onSuccess: (data) => {
