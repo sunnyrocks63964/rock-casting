@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
-import { Input, Button, message } from "antd";
+import { Input, Button, message, Modal } from "antd";
 
 const { TextArea } = Input;
 
@@ -11,6 +12,8 @@ interface OrdererMyPageProps {
 }
 
 const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
+    const router = useRouter();
+    
     // データ取得
     const { data: profileData, isLoading, refetch } = trpc.profile.getOrdererProfile.useQuery({
         userId,
@@ -23,7 +26,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
         year: selectedYear,
     });
 
-    const { data: projectsData } = trpc.profile.getOrdererProjects.useQuery({
+    const { data: projectsData, refetch: refetchProjects } = trpc.profile.getOrdererProjects.useQuery({
         userId,
     });
 
@@ -54,6 +57,33 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
             message.error(`更新に失敗しました: ${error.message}`);
         },
     });
+
+    // 案件削除
+    const deleteProjectMutation = trpc.project.deleteProject.useMutation({
+        onSuccess: () => {
+            message.success("案件を削除しました");
+            refetchProjects();
+        },
+        onError: (error) => {
+            message.error(`案件の削除に失敗しました: ${error.message}`);
+        },
+    });
+
+    // 案件削除の確認と実行
+    const handleDeleteProject = (projectId: string) => {
+        Modal.confirm({
+            title: "案件を削除します",
+            okText: "削除",
+            okType: "danger",
+            cancelText: "キャンセル",
+            onOk: () => {
+                deleteProjectMutation.mutate({
+                    projectId,
+                    userId,
+                });
+            },
+        });
+    };
 
     // データを読み込んだら初期値を設定
     useEffect(() => {
@@ -439,7 +469,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                     }}
                 >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                        <h2 style={{ fontSize: "16px", fontWeight: "bold" }}>
+                        <h2 style={{ fontSize: "16px", fontWeight: "bold", color: "#000" }}>
                             支払い管理
                         </h2>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -615,6 +645,9 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                                         <Button
                                             type="primary"
                                             danger
+                                            onClick={() => {
+                                                router.push(`/order/edit_project/${project.id}`);
+                                            }}
                                             style={{
                                                 borderRadius: "90px",
                                                 height: "31px",
@@ -625,6 +658,10 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                                             編集する
                                         </Button>
                                         <Button
+                                            onClick={() => {
+                                                handleDeleteProject(project.id);
+                                            }}
+                                            loading={deleteProjectMutation.isPending}
                                             style={{
                                                 borderRadius: "90px",
                                                 height: "31px",
