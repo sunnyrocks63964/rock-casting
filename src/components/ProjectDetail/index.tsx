@@ -13,6 +13,7 @@ const ProjectDetail = () => {
     const [userId, setUserId] = useState<string | null>(null);
     const [addingFavorite, setAddingFavorite] = useState(false);
     const [removingFavorite, setRemovingFavorite] = useState(false);
+    const [isCreatingThread, setIsCreatingThread] = useState(false);
 
     // ユーザーIDを取得
     useEffect(() => {
@@ -26,6 +27,27 @@ const ProjectDetail = () => {
         };
         getUserId();
     }, []);
+
+    // 現在のユーザー情報を取得（Castかどうかを確認するため）
+    const { data: userData } = trpc.auth.getCurrentUser.useQuery(
+        { userId: userId! },
+        {
+            enabled: !!userId,
+            retry: false,
+        }
+    );
+
+    // メッセージスレッド作成のmutation
+    const { mutate: createThread } = trpc.message.createThread.useMutation({
+        onSuccess: (data) => {
+            router.push(`/caster/message/${data.threadId}`);
+        },
+        onError: (error) => {
+            console.error("スレッド作成エラー:", error);
+            alert("応募に失敗しました: " + error.message);
+            setIsCreatingThread(false);
+        },
+    });
 
     // 案件データを取得
     const { data: project, isLoading: isLoadingProject } = trpc.project.getProjectById.useQuery(
@@ -553,26 +575,37 @@ const ProjectDetail = () => {
                             justifyContent: "flex-start",
                         }}
                     >
-                        <button
-                            onClick={() => {
-                                // 案件に応募する機能の実装
-                            }}
-                            style={{
-                                backgroundColor: "#d70202",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "90px",
-                                padding: "8px 24px",
-                                fontSize: "14px",
-                                fontWeight: "700",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                cursor: "pointer",
-                                width: "262px",
-                                height: "40px",
-                            }}
-                        >
-                            案件に応募する
-                        </button>
+                        {userData?.hasCasterProfile && userId && project.user.id !== userId && (
+                            <button
+                                onClick={() => {
+                                    if (!userId || !project.user.id) {
+                                        alert("ユーザー情報が取得できませんでした");
+                                        return;
+                                    }
+                                    setIsCreatingThread(true);
+                                    createThread({
+                                        ordererId: project.user.id,
+                                        casterId: userId,
+                                    });
+                                }}
+                                disabled={isCreatingThread}
+                                style={{
+                                    backgroundColor: isCreatingThread ? "#999" : "#d70202",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "90px",
+                                    padding: "8px 24px",
+                                    fontSize: "14px",
+                                    fontWeight: "700",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    cursor: isCreatingThread ? "not-allowed" : "pointer",
+                                    width: "262px",
+                                    height: "40px",
+                                }}
+                            >
+                                {isCreatingThread ? "処理中..." : "案件に応募する"}
+                            </button>
+                        )}
                         <button
                             onClick={handleFavorite}
                             style={{
