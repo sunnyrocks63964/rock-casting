@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { InputNumber, Button } from "antd";
 import Image from "next/image";
+import topOrderBgIcon from "../TopOrder/images/top_order_bg.png";
 
 type ProfessionType = 
     | "photographer"
@@ -28,6 +30,7 @@ const professions: Profession[] = [
 ];
 
 const PackageReservate = () => {
+    const router = useRouter();
     const [counts, setCounts] = useState<Record<ProfessionType, number>>({
         photographer: 0,
         model: 0,
@@ -60,8 +63,29 @@ const PackageReservate = () => {
     };
 
     const handleSearchClick = () => {
-        // 一旦置くだけ
-        console.log("キャストを検索する");
+        // 選択された職種と人数をURLパラメータとして渡す
+        const selectedProfessions: Array<{ profession: ProfessionType; count: number }> = [];
+        
+        Object.entries(counts).forEach(([profession, count]) => {
+            if (count > 0) {
+                selectedProfessions.push({
+                    profession: profession as ProfessionType,
+                    count,
+                });
+            }
+        });
+
+        if (selectedProfessions.length === 0) {
+            return;
+        }
+
+        // URLパラメータを構築
+        const params = new URLSearchParams();
+        selectedProfessions.forEach(({ profession, count }) => {
+            params.append("professions", `${profession}:${count}`);
+        });
+
+        router.push(`/order/package_reservate/serched?${params.toString()}`);
     };
 
     return (
@@ -89,32 +113,49 @@ const PackageReservate = () => {
                             margin: "0 auto",
                             maxWidth: "958px",
                             boxShadow: "0px 4px 4px 0px rgba(0,0,0,0.25)",
+                            position: "relative",
+                            overflow: "hidden",
                         }}
                     >
-                        <h2
+                        <img
+                            src={topOrderBgIcon.src}
+                            alt="パッケージ予約"
                             style={{
-                                fontSize: "18px",
-                                fontWeight: "700",
-                                marginBottom: "16px",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                color: "black",
-                                textAlign: "center",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                opacity: 0.3,
                             }}
-                        >
-                            パッケージ予約とは？
-                        </h2>
-                        <p
-                            style={{
-                                fontSize: "16px",
-                                lineHeight: "1.8",
-                                color: "black",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                margin: 0,
-                                whiteSpace: "pre-wrap",
-                            }}
-                        >
-                            同じ職種のキャストや、異なる職種のキャストを複数名まとめて予約できる機能です。システムが自動的にキャストを選出し、契約手続きまで一括で完了させます。
-                        </p>
+                        />
+                        <div style={{ position: "relative", zIndex: 1 }}>
+                            <h2
+                                style={{
+                                    fontSize: "18px",
+                                    fontWeight: "700",
+                                    marginBottom: "16px",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    color: "black",
+                                    textAlign: "center",
+                                }}
+                            >
+                                パッケージ予約とは？
+                            </h2>
+                            <p
+                                style={{
+                                    fontSize: "16px",
+                                    lineHeight: "1.8",
+                                    color: "black",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    margin: 0,
+                                    whiteSpace: "pre-wrap",
+                                }}
+                            >
+                                同じ職種のキャストや、異なる職種のキャストを複数名まとめて予約できる機能です。システムが自動的にキャストを選出し、契約手続きまで一括で完了させます。
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

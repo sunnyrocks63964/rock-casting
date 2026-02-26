@@ -1133,6 +1133,9 @@ const TopOrder = () => {
                             同じ職種のキャストや、異なる職種のキャストを複数名まとめて予約できる機能です。システムが自動的にキャストを選出し、契約手続きまで一括で完了させます。
                         </p>
                         <button
+                            onClick={() => {
+                                router.push("/order/package_reservate");
+                            }}
                             style={{
                                 backgroundColor: "#d70202",
                                 color: "white",
