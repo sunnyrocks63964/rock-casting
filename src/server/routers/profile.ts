@@ -554,10 +554,20 @@ export const profileRouter = createTRPCRouter({
             z.record(z.string(), z.array(z.string()))
           )
           .optional(),
+        basicInfoFilters: z
+          .object({
+            ageMin: z.number().optional(),
+            ageMax: z.number().optional(),
+            heightMin: z.number().optional(),
+            heightMax: z.number().optional(),
+            gender: z.array(z.string()).optional(),
+            availableDays: z.array(z.string()).optional(),
+          })
+          .optional(),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { page, limit, searchKeyword, jobTypeFilters } = input;
+      const { page, limit, searchKeyword, jobTypeFilters, basicInfoFilters } = input;
 
       try {
         const skip = (page - 1) * limit;
@@ -658,6 +668,146 @@ export const profileRouter = createTRPCRouter({
               delete where.OR;
             } else {
               where.OR = jobTypeFilterConditions;
+            }
+          }
+        }
+
+        // 基本情報フィルターの適用
+        if (basicInfoFilters) {
+          const basicInfoFilterConditions: Prisma.UserWhereInput[] = [];
+
+          // 年齢フィルター
+          if (basicInfoFilters.ageMin !== undefined || basicInfoFilters.ageMax !== undefined) {
+            const today = new Date();
+            // 年齢ageMax以下になるには、今日からageMax年前の日付以降に生まれた必要がある
+            // 例：ageMax=30の場合、1996年2月26日以降に生まれた人が30歳以下
+            const maxBirthdate = basicInfoFilters.ageMax !== undefined
+              ? new Date(today.getFullYear() - basicInfoFilters.ageMax, today.getMonth(), today.getDate())
+              : null;
+            // 年齢ageMin以上になるには、今日からageMin+1年前の日付以前に生まれた必要がある
+            // 例：ageMin=20の場合、2006年2月26日以前に生まれた人が20歳以上
+            const minBirthdate = basicInfoFilters.ageMin !== undefined
+              ? new Date(today.getFullYear() - basicInfoFilters.ageMin - 1, today.getMonth(), today.getDate())
+              : null;
+
+            const ageCondition: Prisma.CasterProfileWhereInput = {};
+            if (maxBirthdate && minBirthdate) {
+              ageCondition.birthdate = { gte: maxBirthdate, lte: minBirthdate };
+            } else if (maxBirthdate) {
+              ageCondition.birthdate = { gte: maxBirthdate };
+            } else if (minBirthdate) {
+              ageCondition.birthdate = { lte: minBirthdate };
+            }
+
+            if (Object.keys(ageCondition).length > 0) {
+              basicInfoFilterConditions.push({
+                casterProfile: ageCondition,
+              });
+            }
+          }
+
+          // 身長フィルター
+          if (basicInfoFilters.heightMin !== undefined || basicInfoFilters.heightMax !== undefined) {
+            const heightCondition: Prisma.CasterProfileWhereInput = {};
+            if (basicInfoFilters.heightMin !== undefined && basicInfoFilters.heightMax !== undefined) {
+              heightCondition.height = { gte: basicInfoFilters.heightMin, lte: basicInfoFilters.heightMax };
+            } else if (basicInfoFilters.heightMin !== undefined) {
+              heightCondition.height = { gte: basicInfoFilters.heightMin };
+            } else if (basicInfoFilters.heightMax !== undefined) {
+              heightCondition.height = { lte: basicInfoFilters.heightMax };
+            }
+
+            if (Object.keys(heightCondition).length > 0) {
+              basicInfoFilterConditions.push({
+                casterProfile: heightCondition,
+              });
+            }
+          }
+
+          // 性別フィルター
+          if (basicInfoFilters.gender && basicInfoFilters.gender.length > 0) {
+            // UIの値（「男性」「女性」「その他」）をDBの値（male, female, other）に変換
+            const genderMap: Record<string, "male" | "female" | "other" | "prefer_not_to_say"> = {
+              "男性": "male",
+              "女性": "female",
+              "その他": "other",
+            };
+            const dbGenders = basicInfoFilters.gender
+              .map((g) => genderMap[g])
+              .filter((g): g is "male" | "female" | "other" | "prefer_not_to_say" => g !== undefined);
+
+            if (dbGenders.length > 0) {
+              basicInfoFilterConditions.push({
+                casterProfile: {
+                  gender: {
+                    in: dbGenders,
+                  },
+                },
+              });
+            }
+          }
+
+          // 活動可能日フィルター
+          if (basicInfoFilters.availableDays && basicInfoFilters.availableDays.length > 0) {
+            // UIの値（「平日」「土日祝」など）を「活動可能日時」カテゴリの値にマッピング
+            const availableDaysMap: Record<string, string[]> = {
+              "平日": ["平日のみ", "平日・土日祝両方可能"],
+              "土日祝": ["土日祝のみ", "平日・土日祝両方可能"],
+              "早朝対応可能": ["早朝対応可能"],
+              "深夜対応可能": ["深夜対応可能"],
+              "即日対応可能": ["即日対応可能"],
+            };
+
+            const skillValues: string[] = [];
+            basicInfoFilters.availableDays.forEach((day) => {
+              const mappedValues = availableDaysMap[day];
+              if (mappedValues) {
+                skillValues.push(...mappedValues);
+              }
+            });
+
+            if (skillValues.length > 0) {
+              // 活動可能日時はCasterJobSkillの「活動可能日時」カテゴリに保存されている
+              basicInfoFilterConditions.push({
+                casterProfile: {
+                  jobTypes: {
+                    some: {
+                      skills: {
+                        some: {
+                          category: "活動可能日時",
+                          value: {
+                            in: skillValues,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+            }
+          }
+
+          // 基本情報フィルター条件をORで結合（いずれかの条件にマッチすればOK）
+          if (basicInfoFilterConditions.length > 0) {
+            // 既存の条件がある場合はANDで結合
+            if (where.OR) {
+              if (where.AND) {
+                const existingAndArray = Array.isArray(where.AND) ? where.AND : [where.AND];
+                const newAndArray: Prisma.UserWhereInput[] = [...existingAndArray, { OR: basicInfoFilterConditions }];
+                where.AND = newAndArray;
+              } else {
+                where.AND = [
+                  { OR: where.OR },
+                  { OR: basicInfoFilterConditions },
+                ];
+                delete where.OR;
+              }
+            } else if (where.AND) {
+              const existingAndArray = Array.isArray(where.AND) ? where.AND : [where.AND];
+              const newAndArray: Prisma.UserWhereInput[] = [...existingAndArray, { OR: basicInfoFilterConditions }];
+              where.AND = newAndArray;
+            } else {
+              where.OR = basicInfoFilterConditions;
             }
           }
         }
