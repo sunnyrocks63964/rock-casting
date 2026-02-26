@@ -41,6 +41,15 @@ const TopOrder = () => {
     const [appliedFilters, setAppliedFilters] = useState<
         Partial<Record<JobType, Record<string, string[]>>> | undefined
     >(undefined);
+    // 適用された基本情報フィルター
+    const [appliedBasicInfoFilters, setAppliedBasicInfoFilters] = useState<{
+        ageMin?: number;
+        ageMax?: number;
+        heightMin?: number;
+        heightMax?: number;
+        gender?: string[];
+        availableDays?: string[];
+    } | undefined>(undefined);
     // 基本情報のstate
     const [ageMin, setAgeMin] = useState("");
     const [ageMax, setAgeMax] = useState("");
@@ -79,6 +88,7 @@ const TopOrder = () => {
         limit: 15,
         searchKeyword: searchKeyword || undefined,
         jobTypeFilters: appliedFilters,
+        basicInfoFilters: appliedBasicInfoFilters,
     });
 
     // お気に入り追加/削除処理
@@ -177,7 +187,7 @@ const TopOrder = () => {
     // フィルターが変更されたときにページをリセット
     useEffect(() => {
         setCurrentPage(1);
-    }, [appliedFilters]);
+    }, [appliedFilters, appliedBasicInfoFilters]);
 
     const handleJobTypeClick = (jobType: JobType) => {
         setOpenJobType(jobType);
@@ -251,6 +261,58 @@ const TopOrder = () => {
         // フィルターが空の場合はundefinedを設定（全キャストを表示）
         const hasAnyFilter = Object.keys(filtersToApply).length > 0;
         setAppliedFilters(hasAnyFilter ? filtersToApply : undefined);
+
+        // 基本情報フィルターを適用
+        const basicInfoFiltersToApply: {
+            ageMin?: number;
+            ageMax?: number;
+            heightMin?: number;
+            heightMax?: number;
+            gender?: string[];
+            availableDays?: string[];
+        } = {};
+
+        // 年齢フィルター
+        if (ageMin.trim()) {
+            const ageMinNum = parseInt(ageMin.trim(), 10);
+            if (!Number.isNaN(ageMinNum)) {
+                basicInfoFiltersToApply.ageMin = ageMinNum;
+            }
+        }
+        if (ageMax.trim()) {
+            const ageMaxNum = parseInt(ageMax.trim(), 10);
+            if (!Number.isNaN(ageMaxNum)) {
+                basicInfoFiltersToApply.ageMax = ageMaxNum;
+            }
+        }
+
+        // 身長フィルター
+        if (heightMin.trim()) {
+            const heightMinNum = parseInt(heightMin.trim(), 10);
+            if (!Number.isNaN(heightMinNum)) {
+                basicInfoFiltersToApply.heightMin = heightMinNum;
+            }
+        }
+        if (heightMax.trim()) {
+            const heightMaxNum = parseInt(heightMax.trim(), 10);
+            if (!Number.isNaN(heightMaxNum)) {
+                basicInfoFiltersToApply.heightMax = heightMaxNum;
+            }
+        }
+
+        // 性別フィルター
+        if (gender.length > 0) {
+            basicInfoFiltersToApply.gender = gender;
+        }
+
+        // 活動可能日フィルター
+        if (availableDays.length > 0) {
+            basicInfoFiltersToApply.availableDays = availableDays;
+        }
+
+        // 基本情報フィルターが空の場合はundefinedを設定
+        const hasAnyBasicInfoFilter = Object.keys(basicInfoFiltersToApply).length > 0;
+        setAppliedBasicInfoFilters(hasAnyBasicInfoFilter ? basicInfoFiltersToApply : undefined);
     };
 
     const handleReset = () => {
@@ -271,6 +333,8 @@ const TopOrder = () => {
         setGender([]);
         // 活動可能日をリセット
         setAvailableDays([]);
+        // 適用された基本情報フィルターもリセット
+        setAppliedBasicInfoFilters(undefined);
     };
 
     return (
