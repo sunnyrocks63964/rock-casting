@@ -87,6 +87,18 @@ const LoginedHeader = () => {
         return "/order/mypage";
     };
 
+    // トップページへの遷移先を決定（パスベースの判定）
+    const getTopPath = (): string => {
+        if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+            return "/top/caster";
+        }
+        if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+            return "/top/order";
+        }
+        // デフォルト
+        return "/top/order";
+    };
+
     // 表示する画像を決定（メイン画像があればそれを使用、なければデフォルト画像）
     const casterMainProfileImage = casterProfileData && "mainProfileImage" in casterProfileData 
         ? (casterProfileData.mainProfileImage as string | null | undefined)
@@ -129,7 +141,7 @@ const LoginedHeader = () => {
         >
             {/* ロゴ */}
             <Link
-                href="/top"
+                href={getTopPath()}
                 className={rocknrollOne.className}
                 style={{
                     fontSize: "24px",
