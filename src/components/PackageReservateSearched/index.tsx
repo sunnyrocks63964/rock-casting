@@ -145,6 +145,50 @@ const PackageReservateSearched = () => {
     // お気に入り管理フック
     const { isFavorite, addFavorite, removeFavorite, isAdding, isRemoving } = useFavoriteCasters({ ordererId });
 
+    // まとめてキャスティング用のmutation
+    const { mutate: createMultipleThreads, isPending: isCreatingMultipleThreads } = trpc.message.createMultipleThreads.useMutation({
+        onSuccess: () => {
+            router.push("/order/message_list");
+        },
+        onError: (error) => {
+            console.error("まとめてキャスティングエラー:", error);
+            alert("まとめてキャスティングに失敗しました: " + error.message);
+        },
+    });
+
+    // 表示されているすべてのCasterのIDを収集する関数
+    const getAllDisplayedCasterIds = (): string[] => {
+        const casterIds: string[] = [];
+        allQueries.forEach((query) => {
+            const casters = query.data?.casters || [];
+            casters.forEach((caster: Caster) => {
+                if (caster.id && !casterIds.includes(caster.id)) {
+                    casterIds.push(caster.id);
+                }
+            });
+        });
+        return casterIds;
+    };
+
+    // まとめてキャスティングを実行する関数
+    const handleBulkCasting = () => {
+        if (!ordererId) {
+            alert("発注者情報が取得できませんでした");
+            return;
+        }
+
+        const casterIds = getAllDisplayedCasterIds();
+        if (casterIds.length === 0) {
+            alert("キャストが選択されていません");
+            return;
+        }
+
+        createMultipleThreads({
+            ordererId,
+            casterIds,
+        });
+    };
+
     // 各職種ごとにキャストを検索
     // Hooksの順序を保つため、useMemoを使用して職種情報を準備
     const professionQueriesConfig = useMemo(() => {
@@ -424,7 +468,7 @@ const PackageReservateSearched = () => {
                                         color: "black",
                                     }}
                                 >
-                                    {getProfessionName(profession)}　{count}名
+                                    {getProfessionName(profession)}　{casters.length}名
                                 </h2>
 
                                 {/* キャストリスト */}
@@ -677,12 +721,10 @@ const PackageReservateSearched = () => {
                         }}
                     >
                         <button
-                            onClick={() => {
-                                // 一旦置くだけ
-                                console.log("まとめてキャスティングを行う");
-                            }}
+                            onClick={handleBulkCasting}
+                            disabled={isCreatingMultipleThreads}
                             style={{
-                                backgroundColor: "#d70202",
+                                backgroundColor: isCreatingMultipleThreads ? "#999" : "#d70202",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "90px",
@@ -690,19 +732,23 @@ const PackageReservateSearched = () => {
                                 fontSize: "24px",
                                 fontWeight: "700",
                                 padding: "0 100px",
-                                cursor: "pointer",
+                                cursor: isCreatingMultipleThreads ? "not-allowed" : "pointer",
                                 fontFamily: "'Noto Sans JP', sans-serif",
                             }}
                             onMouseEnter={(e) => {
-                                const target = e.currentTarget;
-                                target.style.backgroundColor = "#e52222";
+                                if (!isCreatingMultipleThreads) {
+                                    const target = e.currentTarget;
+                                    target.style.backgroundColor = "#e52222";
+                                }
                             }}
                             onMouseLeave={(e) => {
-                                const target = e.currentTarget;
-                                target.style.backgroundColor = "#d70202";
+                                if (!isCreatingMultipleThreads) {
+                                    const target = e.currentTarget;
+                                    target.style.backgroundColor = "#d70202";
+                                }
                             }}
                         >
-                            まとめてキャスティングを行う
+                            {isCreatingMultipleThreads ? "処理中..." : "まとめてキャスティングを行う"}
                         </button>
                     </div>
                 </div>
