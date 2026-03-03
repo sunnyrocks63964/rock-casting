@@ -19,7 +19,7 @@ const DesktopNav = () => {
         }}
       >
         <Link
-          href="#pricing"
+          href="/usage_guide"
           style={{
             color: "white",
             textDecoration: "none",
