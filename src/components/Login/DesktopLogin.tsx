@@ -329,7 +329,7 @@ export default function DesktopLogin() {
 
                     {/* 新規登録リンク */}
                     <a
-                        href="/user_register"
+                        href="/interview_schedule"
                         style={{
                             fontFamily: "'Noto Sans JP', sans-serif",
                             fontSize: "14px",

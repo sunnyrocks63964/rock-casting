@@ -165,7 +165,7 @@ const DesktopHero = ({ slides }: DesktopHeroProps) => {
               {/* CTAボタン */}
               <div style={{ display: "flex" }}>
                 <Link
-                  href="/user_register"
+                  href="/interview_schedule"
                   style={{
                     fontFamily: "Noto Sans JP",
                     backgroundColor: "#dc2626",
