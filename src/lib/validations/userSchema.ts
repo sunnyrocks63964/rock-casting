@@ -55,6 +55,7 @@ export const OrdererProfileUpdateSchema = z.object({
   mainProfileImage: z.string().url().optional().nullable(),
   industry: z.string().max(100).optional(),
   websiteUrl: z.array(urlSchema).optional(),
+  residence: z.string().max(200).optional(),
   desiredWorkAreas: z.array(z.string()).max(47).optional(),
   desiredOccupations: z.array(z.string()).max(20).optional(),
 });

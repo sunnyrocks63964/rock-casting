@@ -620,10 +620,6 @@ export const profileRouter = createTRPCRouter({
               (values) => values.length > 0
             );
 
-            if (!hasSelectedCategories) {
-              return;
-            }
-
             // 各カテゴリごとのスキル条件を構築
             const skillConditions: Prisma.CasterJobSkillWhereInput[] = [];
             Object.entries(categories).forEach(([category, values]) => {
@@ -638,17 +634,22 @@ export const profileRouter = createTRPCRouter({
             });
 
             // この職種にマッチする条件を構築
-            // 職種が存在し、かつ選択されたスキル条件のいずれかにマッチする必要がある
+            // 職種が存在することを条件にする
+            // スキル条件がある場合は、それも条件に含める
             const jobTypeCondition: Prisma.UserWhereInput = {
               casterProfile: {
                 jobTypes: {
                   some: {
                     jobType: jobType as "photographer" | "model" | "artist" | "creator",
-                    skills: {
-                      some: {
-                        OR: skillConditions,
-                      },
-                    },
+                    ...(skillConditions.length > 0
+                      ? {
+                          skills: {
+                            some: {
+                              OR: skillConditions,
+                            },
+                          },
+                        }
+                      : {}),
                   },
                 },
               },

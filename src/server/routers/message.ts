@@ -70,6 +70,101 @@ export const messageRouter = createTRPCRouter({
     }),
 
   /**
+   * 複数のメッセージスレッドを一括作成（まとめてキャスティング時に呼ばれる）
+   */
+  createMultipleThreads: publicProcedure
+    .input(
+      z.object({
+        ordererId: z.string().uuid(),
+        casterIds: z.array(z.string().uuid()).min(1),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { ordererId, casterIds } = input;
+
+      try {
+        const results = await Promise.all(
+          casterIds.map(async (casterId) => {
+            // 自分自身とのスレッドは作成しない
+            if (ordererId === casterId) {
+              return {
+                casterId,
+                success: false,
+                error: "発注者と受注者は異なるユーザーである必要があります",
+              };
+            }
+
+            try {
+              // 既存のスレッドを確認
+              const existingThread = await ctx.prisma.messageThread.findUnique({
+                where: {
+                  ordererId_casterId: {
+                    ordererId,
+                    casterId,
+                  },
+                },
+              });
+
+              if (existingThread) {
+                return {
+                  casterId,
+                  success: true,
+                  threadId: existingThread.id,
+                  isNew: false,
+                };
+              }
+
+              // 新しいスレッドを作成
+              const thread = await ctx.prisma.messageThread.create({
+                data: {
+                  ordererId,
+                  casterId,
+                },
+              });
+
+              return {
+                casterId,
+                success: true,
+                threadId: thread.id,
+                isNew: true,
+              };
+            } catch (error) {
+              console.error(`スレッド作成エラー (casterId: ${casterId}):`, error);
+              return {
+                casterId,
+                success: false,
+                error: "スレッド作成中にエラーが発生しました",
+              };
+            }
+          })
+        );
+
+        const successCount = results.filter((r) => r.success).length;
+        const newThreadCount = results.filter((r) => r.success && r.isNew).length;
+        const existingThreadCount = results.filter((r) => r.success && !r.isNew).length;
+        const errorCount = results.filter((r) => !r.success).length;
+
+        return {
+          success: true,
+          results,
+          summary: {
+            total: casterIds.length,
+            success: successCount,
+            new: newThreadCount,
+            existing: existingThreadCount,
+            errors: errorCount,
+          },
+        };
+      } catch (error) {
+        console.error("複数スレッド作成エラー:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "複数スレッド作成中にエラーが発生しました",
+        });
+      }
+    }),
+
+  /**
    * メッセージ送信
    */
   sendMessage: publicProcedure

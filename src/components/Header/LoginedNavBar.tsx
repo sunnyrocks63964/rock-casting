@@ -183,9 +183,9 @@ const LoginedNavBar = () => {
                 契約一覧
             </Link>
             <Link
-                href="#"
+                href="/order/package_reservate"
                 style={{
-                    color: "white",
+                    color: pathname === "/order/package_reservate" ? "#fff" : "white",
                     textDecoration: "none",
                     fontSize: "14px",
                     fontWeight: "700",
