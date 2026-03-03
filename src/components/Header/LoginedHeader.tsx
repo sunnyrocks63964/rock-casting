@@ -196,7 +196,7 @@ const LoginedHeader = () => {
                     料金
                 </Link>
                 <Link
-                    href="#casts"
+                    href="/top#casts"
                     style={{
                         color: "white",
                         textDecoration: "none",

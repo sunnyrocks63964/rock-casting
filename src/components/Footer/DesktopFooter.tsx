@@ -95,14 +95,12 @@ const DesktopFooter = () => {
                   会員登録
                 </Link>
                 <Link
-                  href="#"
+                  href="/top#casts"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   キャスト一覧
                 </Link>

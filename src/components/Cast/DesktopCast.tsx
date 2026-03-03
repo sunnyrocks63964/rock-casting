@@ -28,6 +28,7 @@ const DesktopCast = ({
 }: DesktopCastProps) => {
   return (
     <section
+      id="casts"
       style={{
         padding: "5rem 0",
         backgroundColor: "white",

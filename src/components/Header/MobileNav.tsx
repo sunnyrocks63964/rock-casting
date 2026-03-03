@@ -95,7 +95,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
           料金
         </Link>
         <Link
-          href="#casts"
+          href="/top#casts"
           onClick={onClose}
           style={{
             color: "white",
