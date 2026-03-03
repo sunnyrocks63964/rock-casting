@@ -115,14 +115,12 @@ const DesktopFooter = () => {
                   ログイン
                 </Link>
                 <Link
-                  href="#"
+                  href="/usage_guide"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   料金
                 </Link>
