@@ -38,6 +38,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
         mainProfileImage: "",
         industry: "",
         websiteUrl: [] as string[],
+        residence: "",
     });
 
     // スクロール用のref
@@ -92,6 +93,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                 mainProfileImage?: string | null;
                 industry?: string | null;
                 websiteUrl?: string[];
+                residence?: string | null;
             };
             
             setFormData({
@@ -99,6 +101,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                 mainProfileImage: profile.mainProfileImage || "",
                 industry: profile.industry || "",
                 websiteUrl: profile.websiteUrl || [],
+                residence: profile.residence || "",
             });
         }
     }, [profileData]);
@@ -118,6 +121,7 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                 mainProfileImage: formData.mainProfileImage || undefined,
                 industry: formData.industry || undefined,
                 websiteUrl: formData.websiteUrl.length > 0 ? formData.websiteUrl : undefined,
+                residence: formData.residence || undefined,
             },
         });
     };
@@ -384,6 +388,31 @@ const OrdererMyPage: React.FC<OrdererMyPageProps> = ({ userId }) => {
                                         value={formData.industry}
                                         onChange={(e) => handleFormChange("industry", e.target.value)}
                                         placeholder="例: 広告代理店"
+                                        style={{
+                                            borderRadius: "10px",
+                                            border: "1px solid #000",
+                                            height: "39px",
+                                        }}
+                                    />
+                                </div>
+
+                                {/* 住所 */}
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "bold",
+                                            marginBottom: "10px",
+                                            fontSize: "16px",
+                                            color: "#000",
+                                        }}
+                                    >
+                                        住所
+                                    </label>
+                                    <Input
+                                        value={formData.residence}
+                                        onChange={(e) => handleFormChange("residence", e.target.value)}
+                                        placeholder="東京都千代田区丸の内1丁目9-1"
                                         style={{
                                             borderRadius: "10px",
                                             border: "1px solid #000",

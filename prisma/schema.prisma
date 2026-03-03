@@ -104,6 +104,7 @@ model OrdererProfile {
   mainProfileImage   String?  @map("main_profile_image") // メインプロフィール画像URL
   industry           String?  // 業種
   websiteUrl         String[] @default([]) @map("website_url")
+  residence          String?  // 居住地
   desiredWorkAreas   String[] @default([]) @map("desired_work_areas")
   desiredOccupations String[] @default([]) @map("desired_occupations")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
