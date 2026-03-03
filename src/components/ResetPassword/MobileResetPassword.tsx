@@ -291,7 +291,7 @@ export default function MobileResetPassword() {
                         {/* 新規登録リンク */}
                         <div style={{ textAlign: "center" }}>
                             <a
-                                href="/user_register"
+                                href="/interview_schedule"
                                 style={{
                                     fontFamily: "'Noto Sans JP', sans-serif",
                                     fontSize: "12px",

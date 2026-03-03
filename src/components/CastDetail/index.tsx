@@ -1066,7 +1066,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                     }}
                                 >
                                     <button
-                                        onClick={() => router.push("/user_register")}
+                                        onClick={() => router.push("/interview_schedule")}
                                         style={{
                                             backgroundColor: "#d70202",
                                             color: "white",

@@ -103,7 +103,7 @@ const MobileFooter = () => {
               仕事を依頼する
             </Link>
             <Link
-              href="/user_register"
+              href="/interview_schedule"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
