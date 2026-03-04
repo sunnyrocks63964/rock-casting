@@ -628,6 +628,15 @@ export const authRouter = createTRPCRouter({
 
         const supabase = getServerSupabaseClient();
         const redirectTo = `${getServerAppUrl()}/password_reset`;
+        
+        // デバッグログ: 実際に使用されるURLを確認
+        console.log("[requestPasswordReset] Environment check:", {
+          APP_URL: process.env.APP_URL,
+          VERCEL_URL: process.env.VERCEL_URL,
+          VERCEL_ENV: process.env.VERCEL_ENV,
+          NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+          redirectTo,
+        });
 
         // パスワードリセットリンクを生成（メールは送信しない）
         const { data, error } = await supabase.auth.admin.generateLink({
