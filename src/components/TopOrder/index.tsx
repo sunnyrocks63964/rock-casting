@@ -1023,7 +1023,7 @@ const TopOrder = () => {
                     >
                         <input
                             type="text"
-                            placeholder="フリーワードで検索"
+                            placeholder="キャスト名で検索"
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onKeyDown={(e) => {
