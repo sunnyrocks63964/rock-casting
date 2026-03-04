@@ -19,7 +19,6 @@ const DesktopReceiveWorkHero = () => {
       <div
         style={{
           position: "absolute",
-          top: "87px",
           left: 0,
           width: "100%",
           height: "408px",
@@ -30,7 +29,7 @@ const DesktopReceiveWorkHero = () => {
           alt=""
           fill
           style={{
-            objectFit: "cover",
+            objectFit: "contain",
           }}
           priority
         />
@@ -52,7 +51,6 @@ const DesktopReceiveWorkHero = () => {
       <div
         style={{
           position: "relative",
-          top: "87px",
           zIndex: 10,
           display: "flex",
           flexDirection: "column",

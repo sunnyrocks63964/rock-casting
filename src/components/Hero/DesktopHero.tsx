@@ -116,12 +116,27 @@ const DesktopHero = ({ slides }: DesktopHeroProps) => {
                   fontFamily: "Noto Sans JP",
                   fontSize: "48px",
                   fontWeight: "bold",
-                  marginBottom: "2rem",
+                  marginBottom: "1.5rem",
                   lineHeight: 1.2,
+                  color: "white",
                 }}
               >
                 キャスト選びを「運任せ」にしない
               </h1>
+
+              {/* 日本で唯一無二の */}
+              <div
+                style={{
+                  fontFamily: "Noto Sans JP",
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  marginBottom: "1.5rem",
+                  color: "white",
+                  lineHeight: 1.2,
+                }}
+              >
+                日本で唯一無二の
+              </div>
 
               {/* サブタイトル */}
               <h2

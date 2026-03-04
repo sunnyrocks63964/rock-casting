@@ -5,6 +5,13 @@ import categoryImage from "./images/get-a-job_example.png";
 import exampleBgImage from "./images/get-a-job_example-bg.png";
 
 const DesktopJobExamplesSection = () => {
+  const scrollToExample = (exampleId: number) => {
+    const element = document.getElementById(`example-${exampleId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const examples = [
     {
       id: 1,
@@ -111,6 +118,7 @@ const DesktopJobExamplesSection = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              position: "relative",
             }}
           >
             <img
@@ -121,6 +129,46 @@ const DesktopJobExamplesSection = () => {
                 height: "auto",
               }}
             />
+            {/* クリック可能な領域 */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                cursor: "pointer",
+              }}
+            >
+              {/* フォトグラファー */}
+              <div
+                onClick={() => scrollToExample(1)}
+                style={{
+                  flex: 1,
+                  height: "100%",
+                }}
+                aria-label="フォトグラファーの事例へ移動"
+              />
+              {/* スタイリスト */}
+              <div
+                onClick={() => scrollToExample(2)}
+                style={{
+                  flex: 1,
+                  height: "100%",
+                }}
+                aria-label="スタイリストの事例へ移動"
+              />
+              {/* ヘアメイク */}
+              <div
+                onClick={() => scrollToExample(3)}
+                style={{
+                  flex: 1,
+                  height: "100%",
+                }}
+                aria-label="ヘアメイクの事例へ移動"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -141,11 +189,13 @@ const DesktopJobExamplesSection = () => {
           {examples.map((example) => (
             <div
               key={example.id}
+              id={`example-${example.id}`}
               style={{
                 borderRadius: "30px",
                 overflow: "hidden",
                 marginBottom: "40px",
                 position: "relative",
+                scrollMarginTop: "100px",
               }}
             >
               {/* 背景画像 */}
