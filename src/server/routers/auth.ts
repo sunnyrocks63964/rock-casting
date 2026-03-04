@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/authSchema";
 import { getServerSupabaseClient } from "@/lib/supabase";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { getServerAppUrl } from "@/lib/utils/url";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
@@ -626,7 +627,7 @@ export const authRouter = createTRPCRouter({
         }
 
         const supabase = getServerSupabaseClient();
-        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/password_reset`;
+        const redirectTo = `${getServerAppUrl()}/password_reset`;
 
         // パスワードリセットリンクを生成（メールは送信しない）
         const { data, error } = await supabase.auth.admin.generateLink({

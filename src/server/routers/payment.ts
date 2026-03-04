@@ -6,6 +6,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { getServerAppUrl } from "@/lib/utils/url";
 import Stripe from "stripe";
 
 // Stripeクライアントの初期化
@@ -161,8 +162,8 @@ export const paymentRouter = createTRPCRouter({
             },
           ],
           mode: "payment",
-          success_url: `${process.env.NEXT_PUBLIC_APP_URL}/order/message/${threadId}?payment=success`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/order/message/${threadId}?payment=cancelled`,
+          success_url: `${getServerAppUrl()}/order/message/${threadId}?payment=success`,
+          cancel_url: `${getServerAppUrl()}/order/message/${threadId}?payment=cancelled`,
           metadata: {
             orderPaymentId: orderPayment.id,
             contractProposalId,
@@ -469,8 +470,8 @@ export const paymentRouter = createTRPCRouter({
         // Account Linkを作成（オンボーディング用）
         const accountLink = await stripe.accountLinks.create({
           account: stripeAccountId,
-          refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/caster/mypage?refresh=true`,
-          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/caster/mypage?success=true`,
+          refresh_url: `${getServerAppUrl()}/caster/mypage?refresh=true`,
+          return_url: `${getServerAppUrl()}/caster/mypage?success=true`,
           type: "account_onboarding",
         });
 
