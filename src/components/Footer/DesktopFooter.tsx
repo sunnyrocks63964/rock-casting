@@ -317,7 +317,7 @@ const DesktopFooter = () => {
                   情報セキュリティーポリシー
                 </Link>
                 <Link
-                  href="#"
+                  href="/service_environment"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -325,9 +325,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   サービス利用環境
                 </Link>

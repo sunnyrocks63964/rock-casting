@@ -244,7 +244,9 @@ const MobileFooter = () => {
               企業情報
             </Link>
             <Link
-              href="/environment"
+              href="/service_environment"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
