@@ -187,108 +187,141 @@ const DesktopOrderWork = () => {
             様々な方にご利用いただけます
           </p>
 
-          {/* タブ */}
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              justifyContent: "center",
-              marginBottom: "clamp(30px, 5vw, 50px)",
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: "#2c2c2c",
-                color: "white",
-                padding: "clamp(15px, 2vw, 25px) clamp(40px, 8vw, 80px)",
-                borderRadius: "30px",
-                fontSize: "clamp(18px, 2vw, 24px)",
-                fontWeight: "700",
-                fontFamily: "Noto Sans JP, sans-serif",
-                boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-                cursor: "pointer",
-              }}
-            >
-              個人の方
-            </div>
-            <div
-              style={{
-                backgroundColor: "#2c2c2c",
-                color: "white",
-                padding: "clamp(15px, 2vw, 25px) clamp(40px, 8vw, 80px)",
-                borderRadius: "30px",
-                fontSize: "clamp(18px, 2vw, 24px)",
-                fontWeight: "700",
-                fontFamily: "Noto Sans JP, sans-serif",
-                boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-                cursor: "pointer",
-              }}
-            >
-              法人の方
-            </div>
-          </div>
-
-          {/* コンテンツエリア */}
+          {/* タブとコンテンツエリア */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "clamp(30px, 5vw, 50px)",
-              textAlign: "left",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: "20px",
+              maxWidth: "1200px",
+              margin: "0 auto",
             }}
           >
             {/* 個人の方 */}
-            <div>
-              <ul
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+              }}
+            >
+              {/* タブ */}
+              <div
                 style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  fontSize: "clamp(16px, 2vw, 24px)",
+                  backgroundColor: "#2c2c2c",
+                  color: "white",
+                  height: "clamp(50px, 6.5vw, 65px)",
+                  padding: "0 clamp(30px, 6vw, 80px)",
+                  borderRadius: "30px",
+                  fontSize: "clamp(18px, 2vw, 24px)",
+                  fontWeight: "700",
                   fontFamily: "Noto Sans JP, sans-serif",
-                  color: "#0b0b0b",
-                  lineHeight: "1.95",
+                  boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "clamp(30px, 5vw, 50px)",
+                  width: "100%",
                 }}
               >
-                <li style={{ marginBottom: "15px" }}>
-                  ・SNS・YouTube・宣材用の撮影をプロにお願いしたい
-                </li>
-                <li style={{ marginBottom: "15px" }}>
-                  ・結婚式やイベントでの出張カメラマンを探したい
-                </li>
-                <li style={{ marginBottom: "15px" }}>
-                  ・七五三・成人式・家族写真などの記念撮影に
-                </li>
-              </ul>
+                個人の方
+              </div>
+
+              {/* コンテンツエリア */}
+              <div
+                style={{
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: 0,
+                    fontSize: "clamp(16px, 2vw, 24px)",
+                    fontFamily: "Noto Sans JP, sans-serif",
+                    color: "#0b0b0b",
+                    lineHeight: "1.95",
+                  }}
+                >
+                  <li style={{ marginBottom: "15px" }}>
+                    ・SNS・YouTube・宣材用の撮影をプロにお願いしたい
+                  </li>
+                  <li style={{ marginBottom: "15px" }}>
+                    ・結婚式やイベントでの出張カメラマンを探したい
+                  </li>
+                  <li style={{ marginBottom: "15px" }}>
+                    ・七五三・成人式・家族写真などの記念撮影に
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* 法人の方 */}
-            <div>
-              <ul
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+              }}
+            >
+              {/* タブ */}
+              <div
                 style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  fontSize: "clamp(16px, 2vw, 24px)",
+                  backgroundColor: "#2c2c2c",
+                  color: "white",
+                  height: "clamp(50px, 6.5vw, 65px)",
+                  padding: "0 clamp(30px, 6vw, 80px)",
+                  borderRadius: "30px",
+                  fontSize: "clamp(18px, 2vw, 24px)",
+                  fontWeight: "700",
                   fontFamily: "Noto Sans JP, sans-serif",
-                  color: "#0b0b0b",
-                  lineHeight: "1.95",
+                  boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "clamp(30px, 5vw, 50px)",
+                  width: "100%",
                 }}
               >
-                <li style={{ marginBottom: "15px" }}>
-                  ・広告・カタログ・CM撮影で、モデルやスタイリストを手配したい
-                </li>
-                <li style={{ marginBottom: "15px" }}>
-                  ・会社のホームページや採用動画の制作を依頼したい
-                </li>
-                <li style={{ marginBottom: "15px" }}>
-                  ・新商品のPR撮影・SNSコンテンツ用素材をまとめて撮りたい
-                </li>
-                <li style={{ marginBottom: "15px" }}>
-                  ・撮影から編集まで、ワンストップで依頼したい
-                </li>
-              </ul>
+                法人の方
+              </div>
+
+              {/* コンテンツエリア */}
+              <div
+                style={{
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: 0,
+                    fontSize: "clamp(16px, 2vw, 24px)",
+                    fontFamily: "Noto Sans JP, sans-serif",
+                    color: "#0b0b0b",
+                    lineHeight: "1.95",
+                  }}
+                >
+                  <li style={{ marginBottom: "15px" }}>
+                    ・広告・カタログ・CM撮影で、モデルやスタイリストを手配したい
+                  </li>
+                  <li style={{ marginBottom: "15px" }}>
+                    ・会社のホームページや採用動画の制作を依頼したい
+                  </li>
+                  <li style={{ marginBottom: "15px" }}>
+                    ・新商品のPR撮影・SNSコンテンツ用素材をまとめて撮りたい
+                  </li>
+                  <li style={{ marginBottom: "15px" }}>
+                    ・撮影から編集まで、ワンストップで依頼したい
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
