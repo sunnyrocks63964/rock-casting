@@ -227,16 +227,12 @@ const DesktopFooter = () => {
                 }}
               >
                 <Link
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/terms_of_service"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   利用規約
                 </Link>
