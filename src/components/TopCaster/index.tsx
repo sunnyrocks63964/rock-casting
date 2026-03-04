@@ -49,6 +49,32 @@ const TopCaster = () => {
         });
     }, [allProjects, searchKeyword]);
 
+    // 1ページあたりの件数
+    const itemsPerPage = 10;
+
+    // 総ページ数を計算
+    const totalPages = useMemo(() => {
+        if (!filteredProjects || filteredProjects.length === 0) {
+            return 1;
+        }
+        return Math.ceil(filteredProjects.length / itemsPerPage);
+    }, [filteredProjects]);
+
+    // 現在のページのデータを取得
+    const paginatedProjects = useMemo(() => {
+        if (!filteredProjects || filteredProjects.length === 0) {
+            return [];
+        }
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredProjects.slice(startIndex, endIndex);
+    }, [filteredProjects, currentPage]);
+
+    // 検索キーワードが変更されたら1ページ目に戻す
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchKeyword]);
+
     // お気に入り一覧を取得（全ての案件のお気に入り状態を確認するため）
     const { data: favoriteProjectsData, refetch: refetchFavorites } = trpc.favorite.getFavoriteProjects.useQuery(
         {
@@ -242,8 +268,8 @@ const TopCaster = () => {
                 >
                     {isLoadingProjects
                         ? "読み込み中..."
-                        : filteredProjects
-                        ? `${filteredProjects.length}件のうち、1~${Math.min(15, filteredProjects.length)}件を表示`
+                        : filteredProjects && filteredProjects.length > 0
+                        ? `${filteredProjects.length}件のうち、${(currentPage - 1) * itemsPerPage + 1}~${Math.min(currentPage * itemsPerPage, filteredProjects.length)}件を表示`
                         : "0件"}
                 </p>
 
@@ -278,7 +304,7 @@ const TopCaster = () => {
                             案件が見つかりませんでした
                         </div>
                     ) : (
-                        filteredProjects.map((project) => {
+                        paginatedProjects.map((project) => {
                             const companyName =
                                 project.user.organization?.companyName ||
                                 project.user.ordererProfile?.fullName ||
@@ -450,38 +476,40 @@ const TopCaster = () => {
                 </div>
 
                 {/* ページネーション */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginTop: "40px",
-                    }}
-                >
-                    {[1, 2, 3, 4].map((page) => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            style={{
-                                width: "40px",
-                                height: "40px",
-                                borderRadius: "10px",
-                                border: "1px solid black",
-                                backgroundColor: page === currentPage ? "#ff6d00" : "white",
-                                color: page === currentPage ? "white" : "black",
-                                fontSize: "20px",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
+                {totalPages > 0 && (
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "10px",
+                            marginTop: "40px",
+                        }}
+                    >
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "10px",
+                                    border: "1px solid black",
+                                    backgroundColor: page === currentPage ? "#ff6d00" : "white",
+                                    color: page === currentPage ? "white" : "black",
+                                    fontSize: "20px",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
