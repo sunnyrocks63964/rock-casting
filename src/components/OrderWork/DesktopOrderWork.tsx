@@ -50,7 +50,7 @@ const DesktopOrderWork = () => {
     >
       {/* ヒーローセクション */}
       <section
-        style={{ position: "relative", height: "408px", overflow: "hidden" }}
+        style={{ position: "relative", height: "358px", overflow: "hidden" }}
       >
         {/* 背景画像 */}
         <div
@@ -59,7 +59,9 @@ const DesktopOrderWork = () => {
             top: 0,
             left: 0,
             right: 0,
+            bottom: 0,
             height: "408px",
+            width: "100%",
             zIndex: 0,
           }}
         >
@@ -67,7 +69,10 @@ const DesktopOrderWork = () => {
             src={heroImage}
             alt="Hero Background"
             fill
-            style={{ objectFit: "cover" }}
+            style={{ 
+              objectFit: "contain",
+              objectPosition: "center",
+            }}
             priority
           />
         </div>
@@ -79,6 +84,7 @@ const DesktopOrderWork = () => {
             top: 0,
             left: 0,
             right: 0,
+            bottom: 0,
             height: "408px",
             backgroundColor: "rgba(0, 0, 0, 0.15)",
             zIndex: 1,
@@ -101,10 +107,10 @@ const DesktopOrderWork = () => {
           <p
             style={{
               color: "white",
-              fontSize: "clamp(16px, 2vw, 24px)",
+              fontSize: "clamp(12px, 1.5vw, 18px)",
               fontWeight: "700",
               fontFamily: "Noto Sans JP, sans-serif",
-              marginBottom: "20px",
+              marginBottom: "clamp(10px, 1.5vw, 15px)",
             }}
           >
             \必要な人材を、必要なタイミングで。/
@@ -112,13 +118,13 @@ const DesktopOrderWork = () => {
           <h1
             style={{
               color: "white",
-              fontSize: "clamp(24px, 4vw, 48px)",
+              fontSize: "clamp(18px, 3vw, 36px)",
               fontWeight: "700",
               fontFamily: "Noto Sans JP, sans-serif",
-              marginBottom: "30px",
+              marginBottom: "clamp(15px, 2vw, 25px)",
               lineHeight: "1.4",
               maxWidth: "992px",
-              margin: "0 auto 30px",
+              margin: "0 auto clamp(15px, 2vw, 25px)",
             }}
           >
             撮影・制作の現場を支えるクリエイターが、すぐに見つかる。
@@ -129,10 +135,10 @@ const DesktopOrderWork = () => {
               display: "inline-block",
               backgroundColor: "#d70202",
               color: "white",
-              padding: "20px 50px",
+              padding: "clamp(12px, 1.5vw, 16px) clamp(30px, 3vw, 40px)",
               borderRadius: "90px",
               textDecoration: "none",
-              fontSize: "clamp(18px, 1.8vw, 24px)",
+              fontSize: "clamp(14px, 1.5vw, 18px)",
               fontWeight: "700",
               fontFamily: "Noto Sans JP, sans-serif",
               transition: "all 0.3s ease",
