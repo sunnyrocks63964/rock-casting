@@ -113,32 +113,34 @@ const LoginedNavBar = () => {
                     新しい仕事を依頼
                 </Link>
             )}
-            <Link
-                href="/top/order"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                    color: "white",
-                    textDecoration: "none",
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    fontFamily: "'Noto Sans JP', sans-serif",
-                    lineHeight: "normal",
-                    textAlign: "center",
-                    whiteSpace: "pre-wrap",
-                    transition: "opacity 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "1";
-                }}
-            >
-                キャスト検索
-            </Link>
+            {isOrderer && (
+                <Link
+                    href="/top/order"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: "white",
+                        textDecoration: "none",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        lineHeight: "normal",
+                        textAlign: "center",
+                        whiteSpace: "pre-wrap",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
+                    }}
+                >
+                    キャスト検索
+                </Link>
+            )}
             <Link
                 href={messageListPath}
                 target="_blank"
