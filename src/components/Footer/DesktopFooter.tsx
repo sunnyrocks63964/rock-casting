@@ -310,7 +310,7 @@ const DesktopFooter = () => {
                   企業情報
                 </Link>
                 <Link
-                  href="#"
+                  href="/security_policy"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -318,9 +318,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   情報セキュリティーポリシー
                 </Link>

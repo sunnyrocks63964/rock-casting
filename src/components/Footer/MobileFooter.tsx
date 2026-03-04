@@ -192,7 +192,9 @@ const MobileFooter = () => {
               プライバシーポリシー
             </Link>
             <Link
-              href="/security"
+              href="/security_policy"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
