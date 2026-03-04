@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import bannerPc from "./images/banner_pc.png";
 
 const CTA = () => {
@@ -18,15 +19,18 @@ const CTA = () => {
           padding: "0 16px",
         }}
       >
-        <img
-          src={bannerPc.src}
-          alt="ROCK CASTING - 今すぐ無料登録！必要なキャストがすぐに揃います"
-          style={{
-            width: "100%",
-            height: "auto",
-            display: "block",
-          }}
-        />
+        <Link href="/interview_schedule">
+          <img
+            src={bannerPc.src}
+            alt="ROCK CASTING - 今すぐ無料登録！必要なキャストがすぐに揃います"
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+              cursor: "pointer",
+            }}
+          />
+        </Link>
       </div>
     </section>
   );
