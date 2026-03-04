@@ -282,17 +282,15 @@ const DesktopFooter = () => {
                   特定商取引法に基づく表示
                 </Link>
                 <Link
-                  href="#"
+                  href="/privacy_policy"
                   target="_blank"
-                  rel="noopener noreferrer"
+
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   プライバシーポリシー
                 </Link>

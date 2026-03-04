@@ -181,7 +181,7 @@ const MobileFooter = () => {
               商標・特許
             </Link>
             <Link
-              href="/privacy"
+              href="/privacy_policy"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
