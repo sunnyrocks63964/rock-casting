@@ -248,7 +248,7 @@ const CasterFavoriteOrderProject = ({ casterId }: CasterFavoriteOrderProjectProp
                                     >
                                         <button
                                             onClick={() =>
-                                                router.push(`/project/detail?id=${project.id}`)
+                                                window.open(`/project/detail?id=${project.id}`, "_blank")
                                             }
                                             style={{
                                                 backgroundColor: "#d70202",

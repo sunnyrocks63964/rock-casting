@@ -1259,7 +1259,7 @@ const TopOrder = () => {
                                     {/* アクションボタン */}
                                     <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
                                         <button
-                                            onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
+                                            onClick={() => window.open(`/cast/detail?userId=${user.id}`, "_blank")}
                                             style={{
                                                 backgroundColor: "#d70202",
                                                 color: "white",

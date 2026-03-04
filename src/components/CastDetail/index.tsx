@@ -29,7 +29,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
     const [activeTab, setActiveTab] = useState<"profile" | "member">("profile");
     const { mutate: createThread, isPending: isCreatingThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
-            router.push(`/order/message/${data.threadId}`);
+            window.open(`/order/message/${data.threadId}`, "_blank");
         },
         onError: (error) => {
             console.error("スレッド作成エラー:", error);

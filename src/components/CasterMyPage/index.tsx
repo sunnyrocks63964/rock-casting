@@ -1399,6 +1399,7 @@ const CasterMyPage: React.FC<CasterMyPageProps> = ({ userId }) => {
                             <Button
                                 type="primary"
                                 danger
+                                onClick={() => window.open(`/cast/detail?userId=${userId}`, "_blank")}
                                 style={{
                                     borderRadius: "90px",
                                     height: "31px",
