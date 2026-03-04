@@ -239,7 +239,7 @@ const DesktopFooter = () => {
                   利用規約
                 </Link>
                 <Link
-                  href="#"
+                  href="/external_transmission"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -247,9 +247,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   外部送信規律に関する公表事項
                 </Link>

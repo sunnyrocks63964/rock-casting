@@ -205,7 +205,9 @@ const MobileFooter = () => {
               情報セキュリティーポリシー
             </Link>
             <Link
-              href="/external-transmission"
+              href="/external_transmission"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
