@@ -231,7 +231,9 @@ const MobileFooter = () => {
               特定商取引法に基づく表示
             </Link>
             <Link
-              href="/company"
+              href="https://sunnyrocks32169.com/aboutus/"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",

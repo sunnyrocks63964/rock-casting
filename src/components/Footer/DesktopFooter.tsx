@@ -291,7 +291,7 @@ const DesktopFooter = () => {
                   プライバシーポリシー
                 </Link>
                 <Link
-                  href="#"
+                  href="https://sunnyrocks32169.com/aboutus/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -299,9 +299,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   企業情報
                 </Link>
