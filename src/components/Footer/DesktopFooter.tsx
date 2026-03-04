@@ -265,7 +265,7 @@ const DesktopFooter = () => {
                   商標・特許
                 </Link>
                 <Link
-                  href="#"
+                  href="/commercial_law"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -273,9 +273,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   特定商取引法に基づく表示
                 </Link>

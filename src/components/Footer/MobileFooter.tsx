@@ -218,7 +218,9 @@ const MobileFooter = () => {
               外部送信規律に関する公表事項
             </Link>
             <Link
-              href="/commercial-law"
+              href="/commercial_law"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
