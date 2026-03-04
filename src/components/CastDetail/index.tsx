@@ -93,22 +93,6 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             .join("、");
     };
 
-    // 居住地を取得
-    const getResidence = (): string => {
-        if (castProfile.residence) {
-            return castProfile.residence;
-        }
-        if (castProfile.area) {
-            return castProfile.area;
-        }
-        if (castProfile.workAreas && castProfile.workAreas.length > 0) {
-            const prefecture = castProfile.workAreas[0]?.prefecture?.name;
-            if (prefecture) {
-                return prefecture;
-            }
-        }
-        return "-";
-    };
 
     // 性別を日本語に変換するヘルパー関数
     const getGenderLabel = (): string => {
@@ -369,37 +353,6 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         }}
                                     >
                                         {getJobTypeNames()}
-                                    </p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            width: "100px",
-                                        }}
-                                    >
-                                        居住地
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            textAlign: "center",
-                                            flex: 1,
-                                        }}
-                                    >
-                                        {getResidence()}
                                     </p>
                                 </div>
                                 <div
