@@ -72,9 +72,24 @@ export const BaseRegisterSchema = z.object({
   email: emailSchema.min(1, "メールアドレスは必須です"),
   password: z
     .string()
-    .min(8, "パスワードは8文字以上で設定してください")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message: "パスワードは大文字、小文字、数字を含む必要があります",
+    .superRefine((val, ctx) => {
+      if (val.length < 8) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_small,
+          minimum: 8,
+          type: "string",
+          inclusive: true,
+          origin: "string",
+          message: "パスワードは8文字以上で設定してください",
+        });
+        return;
+      }
+      if (!/^(?=.*[a-zA-Z])(?=.*\d)/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "パスワードは文字と数字を含む必要があります",
+        });
+      }
     }),
   passwordConfirm: z.string(),
   role: UserRoleSchema, // "caster" | "orderer" | "both"
@@ -123,9 +138,24 @@ export const ResetPasswordConfirmSchema = z.object({
   token: z.string().min(1),
   password: z
     .string()
-    .min(8, "パスワードは8文字以上で設定してください")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message: "パスワードは大文字、小文字、数字を含む必要があります",
+    .superRefine((val, ctx) => {
+      if (val.length < 8) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_small,
+          minimum: 8,
+          type: "string",
+          inclusive: true,
+          origin: "string",
+          message: "パスワードは8文字以上で設定してください",
+        });
+        return;
+      }
+      if (!/^(?=.*[a-zA-Z])(?=.*\d)/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "パスワードは文字と数字を含む必要があります",
+        });
+      }
     }),
   passwordConfirm: z.string(),
 }).refine((data) => data.password === data.passwordConfirm, {

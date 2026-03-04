@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
+import { extractErrorMessage } from "@/lib/utils/error";
 import WorkAreaSelector, {
   type WorkAreaData,
 } from "@/components/WorkAreaSelector";
@@ -823,7 +824,7 @@ const DesktopUserRegister = () => {
                 fontSize: "14px",
               }}
             >
-              {registerMutation.error.message}
+              {extractErrorMessage(registerMutation.error)}
             </div>
           )}
         </div>
