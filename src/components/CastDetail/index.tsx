@@ -138,6 +138,52 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
         return castProfile.workStyle;
     };
 
+    // 活動可能エリアを取得するヘルパー関数
+    const getWorkAreas = (): string => {
+        if (!castProfile.workAreas || castProfile.workAreas.length === 0) {
+            return "-";
+        }
+
+        // 都道府県ごとにグループ化
+        const groupedByPrefecture = castProfile.workAreas.reduce<Record<string, typeof castProfile.workAreas>>(
+            (acc, workArea) => {
+                const prefectureId = workArea.prefecture?.id || "";
+                if (!acc[prefectureId]) {
+                    acc[prefectureId] = [];
+                }
+                acc[prefectureId].push(workArea);
+                return acc;
+            },
+            {}
+        );
+
+        // 各都道府県の表示文字列を生成
+        const prefectureStrings = Object.values(groupedByPrefecture).map((workAreas) => {
+            const prefectureName = workAreas[0]?.prefecture?.name || "";
+            const tokyoWards = workAreas.filter((wa) => wa.tokyoWard).map((wa) => wa.tokyoWard?.name || "");
+            const cities = workAreas.filter((wa) => wa.city && !wa.tokyoWard).map((wa) => wa.city?.name || "");
+
+            // 東京都の場合
+            if (prefectureName === "東京都") {
+                if (tokyoWards.length > 0) {
+                    return `東京都：${tokyoWards.join("、")}`;
+                }
+                if (cities.length > 0) {
+                    return `東京都：${cities.join("、")}`;
+                }
+                return "東京都";
+            }
+
+            // その他の都道府県
+            if (cities.length > 0) {
+                return `${prefectureName}：${cities.join("、")}`;
+            }
+            return prefectureName;
+        });
+
+        return prefectureStrings.join("、");
+    };
+
     return (
         <div
             style={{
@@ -923,6 +969,32 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         </p>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* 活動可能エリアセクション */}
+                            <div>
+                                <h2
+                                    style={{
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        margin: "0 0 20px 0",
+                                    }}
+                                >
+                                    活動可能エリア
+                                </h2>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        margin: "0",
+                                        lineHeight: "1.6",
+                                    }}
+                                >
+                                    {getWorkAreas()}
+                                </p>
                             </div>
 
                             {/* 報酬額セクション */}
