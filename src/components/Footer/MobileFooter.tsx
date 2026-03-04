@@ -170,7 +170,7 @@ const MobileFooter = () => {
               利用規約
             </Link>
             <Link
-              href="/trademark"
+              href="/trademark_patent"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",

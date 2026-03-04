@@ -254,17 +254,15 @@ const DesktopFooter = () => {
                   外部送信規律に関する公表事項
                 </Link>
                 <Link
-                  href="#"
                   target="_blank"
                   rel="noopener noreferrer"
+                  href="/trademark_patent"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   商標・特許
                 </Link>
