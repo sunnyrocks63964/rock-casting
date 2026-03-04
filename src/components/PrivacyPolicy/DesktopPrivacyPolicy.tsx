@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 const DesktopPrivacyPolicy = () => {
   return (
@@ -339,7 +340,17 @@ const DesktopPrivacyPolicy = () => {
               ご意見、ご質問、苦情のお申し出、その他個人情報の取り扱いに関するお問い合わせは、以下の窓口までお願いいたします。
             </p>
             <p>
-              お問い合わせはこちら
+              <Link
+                href="https://sunnyrocks32169.com/contact/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "inherit",
+                  textDecoration: "underline",
+                }}
+              >
+                お問い合わせはこちら
+              </Link>
             </p>
           </div>
 

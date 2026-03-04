@@ -336,7 +336,7 @@ const DesktopFooter = () => {
             <div style={{ textAlign: "center" }}>
               <div style={{ marginBottom: "40px" }}>
                 <Link
-                  href="#"
+                  href="https://sunnyrocks32169.com/contact/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -348,9 +348,7 @@ const DesktopFooter = () => {
                     textDecoration: "none",
                     display: "inline-block",
                     transition: "background-color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   お問い合わせはこちら
                 </Link>

@@ -262,7 +262,9 @@ const MobileFooter = () => {
         {/* お問い合わせボタン */}
         <div style={{ marginBottom: "0.75rem" }}>
           <Link
-            href="/contact"
+            href="https://sunnyrocks32169.com/contact/"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               display: "block",
               backgroundColor: "white",

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
 
 export default function MobileResetPassword() {
@@ -395,8 +396,12 @@ export default function MobileResetPassword() {
 
                 {/* ボタン */}
                 <div style={{ marginBottom: "12px" }}>
-                    <button
+                    <Link
+                        href="https://sunnyrocks32169.com/contact/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
+                            display: "block",
                             width: "100%",
                             height: "38px",
                             backgroundColor: "white",
@@ -407,10 +412,13 @@ export default function MobileResetPassword() {
                             fontWeight: "700",
                             color: "black",
                             cursor: "pointer",
+                            textDecoration: "none",
+                            textAlign: "center",
+                            lineHeight: "38px",
                         }}
                     >
                         お問い合わせはこちら
-                    </button>
+                    </Link>
                 </div>
 
                 <div style={{ marginBottom: "24px" }}>
