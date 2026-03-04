@@ -81,7 +81,7 @@ const MobileFooter = () => {
               キャスト一覧
             </Link>
             <Link
-              href="/register/cast"
+              href="/interview_schedule"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -170,7 +170,7 @@ const MobileFooter = () => {
               利用規約
             </Link>
             <Link
-              href="/trademark"
+              href="/trademark_patent"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -181,7 +181,7 @@ const MobileFooter = () => {
               商標・特許
             </Link>
             <Link
-              href="/privacy"
+              href="/privacy_policy"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -192,7 +192,9 @@ const MobileFooter = () => {
               プライバシーポリシー
             </Link>
             <Link
-              href="/security"
+              href="/security_policy"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -203,7 +205,9 @@ const MobileFooter = () => {
               情報セキュリティーポリシー
             </Link>
             <Link
-              href="/external-transmission"
+              href="/external_transmission"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -214,7 +218,9 @@ const MobileFooter = () => {
               外部送信規律に関する公表事項
             </Link>
             <Link
-              href="/commercial-law"
+              href="/commercial_law"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -225,7 +231,9 @@ const MobileFooter = () => {
               特定商取引法に基づく表示
             </Link>
             <Link
-              href="/company"
+              href="https://sunnyrocks32169.com/aboutus/"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -236,7 +244,9 @@ const MobileFooter = () => {
               企業情報
             </Link>
             <Link
-              href="/environment"
+              href="/service_environment"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -252,7 +262,9 @@ const MobileFooter = () => {
         {/* お問い合わせボタン */}
         <div style={{ marginBottom: "0.75rem" }}>
           <Link
-            href="/contact"
+            href="https://sunnyrocks32169.com/contact/"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               display: "block",
               backgroundColor: "white",

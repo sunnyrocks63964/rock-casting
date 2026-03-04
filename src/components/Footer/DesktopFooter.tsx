@@ -227,21 +227,19 @@ const DesktopFooter = () => {
                 }}
               >
                 <Link
-                  href="#"
+                  href="/terms_of_service"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   利用規約
                 </Link>
                 <Link
-                  href="#"
+                  href="/external_transmission"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -249,29 +247,25 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   外部送信規律に関する公表事項
                 </Link>
                 <Link
-                  href="#"
                   target="_blank"
                   rel="noopener noreferrer"
+                  href="/trademark_patent"
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   商標・特許
                 </Link>
                 <Link
-                  href="#"
+                  href="/commercial_law"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -279,29 +273,25 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   特定商取引法に基づく表示
                 </Link>
                 <Link
-                  href="#"
+                  href="/privacy_policy"
                   target="_blank"
-                  rel="noopener noreferrer"
+
                   style={{
                     fontSize: "12px",
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   プライバシーポリシー
                 </Link>
                 <Link
-                  href="#"
+                  href="https://sunnyrocks32169.com/aboutus/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -309,14 +299,12 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   企業情報
                 </Link>
                 <Link
-                  href="#"
+                  href="/security_policy"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -324,14 +312,12 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   情報セキュリティーポリシー
                 </Link>
                 <Link
-                  href="#"
+                  href="/service_environment"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -339,9 +325,7 @@ const DesktopFooter = () => {
                     color: "#d1d5db",
                     textDecoration: "none",
                     transition: "color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   サービス利用環境
                 </Link>
@@ -352,7 +336,7 @@ const DesktopFooter = () => {
             <div style={{ textAlign: "center" }}>
               <div style={{ marginBottom: "40px" }}>
                 <Link
-                  href="#"
+                  href="https://sunnyrocks32169.com/contact/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -364,9 +348,7 @@ const DesktopFooter = () => {
                     textDecoration: "none",
                     display: "inline-block",
                     transition: "background-color 0.3s",
-                    cursor: "not-allowed",
                   }}
-                  onClick={(e) => e.preventDefault()}
                 >
                   お問い合わせはこちら
                 </Link>
