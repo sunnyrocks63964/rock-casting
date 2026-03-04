@@ -190,28 +190,6 @@ const DesktopCast = ({
               textAlign: "center",
             }}
           >
-            <button
-              style={{
-                backgroundColor: "#3b82f6",
-                color: "white",
-                padding: "0.75rem 2rem",
-                borderRadius: "0.5rem",
-                fontWeight: "600",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                const target = e.target as HTMLElement;
-                target.style.backgroundColor = "#2563eb";
-              }}
-              onMouseLeave={(e) => {
-                const target = e.target as HTMLElement;
-                target.style.backgroundColor = "#3b82f6";
-              }}
-            >
-              もっと見る
-            </button>
           </div>
         </div>
       </div>
