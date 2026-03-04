@@ -27,8 +27,33 @@ export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    let message = shape.message;
+    
+    // Zodエラーの場合、最初のエラーメッセージを取得
+    if (error.cause instanceof ZodError) {
+      const flattened = error.cause.flatten();
+      
+      // フィールドエラーから最初のメッセージを取得
+      const fieldErrors = flattened.fieldErrors;
+      if (fieldErrors) {
+        const entries = Object.entries(fieldErrors);
+        for (const [, messages] of entries) {
+          if (Array.isArray(messages) && messages.length > 0) {
+            message = messages[0];
+            break;
+          }
+        }
+      }
+      
+      // フィールドエラーが見つからない場合、フォームエラーから取得
+      if (message === shape.message && flattened.formErrors.length > 0) {
+        message = flattened.formErrors[0];
+      }
+    }
+    
     return {
       ...shape,
+      message,
       data: {
         ...shape.data,
         zodError:
