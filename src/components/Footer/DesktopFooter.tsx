@@ -228,6 +228,8 @@ const DesktopFooter = () => {
               >
                 <Link
                   href="/terms_of_service"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
                     color: "#d1d5db",
                     textDecoration: "none",
