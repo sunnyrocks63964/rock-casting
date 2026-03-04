@@ -174,7 +174,9 @@ const LoginedHeader = () => {
                 }}
             >
                 <Link
-                    href="#pricing"
+                    href="/usage_guide"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -196,7 +198,9 @@ const LoginedHeader = () => {
                     料金
                 </Link>
                 <Link
-                    href="#casts"
+                    href="/top#casts"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -219,6 +223,8 @@ const LoginedHeader = () => {
                 </Link>
                 <Link
                     href="/receive-work"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -241,6 +247,8 @@ const LoginedHeader = () => {
                 </Link>
                 <Link
                     href="/order-work"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",

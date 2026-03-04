@@ -88,6 +88,8 @@ const LoginedNavBar = () => {
             {isOrderer && (
                 <Link
                     href="/order/add_project"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -111,32 +113,38 @@ const LoginedNavBar = () => {
                     新しい仕事を依頼
                 </Link>
             )}
-            <Link
-                href="#"
-                style={{
-                    color: "white",
-                    textDecoration: "none",
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    fontFamily: "'Noto Sans JP', sans-serif",
-                    lineHeight: "normal",
-                    textAlign: "center",
-                    whiteSpace: "pre-wrap",
-                    transition: "opacity 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "1";
-                }}
-            >
-                キャスト検索
-            </Link>
+            {isOrderer && (
+                <Link
+                    href="/top/order"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: "white",
+                        textDecoration: "none",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        lineHeight: "normal",
+                        textAlign: "center",
+                        whiteSpace: "pre-wrap",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
+                    }}
+                >
+                    キャスト検索
+                </Link>
+            )}
             <Link
                 href={messageListPath}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",
@@ -161,6 +169,8 @@ const LoginedNavBar = () => {
             </Link>
             <Link
                 href={contractListPath}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",
@@ -184,6 +194,8 @@ const LoginedNavBar = () => {
             </Link>
             <Link
                 href="/order/package_reservate"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                     color: pathname === "/order/package_reservate" ? "#fff" : "white",
                     textDecoration: "none",
@@ -207,6 +219,8 @@ const LoginedNavBar = () => {
             </Link>
             <Link
                 href={favoritePath}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",

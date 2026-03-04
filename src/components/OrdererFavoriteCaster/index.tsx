@@ -267,7 +267,7 @@ const OrdererFavoriteCaster = ({ ordererId }: OrdererFavoriteCasterProps) => {
                                         }}
                                     >
                                         <button
-                                            onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
+                                            onClick={() => window.open(`/cast/detail?userId=${user.id}`, "_blank")}
                                             style={{
                                                 backgroundColor: "#d70202",
                                                 color: "white",

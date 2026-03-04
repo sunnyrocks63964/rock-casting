@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
@@ -26,10 +26,9 @@ interface CastDetailProps {
 
 const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<"profile" | "member">("profile");
     const { mutate: createThread, isPending: isCreatingThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
-            router.push(`/order/message/${data.threadId}`);
+            window.open(`/order/message/${data.threadId}`, "_blank");
         },
         onError: (error) => {
             console.error("スレッド作成エラー:", error);
@@ -93,22 +92,6 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
             .join("、");
     };
 
-    // 居住地を取得
-    const getResidence = (): string => {
-        if (castProfile.residence) {
-            return castProfile.residence;
-        }
-        if (castProfile.area) {
-            return castProfile.area;
-        }
-        if (castProfile.workAreas && castProfile.workAreas.length > 0) {
-            const prefecture = castProfile.workAreas[0]?.prefecture?.name;
-            if (prefecture) {
-                return prefecture;
-            }
-        }
-        return "-";
-    };
 
     // 性別を日本語に変換するヘルパー関数
     const getGenderLabel = (): string => {
@@ -152,6 +135,52 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
     const getWorkStyle = (): string => {
         if (!castProfile.workStyle) return "-";
         return castProfile.workStyle;
+    };
+
+    // 活動可能エリアを取得するヘルパー関数
+    const getWorkAreas = (): string => {
+        if (!castProfile.workAreas || castProfile.workAreas.length === 0) {
+            return "-";
+        }
+
+        // 都道府県ごとにグループ化
+        const groupedByPrefecture = castProfile.workAreas.reduce<Record<string, typeof castProfile.workAreas>>(
+            (acc, workArea) => {
+                const prefectureId = workArea.prefecture?.id || "";
+                if (!acc[prefectureId]) {
+                    acc[prefectureId] = [];
+                }
+                acc[prefectureId].push(workArea);
+                return acc;
+            },
+            {}
+        );
+
+        // 各都道府県の表示文字列を生成
+        const prefectureStrings = Object.values(groupedByPrefecture).map((workAreas) => {
+            const prefectureName = workAreas[0]?.prefecture?.name || "";
+            const tokyoWards = workAreas.filter((wa) => wa.tokyoWard).map((wa) => wa.tokyoWard?.name || "");
+            const cities = workAreas.filter((wa) => wa.city && !wa.tokyoWard).map((wa) => wa.city?.name || "");
+
+            // 東京都の場合
+            if (prefectureName === "東京都") {
+                if (tokyoWards.length > 0) {
+                    return `東京都：${tokyoWards.join("、")}`;
+                }
+                if (cities.length > 0) {
+                    return `東京都：${cities.join("、")}`;
+                }
+                return "東京都";
+            }
+
+            // その他の都道府県
+            if (cities.length > 0) {
+                return `${prefectureName}：${cities.join("、")}`;
+            }
+            return prefectureName;
+        });
+
+        return prefectureStrings.join("、");
     };
 
     return (
@@ -369,37 +398,6 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                         }}
                                     >
                                         {getJobTypeNames()}
-                                    </p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "700",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            width: "100px",
-                                        }}
-                                    >
-                                        居住地
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: "16px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            margin: "0",
-                                            textAlign: "center",
-                                            flex: 1,
-                                        }}
-                                    >
-                                        {getResidence()}
                                     </p>
                                 </div>
                                 <div
@@ -701,94 +699,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                         </div>
                     </div>
 
-                    {/* タブ */}
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: "340px",
-                            marginBottom: "35px",
-                            borderBottom: "none",
-                            position: "relative",
-                        }}
-                    >
-                        <button
-                            onClick={() => setActiveTab("profile")}
-                            style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                padding: "0",
-                                cursor: "pointer",
-                                position: "relative",
-                            }}
-                        >
-                            <p
-                                style={{
-                                    fontSize: "20px",
-                                    fontWeight: "700",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    margin: "0 0 10px 0",
-                                }}
-                            >
-                                プロフィール
-                            </p>
-                            {activeTab === "profile" && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        margin: "0 auto",
-                                        width: "150px",
-                                        height: "4px",
-                                        backgroundColor: "#ff6d00",
-                                        marginBottom: "-4px",
-                                    }}
-                                />
-                            )}
- 
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("member")}
-                            style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                padding: "0",
-                                cursor: "pointer",
-                                position: "relative",
-                            }}
-                        >
-                            <p
-                                style={{
-                                    fontSize: "20px",
-                                    fontWeight: "700",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    margin: "0 0 10px 0",
-                                }}
-                            >
-                                会員限定情報
-                            </p>
-                            {activeTab === "member" && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        left: "55%",
-                                        transform: "translateX(-50%)",
-                                        margin: "0 auto",
-                                        width: "160px",
-                                        height: "4px",
-                                        backgroundColor: "#ff6d00",
-                                        marginBottom: "-4px",
-                                    }}
-                                />
-                            )}
-                        </button>
-                    </div>
-
-                    {/* タブコンテンツ */}
-                    {activeTab === "profile" ? (
+                    {/* コンテンツ */}
                         <div
                             style={{
                                 display: "flex",
@@ -802,7 +713,7 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                             <div>
                                 <h2
                                     style={{
-                                        fontSize: "20px",
+                                        fontSize: "24px",
                                         fontWeight: "700",
                                         color: "black",
                                         fontFamily: "'Noto Sans JP', sans-serif",
@@ -972,6 +883,32 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                 </div>
                             </div>
 
+                            {/* 活動可能エリアセクション */}
+                            <div>
+                                <h2
+                                    style={{
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        margin: "0 0 20px 0",
+                                    }}
+                                >
+                                    活動可能エリア
+                                </h2>
+                                <p
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "black",
+                                        fontFamily: "'Noto Sans JP', sans-serif",
+                                        margin: "0",
+                                        lineHeight: "1.6",
+                                    }}
+                                >
+                                    {getWorkAreas()}
+                                </p>
+                            </div>
+
                             {/* 報酬額セクション */}
                             <div>
                                 <h2
@@ -1021,117 +958,6 @@ const CastDetail = ({ castProfile, ordererUserId }: CastDetailProps) => {
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "40px",
-                                maxWidth: "1358px",
-                                margin: "0 auto",
-                            }}
-                        >
-                            {/* 注意事項セクション */}
-                            <div>
-                                <h2
-                                    style={{
-                                        fontSize: "20px",
-                                        fontWeight: "700",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: "0 0 20px 0",
-                                    }}
-                                >
-                                    注意事項
-                                </h2>
-                                <p
-                                    style={{
-                                        fontSize: "16px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: "0",
-                                        lineHeight: "1.6",
-                                    }}
-                                >
-                                    こちらは会員限定情報になります。<br />
-                                    内容を確認したい場合はログインを行う必要があります。
-                                </p>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-end",
-                                        gap: "32px",
-                                        marginTop: "40px",
-                                    }}
-                                >
-                                    <button
-                                        onClick={() => router.push("/interview_schedule")}
-                                        style={{
-                                            backgroundColor: "#d70202",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "90px",
-                                            padding: "8px 24px",
-                                            fontSize: "14px",
-                                            fontWeight: "700",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            cursor: "pointer",
-                                            width: "262px",
-                                            height: "40px",
-                                        }}
-                                    >
-                                        新規登録はこちら
-                                    </button>
-                                    <button
-                                        onClick={() => router.push("/login")}
-                                        style={{
-                                            backgroundColor: "white",
-                                            color: "black",
-                                            border: "1px solid black",
-                                            borderRadius: "90px",
-                                            padding: "8px 24px",
-                                            fontSize: "14px",
-                                            fontWeight: "700",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                            cursor: "pointer",
-                                            width: "262px",
-                                            height: "40px",
-                                        }}
-                                    >
-                                        ログインはこちら
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* レビューセクション */}
-                            <div>
-                                <h2
-                                    style={{
-                                        fontSize: "20px",
-                                        fontWeight: "700",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: "0 0 20px 0",
-                                    }}
-                                >
-                                    レビュー
-                                </h2>
-                                <p
-                                    style={{
-                                        fontSize: "16px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                        margin: "0",
-                                        lineHeight: "1.6",
-                                    }}
-                                >
-                                    こちらは会員限定情報になります。<br />
-                                    内容を確認したい場合はログインを行う必要があります。
-                                </p>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

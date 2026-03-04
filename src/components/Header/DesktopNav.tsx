@@ -19,7 +19,7 @@ const DesktopNav = () => {
         }}
       >
         <Link
-          href="#pricing"
+          href="/usage_guide"
           style={{
             color: "white",
             textDecoration: "none",
@@ -41,7 +41,7 @@ const DesktopNav = () => {
           料金
         </Link>
         <Link
-          href="#casts"
+          href="/top#casts"
           style={{
             color: "white",
             textDecoration: "none",

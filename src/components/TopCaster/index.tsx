@@ -2,12 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaChevronDown, FaRegBookmark, FaBookmark } from "react-icons/fa";
+import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import img11 from "../TopOrder/images/search_magnifying_glass.png";
-import JobTypeFilterDetail, {
-    JobType,
-    jobTypeFilterData,
-} from "../TopOrder/JobTypeFilterDetail";
 import { trpc } from "@/lib/trpc/client";
 import { supabase } from "@/lib/supabase";
 
@@ -15,23 +11,6 @@ const TopCaster = () => {
     const router = useRouter();
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [openJobType, setOpenJobType] = useState<JobType | null>(null);
-    const [selectedFilters, setSelectedFilters] = useState<
-        Record<JobType, Record<string, string[]>>
-    >({
-        photographer: {},
-        model: {},
-        artist: {},
-        creator: {},
-    });
-    // 基本情報のstate
-    const [ageMin, setAgeMin] = useState("");
-    const [ageMax, setAgeMax] = useState("");
-    const [heightMin, setHeightMin] = useState("");
-    const [heightMax, setHeightMax] = useState("");
-    const [gender, setGender] = useState<string[]>([]);
-    // 活動可能日のstate
-    const [availableDays, setAvailableDays] = useState<string[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
     const [addingFavorites, setAddingFavorites] = useState<Set<string>>(new Set());
     const [removingFavorites, setRemovingFavorites] = useState<Set<string>>(new Set());
@@ -50,7 +29,51 @@ const TopCaster = () => {
     }, []);
 
     // 全ての案件を取得
-    const { data: projects, isLoading: isLoadingProjects } = trpc.project.getAllProjects.useQuery();
+    const { data: allProjects, isLoading: isLoadingProjects } = trpc.project.getAllProjects.useQuery();
+
+    // 検索キーワードでフィルタリングされた案件
+    const filteredProjects = useMemo(() => {
+        if (!allProjects) {
+            return [];
+        }
+        if (!searchKeyword.trim()) {
+            return allProjects;
+        }
+        const keyword = searchKeyword.trim().toLowerCase();
+        return allProjects.filter((project) => {
+            const companyName =
+                project.user.organization?.companyName ||
+                project.user.ordererProfile?.fullName ||
+                "";
+            return companyName.toLowerCase().includes(keyword);
+        });
+    }, [allProjects, searchKeyword]);
+
+    // 1ページあたりの件数
+    const itemsPerPage = 10;
+
+    // 総ページ数を計算
+    const totalPages = useMemo(() => {
+        if (!filteredProjects || filteredProjects.length === 0) {
+            return 1;
+        }
+        return Math.ceil(filteredProjects.length / itemsPerPage);
+    }, [filteredProjects]);
+
+    // 現在のページのデータを取得
+    const paginatedProjects = useMemo(() => {
+        if (!filteredProjects || filteredProjects.length === 0) {
+            return [];
+        }
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredProjects.slice(startIndex, endIndex);
+    }, [filteredProjects, currentPage]);
+
+    // 検索キーワードが変更されたら1ページ目に戻す
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchKeyword]);
 
     // お気に入り一覧を取得（全ての案件のお気に入り状態を確認するため）
     const { data: favoriteProjectsData, refetch: refetchFavorites } = trpc.favorite.getFavoriteProjects.useQuery(
@@ -158,76 +181,6 @@ const TopCaster = () => {
         return "お気に入りに追加";
     };
 
-    const jobTypeLabels: Record<JobType, string> = {
-        photographer: "フォトグラファー",
-        model: "モデル",
-        artist: "アーティスト",
-        creator: "クリエイター",
-    };
-
-    const handleJobTypeClick = (jobType: JobType) => {
-        setOpenJobType(jobType);
-    };
-
-    const handleFilterChange = (jobType: JobType, category: string, items: string[]) => {
-        setSelectedFilters((prev) => ({
-            ...prev,
-            [jobType]: {
-                ...prev[jobType],
-                [category]: items,
-            },
-        }));
-    };
-
-    const hasSelectedFilters = (jobType: JobType): boolean => {
-        const filters = selectedFilters[jobType];
-        return Object.values(filters).some((items) => items.length > 0);
-    };
-
-    const getSelectedItemsList = (jobType: JobType): string[] => {
-        const filters = selectedFilters[jobType];
-        const filterData = jobTypeFilterData[jobType];
-        const categoryDisplays: string[] = [];
-
-        // 各カテゴリ（ジャンル）ごとに処理
-        Object.keys(filterData).forEach((categoryKey) => {
-            const category = filterData[categoryKey];
-            const selectedItems = filters[categoryKey] || [];
-            const totalItems = category.items.length;
-
-            // 選択項目がある場合のみ表示
-            if (selectedItems.length > 0) {
-                if (selectedItems.length === totalItems) {
-                    // 全て選択されている場合は「ジャンル名　全選択」
-                    categoryDisplays.push(`${category.name}　全選択`);
-                } else {
-                    // 一部選択されている場合は選択項目を列挙
-                    categoryDisplays.push(`${category.name}：${selectedItems.join("、")}`);
-                }
-            }
-        });
-
-        return categoryDisplays;
-    };
-
-    const handleReset = () => {
-        // 職種フィルターをリセット
-        setSelectedFilters({
-            photographer: {},
-            model: {},
-            artist: {},
-            creator: {},
-        });
-        // 基本情報をリセット
-        setAgeMin("");
-        setAgeMax("");
-        setHeightMin("");
-        setHeightMax("");
-        setGender([]);
-        // 活動可能日をリセット
-        setAvailableDays([]);
-    };
-
     return (
         <div
             style={{
@@ -235,661 +188,12 @@ const TopCaster = () => {
                 paddingBottom: "60px",
                 paddingLeft: "clamp(20px, 4vw, 60px)",
                 paddingRight: "clamp(20px, 4vw, 60px)",
-                display: "flex",
-                gap: "40px",
-                maxWidth: "1920px",
+                maxWidth: "1080px",
                 margin: "0 auto",
             }}
         >
-            {/* 左側: フィルターサイドバー */}
-            <aside
-                style={{
-                    width: "262px",
-                    flexShrink: 0,
-                }}
-            >
-                {/* フィルター */}
-                <div
-                    style={{
-                        backgroundColor: "white",
-                        borderRadius: "10px",
-                        padding: "20px",
-                        marginBottom: "20px",
-                    }}
-                >
-                    <h3
-                        style={{
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            color: "black",
-                            marginBottom: "16px",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                        }}
-                    >
-                        職種
-                    </h3>
-                    <div
-                        style={{
-                            borderTop: "1px solid #e5e5e5",
-                            paddingTop: "16px",
-                        }}
-                    >
-                        {(["photographer", "model", "artist", "creator"] as JobType[]).map(
-                            (jobType, index, array) => {
-                                const hasSelected = hasSelectedFilters(jobType);
-                                const selectedItemsList = getSelectedItemsList(jobType);
-                                const isLast = index === array.length - 1;
-
-                                return (
-                                    <div key={jobType}>
-                                        <div
-                                            onClick={() => handleJobTypeClick(jobType)}
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                                marginBottom: isLast ? "0" : "12px",
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: "4px",
-                                                    flex: 1,
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        fontSize: "11px",
-                                                        color: "black",
-                                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                                    }}
-                                                >
-                                                    {jobTypeLabels[jobType]}
-                                                </span>
-                                                {hasSelected && (
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            flexDirection: "column",
-                                                            gap: "2px",
-                                                        }}
-                                                    >
-                                                        {selectedItemsList.map((item, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                style={{
-                                                                    fontSize: "9px",
-                                                                    color: "#666",
-                                                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                                                    lineHeight: "1.4",
-                                                                }}
-                                                            >
-                                                                {item}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {hasSelected ? (
-                                                <FaChevronDown
-                                                    style={{
-                                                        width: "12px",
-                                                        height: "12px",
-                                                        color: "black",
-                                                    }}
-                                                />
-                                            ) : (
-                                                <FaChevronRight
-                                                    style={{
-                                                        width: "12px",
-                                                        height: "12px",
-                                                        color: "black",
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            }
-                        )}
-                    </div>
-                </div>
-
-                {/* 基本情報フィルター */}
-                <div
-                    style={{
-                        backgroundColor: "white",
-                        borderRadius: "10px",
-                        padding: "20px",
-                        marginBottom: "20px",
-                    }}
-                >
-                    <h3
-                        style={{
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            color: "black",
-                            marginBottom: "16px",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                        }}
-                    >
-                        基本情報
-                    </h3>
-                    <div
-                        style={{
-                            borderTop: "1px solid #e5e5e5",
-                            paddingTop: "16px",
-                        }}
-                    >
-                        {/* 年齢 */}
-                        <div style={{ marginBottom: "16px" }}>
-                            <label
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    display: "block",
-                                    marginBottom: "8px",
-                                }}
-                            >
-                                年齢
-                            </label>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                }}
-                            >
-                                <input
-                                    type="text"
-                                    placeholder=""
-                                    value={ageMin}
-                                    onChange={(e) => setAgeMin(e.target.value)}
-                                    style={{
-                                        width: "67px",
-                                        height: "20px",
-                                        padding: "4px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                        fontSize: "9px",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "14px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    ～
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder=""
-                                    value={ageMax}
-                                    onChange={(e) => setAgeMax(e.target.value)}
-                                    style={{
-                                        width: "67px",
-                                        height: "20px",
-                                        padding: "4px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                        fontSize: "9px",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* 身長 */}
-                        <div style={{ marginBottom: "16px" }}>
-                            <label
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    display: "block",
-                                    marginBottom: "8px",
-                                }}
-                            >
-                                身長
-                            </label>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                }}
-                            >
-                                <input
-                                    type="text"
-                                    placeholder=""
-                                    value={heightMin}
-                                    onChange={(e) => setHeightMin(e.target.value)}
-                                    style={{
-                                        width: "67px",
-                                        height: "20px",
-                                        padding: "4px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                        fontSize: "9px",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "14px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    ～
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder=""
-                                    value={heightMax}
-                                    onChange={(e) => setHeightMax(e.target.value)}
-                                    style={{
-                                        width: "67px",
-                                        height: "20px",
-                                        padding: "4px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                        fontSize: "9px",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* 性別 */}
-                        <div style={{ marginBottom: "16px" }}>
-                            <label
-                                style={{
-                                    fontSize: "11px",
-                                    color: "black",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                    display: "block",
-                                    marginBottom: "8px",
-                                }}
-                            >
-                                性別
-                            </label>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "12px",
-                                }}
-                            >
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={gender.includes("男性")}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setGender([...gender, "男性"]);
-                                            } else {
-                                                setGender(gender.filter((g) => g !== "男性"));
-                                            }
-                                        }}
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        男性
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={gender.includes("女性")}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setGender([...gender, "女性"]);
-                                            } else {
-                                                setGender(gender.filter((g) => g !== "女性"));
-                                            }
-                                        }}
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        女性
-                                    </span>
-                                </label>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={gender.includes("その他")}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setGender([...gender, "その他"]);
-                                            } else {
-                                                setGender(gender.filter((g) => g !== "その他"));
-                                            }
-                                        }}
-                                        style={{
-                                            width: "14px",
-                                            height: "14px",
-                                            borderRadius: "3px",
-                                            border: "1px solid black",
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize: "11px",
-                                            color: "black",
-                                            fontFamily: "'Noto Sans JP', sans-serif",
-                                        }}
-                                    >
-                                        その他
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 活動可能日 */}
-                    <h3
-                        style={{
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            color: "black",
-                            marginBottom: "16px",
-                            marginTop: "20px",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                        }}
-                    >
-                        活動可能日
-                    </h3>
-                    <div
-                        style={{
-                            borderTop: "1px solid #e5e5e5",
-                            paddingTop: "16px",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "8px",
-                            }}
-                        >
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={availableDays.includes("平日")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setAvailableDays([...availableDays, "平日"]);
-                                        } else {
-                                            setAvailableDays(availableDays.filter((d) => d !== "平日"));
-                                        }
-                                    }}
-                                    style={{
-                                        width: "14px",
-                                        height: "14px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "11px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    平日
-                                </span>
-                            </label>
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={availableDays.includes("土日祝")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setAvailableDays([...availableDays, "土日祝"]);
-                                        } else {
-                                            setAvailableDays(availableDays.filter((d) => d !== "土日祝"));
-                                        }
-                                    }}
-                                    style={{
-                                        width: "14px",
-                                        height: "14px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "11px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    土日祝
-                                </span>
-                            </label>
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={availableDays.includes("早朝対応可能")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setAvailableDays([...availableDays, "早朝対応可能"]);
-                                        } else {
-                                            setAvailableDays(availableDays.filter((d) => d !== "早朝対応可能"));
-                                        }
-                                    }}
-                                    style={{
-                                        width: "14px",
-                                        height: "14px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "11px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    早朝対応可能
-                                </span>
-                            </label>
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={availableDays.includes("深夜対応可能")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setAvailableDays([...availableDays, "深夜対応可能"]);
-                                        } else {
-                                            setAvailableDays(availableDays.filter((d) => d !== "深夜対応可能"));
-                                        }
-                                    }}
-                                    style={{
-                                        width: "14px",
-                                        height: "14px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "11px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    深夜対応可能
-                                </span>
-                            </label>
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={availableDays.includes("即日対応可能")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setAvailableDays([...availableDays, "即日対応可能"]);
-                                        } else {
-                                            setAvailableDays(availableDays.filter((d) => d !== "即日対応可能"));
-                                        }
-                                    }}
-                                    style={{
-                                        width: "14px",
-                                        height: "14px",
-                                        borderRadius: "3px",
-                                        border: "1px solid black",
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: "11px",
-                                        color: "black",
-                                        fontFamily: "'Noto Sans JP', sans-serif",
-                                    }}
-                                >
-                                    即日対応可能
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                {/* フィルターボタン */}
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "12px",
-                    }}
-                >
-                    <button
-                        style={{
-                            backgroundColor: "#d70202",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "90px",
-                            padding: "12px",
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                            cursor: "pointer",
-                        }}
-                    >
-                        絞り込む
-                    </button>
-                    <button
-                        onClick={handleReset}
-                        style={{
-                            backgroundColor: "white",
-                            color: "black",
-                            border: "1px solid black",
-                            borderRadius: "90px",
-                            padding: "12px",
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            fontFamily: "'Noto Sans JP', sans-serif",
-                            cursor: "pointer",
-                        }}
-                    >
-                        リセット
-                    </button>
-                </div>
-            </aside>
-
-            {/* 右側: メインコンテンツ */}
-            <div
-                style={{
-                    flex: 1,
-                }}
-            >
+            {/* メインコンテンツ */}
+            <div>
                 {/* 検索バー */}
                 <div
                     style={{
@@ -913,7 +217,7 @@ const TopCaster = () => {
                     >
                         <input
                             type="text"
-                            placeholder="フリーワードで検索"
+                            placeholder="発注者名で検索"
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             style={{
@@ -922,7 +226,7 @@ const TopCaster = () => {
                                 outline: "none",
                                 fontSize: "16px",
                                 fontFamily: "'Noto Sans JP', sans-serif",
-                                color: "#d3d3d3",
+                                color: "#333",
                                 backgroundColor: "transparent",
                             }}
                         />
@@ -964,8 +268,8 @@ const TopCaster = () => {
                 >
                     {isLoadingProjects
                         ? "読み込み中..."
-                        : projects
-                        ? `${projects.length}件のうち、1~${Math.min(15, projects.length)}件を表示`
+                        : filteredProjects && filteredProjects.length > 0
+                        ? `${filteredProjects.length}件のうち、${(currentPage - 1) * itemsPerPage + 1}~${Math.min(currentPage * itemsPerPage, filteredProjects.length)}件を表示`
                         : "0件"}
                 </p>
 
@@ -988,7 +292,7 @@ const TopCaster = () => {
                         >
                             読み込み中...
                         </div>
-                    ) : !projects || projects.length === 0 ? (
+                    ) : !filteredProjects || filteredProjects.length === 0 ? (
                         <div
                             style={{
                                 textAlign: "center",
@@ -1000,7 +304,7 @@ const TopCaster = () => {
                             案件が見つかりませんでした
                         </div>
                     ) : (
-                        projects.map((project) => {
+                        paginatedProjects.map((project) => {
                             const companyName =
                                 project.user.organization?.companyName ||
                                 project.user.ordererProfile?.fullName ||
@@ -1107,7 +411,7 @@ const TopCaster = () => {
                                         >
                                             <button
                                                 onClick={() =>
-                                                    router.push(`/project/detail?id=${project.id}`)
+                                                    window.open(`/project/detail?id=${project.id}`, "_blank")
                                                 }
                                                 style={{
                                                     backgroundColor: "#d70202",
@@ -1172,51 +476,41 @@ const TopCaster = () => {
                 </div>
 
                 {/* ページネーション */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginTop: "40px",
-                    }}
-                >
-                    {[1, 2, 3, 4].map((page) => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            style={{
-                                width: "40px",
-                                height: "40px",
-                                borderRadius: "10px",
-                                border: "1px solid black",
-                                backgroundColor: page === currentPage ? "#ff6d00" : "white",
-                                color: page === currentPage ? "white" : "black",
-                                fontSize: "20px",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
+                {totalPages > 0 && (
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "10px",
+                            marginTop: "40px",
+                        }}
+                    >
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "10px",
+                                    border: "1px solid black",
+                                    backgroundColor: page === currentPage ? "#ff6d00" : "white",
+                                    color: page === currentPage ? "white" : "black",
+                                    fontSize: "20px",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
-
-            {/* フィルター詳細モーダル */}
-            {openJobType && (
-                <JobTypeFilterDetail
-                    jobType={openJobType}
-                    selectedFilters={selectedFilters[openJobType]}
-                    onFilterChange={(category, items) =>
-                        handleFilterChange(openJobType, category, items)
-                    }
-                    onClose={() => setOpenJobType(null)}
-                />
-            )}
         </div>
     );
 };

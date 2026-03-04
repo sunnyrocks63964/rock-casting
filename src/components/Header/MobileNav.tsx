@@ -78,7 +78,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
         }}
       >
         <Link
-          href="#pricing"
+          href="/usage_guide"
           onClick={onClose}
           style={{
             color: "white",
@@ -95,7 +95,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
           料金
         </Link>
         <Link
-          href="#casts"
+          href="/top#casts"
           onClick={onClose}
           style={{
             color: "white",
