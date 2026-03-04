@@ -91,7 +91,7 @@ const MobileReceiveWorkHero = () => {
           自分らしく働く。
         </h1>
         <Link
-          href="/register/cast"
+          href="/interview_schedule"
           style={{
             backgroundColor: "#d70202",
             color: "white",

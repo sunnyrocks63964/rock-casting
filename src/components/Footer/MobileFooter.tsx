@@ -81,7 +81,7 @@ const MobileFooter = () => {
               キャスト一覧
             </Link>
             <Link
-              href="/register/cast"
+              href="/interview_schedule"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
