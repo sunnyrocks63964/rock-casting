@@ -761,7 +761,7 @@ const MobileTopOrder = () => {
                                             fontFamily: "'Noto Sans JP', sans-serif",
                                         }}
                                     >
-                                        予約に進む
+                                        詳細を確認
                                     </button>
                                     <button
                                         onClick={() => handleAddFavorite(user.id)}
