@@ -21,7 +21,6 @@ const MobilePrivacyPolicy = () => {
         {/* タイトル */}
         <h1
           style={{
-            fontFamily: "RocknRoll One",
             fontSize: "28px",
             fontWeight: "normal",
             color: "black",

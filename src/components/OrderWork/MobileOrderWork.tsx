@@ -172,14 +172,8 @@ const MobileOrderWork = () => {
             様々な方にご利用いただけます
           </p>
 
-          {/* タブ */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "30px",
-            }}
-          >
+          {/* 個人の方セクション */}
+          <div style={{ marginBottom: "30px" }}>
             <div
               style={{
                 backgroundColor: "#2c2c2c",
@@ -190,35 +184,81 @@ const MobileOrderWork = () => {
                 fontWeight: "700",
                 fontFamily: "Noto Sans JP, sans-serif",
                 boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                textAlign: "center",
+                marginBottom: "15px",
               }}
             >
               個人の方
             </div>
+            <div style={{ textAlign: "left" }}>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  fontSize: "16px",
+                  fontFamily: "Noto Sans JP, sans-serif",
+                  color: "#0b0b0b",
+                  lineHeight: "1.8",
+                }}
+              >
+                <li style={{ marginBottom: "15px" }}>
+                  ・SNS・YouTube・宣材用の撮影をプロにお願いしたい
+                </li>
+                <li style={{ marginBottom: "15px" }}>
+                  ・結婚式やイベントでの出張カメラマンを探したい
+                </li>
+                <li style={{ marginBottom: "15px" }}>
+                  ・七五三・成人式・家族写真などの記念撮影に
+                </li>
+              </ul>
+            </div>
           </div>
 
-          {/* コンテンツエリア */}
-          <div style={{ textAlign: "left" }}>
-            <ul
+          {/* 法人の方セクション */}
+          <div>
+            <div
               style={{
-                listStyle: "none",
-                padding: 0,
-                margin: 0,
+                backgroundColor: "#2c2c2c",
+                color: "white",
+                padding: "15px 45px",
+                borderRadius: "30px",
                 fontSize: "16px",
+                fontWeight: "700",
                 fontFamily: "Noto Sans JP, sans-serif",
-                color: "#0b0b0b",
-                lineHeight: "1.8",
+                boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                textAlign: "center",
+                marginBottom: "15px",
               }}
             >
-              <li style={{ marginBottom: "15px" }}>
-                ・SNS・YouTube・宣材用の撮影をプロにお願いしたい
-              </li>
-              <li style={{ marginBottom: "15px" }}>
-                ・結婚式やイベントでの出張カメラマンを探したい
-              </li>
-              <li style={{ marginBottom: "15px" }}>
-                ・七五三・成人式・家族写真などの記念撮影に
-              </li>
-            </ul>
+              法人の方
+            </div>
+            <div style={{ textAlign: "left" }}>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  fontSize: "16px",
+                  fontFamily: "Noto Sans JP, sans-serif",
+                  color: "#0b0b0b",
+                  lineHeight: "1.8",
+                }}
+              >
+                <li style={{ marginBottom: "15px" }}>
+                  ・広告・カタログ・CM撮影で、モデルやスタイリストを手配したい
+                </li>
+                <li style={{ marginBottom: "15px" }}>
+                  ・会社のホームページや採用動画の制作を依頼したい
+                </li>
+                <li style={{ marginBottom: "15px" }}>
+                  ・新商品のPR撮影・SNSコンテンツ用素材をまとめて撮りたい
+                </li>
+                <li style={{ marginBottom: "15px" }}>
+                  ・撮影から編集まで、ワンストップで依頼したい
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
