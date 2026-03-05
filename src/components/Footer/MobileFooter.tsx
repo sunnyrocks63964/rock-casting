@@ -270,11 +270,13 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="https://sunnyrocks32169.com/aboutus/"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
                 color: "white",
                 textDecoration: "none",
+
               }}
             >
               企業情報
