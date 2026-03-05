@@ -310,6 +310,7 @@ const MobileFooter = () => {
         <div style={{ marginBottom: "0.75rem" }}>
           <Link
             href="https://sunnyrocks32169.com/contact/"
+            target="_blank"
             style={{
               display: "block",
               backgroundColor: "white",
