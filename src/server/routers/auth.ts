@@ -655,13 +655,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // デバッグログ: 生成されたリンクを確認
-        console.error("[requestPasswordReset] Generated link:", {
-          action_link: data.properties.action_link,
-          redirectTo_passed: redirectTo,
-          email: email,
-        });
-
         // カスタムメールを送信
         try {
           await sendPasswordResetEmail({
