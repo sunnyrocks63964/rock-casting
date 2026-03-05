@@ -1,9 +1,64 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { trpc } from "@/lib/trpc/client";
 
 const MobileFooter = () => {
+  const pathname = usePathname();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // ユーザーIDを取得
+  useEffect(() => {
+    const getUserId = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    };
+    getUserId();
+  }, []);
+
+  // 現在のユーザー情報を取得
+  const { data: userData } = trpc.auth.getCurrentUser.useQuery(
+    { userId: userId! },
+    {
+      enabled: !!userId,
+      retry: false,
+    }
+  );
+
+  // トップページへの遷移先を決定（パスベースの判定）
+  const getTopPath = (): string => {
+    // パスベースの判定（優先度：高）
+    if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+      return "/top/caster";
+    }
+    if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+      return "/top/order";
+    }
+
+    // ユーザーデータベースの判定（フォールバック）
+    if (userData) {
+      if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
+        return "/top/caster";
+      }
+      if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
+        return "/top/order";
+      }
+      if (userData.hasCasterProfile && userData.hasOrdererProfile) {
+        // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
+        return "/top/order";
+      }
+    }
+
+    // デフォルト（ログインしていない場合も含む）
+    return "/";
+  };
   return (
     <footer>
       {/* グレー背景セクション */}
@@ -48,7 +103,7 @@ const MobileFooter = () => {
             }}
           >
             <Link
-              href="/"
+              href={getTopPath()}
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -59,7 +114,7 @@ const MobileFooter = () => {
               トップページ
             </Link>
             <Link
-              href="/price"
+              href="/usage_guide"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -81,7 +136,7 @@ const MobileFooter = () => {
               キャスト一覧
             </Link>
             <Link
-              href="/interview_schedule"
+              href="/receive-work"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -92,7 +147,7 @@ const MobileFooter = () => {
               仕事を受ける
             </Link>
             <Link
-              href="/register/company"
+              href="/order-work"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -159,7 +214,7 @@ const MobileFooter = () => {
             }}
           >
             <Link
-              href="/terms"
+              href="/terms_of_service"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -168,6 +223,17 @@ const MobileFooter = () => {
               }}
             >
               利用規約
+            </Link>
+            <Link
+              href="/external_transmission"
+              style={{
+                fontFamily: "Noto Sans JP",
+                fontSize: "11px",
+                color: "white",
+                textDecoration: "none",
+              }}
+            >
+              外部送信規律に関する公表事項
             </Link>
             <Link
               href="/trademark_patent"
@@ -181,6 +247,17 @@ const MobileFooter = () => {
               商標・特許
             </Link>
             <Link
+              href="/commercial_law"
+              style={{
+                fontFamily: "Noto Sans JP",
+                fontSize: "11px",
+                color: "white",
+                textDecoration: "none",
+              }}
+            >
+              特定商取引法に基づく表示
+            </Link>
+            <Link
               href="/privacy_policy"
               style={{
                 fontFamily: "Noto Sans JP",
@@ -192,48 +269,7 @@ const MobileFooter = () => {
               プライバシーポリシー
             </Link>
             <Link
-              href="/security_policy"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "Noto Sans JP",
-                fontSize: "11px",
-                color: "white",
-                textDecoration: "none",
-              }}
-            >
-              情報セキュリティーポリシー
-            </Link>
-            <Link
-              href="/external_transmission"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "Noto Sans JP",
-                fontSize: "11px",
-                color: "white",
-                textDecoration: "none",
-              }}
-            >
-              外部送信規律に関する公表事項
-            </Link>
-            <Link
-              href="/commercial_law"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "Noto Sans JP",
-                fontSize: "11px",
-                color: "white",
-                textDecoration: "none",
-              }}
-            >
-              特定商取引法に基づく表示
-            </Link>
-            <Link
               href="https://sunnyrocks32169.com/aboutus/"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -244,9 +280,18 @@ const MobileFooter = () => {
               企業情報
             </Link>
             <Link
+              href="/security_policy"
+              style={{
+                fontFamily: "Noto Sans JP",
+                fontSize: "11px",
+                color: "white",
+                textDecoration: "none",
+              }}
+            >
+              情報セキュリティーポリシー
+            </Link>
+            <Link
               href="/service_environment"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -263,8 +308,6 @@ const MobileFooter = () => {
         <div style={{ marginBottom: "0.75rem" }}>
           <Link
             href="https://sunnyrocks32169.com/contact/"
-            target="_blank"
-            rel="noopener noreferrer"
             style={{
               display: "block",
               backgroundColor: "white",
