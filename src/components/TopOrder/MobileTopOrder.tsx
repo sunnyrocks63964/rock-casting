@@ -28,6 +28,7 @@ const MobileTopOrder = () => {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [openJobType, setOpenJobType] = useState<JobType | null>(null);
+    const [openJobTypeSelector, setOpenJobTypeSelector] = useState(false);
     const [openBasicInfoFilter, setOpenBasicInfoFilter] = useState(false);
     const [ordererId, setOrdererId] = useState<string | null>(null);
     const [selectedFilters, setSelectedFilters] = useState<
@@ -202,6 +203,37 @@ const MobileTopOrder = () => {
         }));
     };
 
+    const hasSelectedFilters = (jobType: JobType): boolean => {
+        const filters = selectedFilters[jobType];
+        return Object.values(filters).some((items) => items.length > 0);
+    };
+
+    const getSelectedItemsList = (jobType: JobType): string[] => {
+        const filters = selectedFilters[jobType];
+        const filterData = jobTypeFilterData[jobType];
+        const categoryDisplays: string[] = [];
+
+        // 各カテゴリ（ジャンル）ごとに処理
+        Object.keys(filterData).forEach((categoryKey) => {
+            const category = filterData[categoryKey];
+            const selectedItems = filters[categoryKey] || [];
+            const totalItems = category.items.length;
+
+            // 選択項目がある場合のみ表示
+            if (selectedItems.length > 0) {
+                if (selectedItems.length === totalItems) {
+                    // 全て選択されている場合は「ジャンル名　全選択」
+                    categoryDisplays.push(`${category.name}　全選択`);
+                } else {
+                    // 一部選択されている場合は選択項目を列挙
+                    categoryDisplays.push(`${category.name}：${selectedItems.join("、")}`);
+                }
+            }
+        });
+
+        return categoryDisplays;
+    };
+
     const handleApplyFilters = () => {
         // 選択されたフィルターを適用（空のフィルターは除外）
         const filtersToApply: Partial<Record<JobType, Record<string, string[]>>> = {};
@@ -276,8 +308,6 @@ const MobileTopOrder = () => {
         // 基本情報フィルターが空の場合はundefinedを設定
         const hasAnyBasicInfoFilter = Object.keys(basicInfoFiltersToApply).length > 0;
         setAppliedBasicInfoFilters(hasAnyBasicInfoFilter ? basicInfoFiltersToApply : undefined);
-        
-        setOpenBasicInfoFilter(false);
     };
 
     const handleReset = () => {
@@ -481,8 +511,8 @@ const MobileTopOrder = () => {
             >
                 <button
                     onClick={() => {
-                        // 最初の職種を開く（またはモーダルを開く）
-                        setOpenJobType("model");
+                        // 職種選択モーダルを開く
+                        setOpenJobTypeSelector(true);
                     }}
                     style={{
                         backgroundColor: "white",
@@ -490,22 +520,79 @@ const MobileTopOrder = () => {
                         padding: "10px 23px",
                         border: "none",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: "4px",
                         cursor: "pointer",
                         fontFamily: "'Noto Sans JP', sans-serif",
                         fontSize: "16px",
                         color: "black",
                     }}
                 >
-                    <span>職種から絞り込む</span>
-                    <FaChevronRight
+                    <div
                         style={{
-                            width: "15px",
-                            height: "15px",
-                            color: "black",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            width: "100%",
                         }}
-                    />
+                    >
+                        <span>職種から絞り込む</span>
+                        <FaChevronRight
+                            style={{
+                                width: "15px",
+                                height: "15px",
+                                color: "black",
+                            }}
+                        />
+                    </div>
+                    {/* 選択されたフィルターを表示 */}
+                    {(["photographer", "model", "artist", "creator"] as JobType[]).some((jobType) =>
+                        hasSelectedFilters(jobType)
+                    ) && (
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "2px",
+                                width: "100%",
+                                marginTop: "4px",
+                            }}
+                        >
+                            {(["photographer", "model", "artist", "creator"] as JobType[]).map((jobType) => {
+                                if (!hasSelectedFilters(jobType)) return null;
+                                const selectedItemsList = getSelectedItemsList(jobType);
+                                return (
+                                    <div key={jobType} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <span
+                                            style={{
+                                                fontSize: "11px",
+                                                color: "#666",
+                                                fontFamily: "'Noto Sans JP', sans-serif",
+                                                fontWeight: "700",
+                                            }}
+                                        >
+                                            {jobTypeLabels[jobType]}
+                                        </span>
+                                        {selectedItemsList.map((item, idx) => (
+                                            <span
+                                                key={idx}
+                                                style={{
+                                                    fontSize: "11px",
+                                                    color: "#666",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                    lineHeight: "1.4",
+                                                    paddingLeft: "8px",
+                                                }}
+                                            >
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </button>
                 <button
                     onClick={() => setOpenBasicInfoFilter(true)}
@@ -531,6 +618,23 @@ const MobileTopOrder = () => {
                             color: "black",
                         }}
                     />
+                </button>
+                <button
+                    onClick={handleReset}
+                    style={{
+                        backgroundColor: "white",
+                        color: "black",
+                        border: "1px solid black",
+                        borderRadius: "90px",
+                        padding: "12px",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        cursor: "pointer",
+                        width: "100%",
+                    }}
+                >
+                    絞り込みリセット
                 </button>
             </div>
 
@@ -740,6 +844,163 @@ const MobileTopOrder = () => {
                 </div>
             )}
 
+            {/* 職種選択モーダル */}
+            {openJobTypeSelector && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        zIndex: 1000,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "20px",
+                    }}
+                    onClick={() => setOpenJobTypeSelector(false)}
+                >
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "10px",
+                            maxWidth: "90vw",
+                            width: "100%",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                            padding: "30px",
+                            position: "relative",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* 閉じるボタン */}
+                        <button
+                            onClick={() => setOpenJobTypeSelector(false)}
+                            style={{
+                                position: "absolute",
+                                top: "20px",
+                                right: "20px",
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: "0",
+                                fontSize: "24px",
+                                color: "black",
+                            }}
+                            aria-label="閉じる"
+                        >
+                            ×
+                        </button>
+
+                        {/* タイトル */}
+                        <h2
+                            style={{
+                                fontSize: "20px",
+                                fontWeight: "700",
+                                color: "black",
+                                marginBottom: "30px",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            職種から絞り込む
+                        </h2>
+
+                        {/* 職種リスト */}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "12px",
+                            }}
+                        >
+                            {(["photographer", "model", "artist", "creator"] as JobType[]).map((jobType) => {
+                                const hasSelected = hasSelectedFilters(jobType);
+                                const selectedItemsList = getSelectedItemsList(jobType);
+
+                                return (
+                                    <button
+                                        key={jobType}
+                                        onClick={() => {
+                                            setOpenJobTypeSelector(false);
+                                            setOpenJobType(jobType);
+                                        }}
+                                        style={{
+                                            backgroundColor: "white",
+                                            borderRadius: "10px",
+                                            padding: "16px",
+                                            border: "1px solid #e5e5e5",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-start",
+                                            gap: "4px",
+                                            cursor: "pointer",
+                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                            textAlign: "left",
+                                            width: "100%",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                width: "100%",
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    fontSize: "16px",
+                                                    color: "black",
+                                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                                    fontWeight: "700",
+                                                }}
+                                            >
+                                                {jobTypeLabels[jobType]}
+                                            </span>
+                                            <FaChevronRight
+                                                style={{
+                                                    width: "15px",
+                                                    height: "15px",
+                                                    color: "black",
+                                                }}
+                                            />
+                                        </div>
+                                        {hasSelected && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "2px",
+                                                    width: "100%",
+                                                    marginTop: "4px",
+                                                }}
+                                            >
+                                                {selectedItemsList.map((item, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        style={{
+                                                            fontSize: "12px",
+                                                            color: "#666",
+                                                            fontFamily: "'Noto Sans JP', sans-serif",
+                                                            lineHeight: "1.4",
+                                                            paddingLeft: "8px",
+                                                        }}
+                                                    >
+                                                        {item}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 職種フィルターモーダル */}
             {openJobType && (
                 <JobTypeFilterDetail
@@ -748,7 +1009,11 @@ const MobileTopOrder = () => {
                     onFilterChange={(category, items) =>
                         handleFilterChange(openJobType, category, items)
                     }
-                    onClose={() => setOpenJobType(null)}
+                    onClose={() => {
+                        // モーダルを閉じたときにフィルターを適用
+                        handleApplyFilters();
+                        setOpenJobType(null);
+                    }}
                 />
             )}
 
@@ -1153,7 +1418,10 @@ const MobileTopOrder = () => {
                                 リセット
                             </button>
                             <button
-                                onClick={handleApplyFilters}
+                                onClick={() => {
+                                    handleApplyFilters();
+                                    setOpenBasicInfoFilter(false);
+                                }}
                                 style={{
                                     backgroundColor: "#d70202",
                                     color: "white",
