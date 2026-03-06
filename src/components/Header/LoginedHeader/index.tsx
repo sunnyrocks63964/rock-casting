@@ -58,7 +58,7 @@ const LoginedHeader = () => {
         >
           {/* ロゴ */}
           <Link
-            href={isMobile ? "/top" : getTopPath()}
+            href={getTopPath()}
             className={rocknrollOne.className}
             style={{
               fontSize: isMobile ? "clamp(14px, 1.25vw, 24px)" : "24px",
