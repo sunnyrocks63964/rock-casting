@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { supabase } from "@/lib/supabase";
 import userPicture from "../images/user_picture.png";
+import notificationBell from "../images/notification_bell.png";
 import { useEffect, useState } from "react";
 
 interface MobileLoginedNavProps {
@@ -17,6 +18,8 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [userId, setUserId] = useState<string | null>(null);
+  const [messageListPath, setMessageListPath] = useState("/order/message_list");
+  const [contractListPath, setContractListPath] = useState("/order/contracts");
 
   // ユーザーIDを取得
   useEffect(() => {
@@ -57,6 +60,44 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
       retry: false,
     }
   );
+
+  // メッセージ一覧のパスを決定
+  useEffect(() => {
+    // パスベースの判定（優先度：高）
+    if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
+      setMessageListPath("/caster/message_list");
+      setContractListPath("/caster/contracts");
+      return;
+    }
+    if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
+      setMessageListPath("/order/message_list");
+      setContractListPath("/order/contracts");
+      return;
+    }
+
+    // ユーザーデータベースの判定（フォールバック）
+    if (userData) {
+      if (userData.hasCasterProfile && !userData.hasOrdererProfile) {
+        setMessageListPath("/caster/message_list");
+        setContractListPath("/caster/contracts");
+      } else if (userData.hasOrdererProfile && !userData.hasCasterProfile) {
+        setMessageListPath("/order/message_list");
+        setContractListPath("/order/contracts");
+      } else if (userData.hasCasterProfile && userData.hasOrdererProfile) {
+        // 両方持っている場合は、パスに基づいて判定（デフォルトはorder）
+        setMessageListPath("/order/message_list");
+        setContractListPath("/order/contracts");
+      }
+    }
+  }, [pathname, userData]);
+
+  // orderとしてログインしているかどうかを判定
+  const isOrderer = userData?.hasOrdererProfile ?? false;
+  // casterとしてログインしているかどうかを判定
+  const isCaster = userData?.hasCasterProfile ?? false;
+
+  // お気に入りページのパスを決定
+  const favoritePath = isCaster ? "/caster/favorite" : "/order/favorite";
 
   // マイページへの遷移先を決定
   const getMyPagePath = (): string => {
@@ -268,6 +309,159 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         >
           仕事を発注する
         </Link>
+
+        {/* 新しい仕事を依頼（isOrdererの場合のみ） */}
+        {isOrderer && (
+          <Link
+            href="/order/add_project"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            style={{
+              color: "#ff6d00",
+              fontSize: "12px",
+              fontFamily: "Noto Sans JP",
+              fontWeight: "500",
+              textDecoration: "none",
+              paddingBottom: "15px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
+            新しい仕事を依頼
+          </Link>
+        )}
+
+        {/* キャスト検索（isOrdererの場合のみ） */}
+        {isOrderer && (
+          <Link
+            href="/top/order"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            style={{
+              color: "#ff6d00",
+              fontSize: "12px",
+              fontFamily: "Noto Sans JP",
+              fontWeight: "500",
+              textDecoration: "none",
+              paddingBottom: "15px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
+            キャスト検索
+          </Link>
+        )}
+
+        {/* メッセージ */}
+        <Link
+          href={messageListPath}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          style={{
+            color: "#ff6d00",
+            fontSize: "12px",
+            fontFamily: "Noto Sans JP",
+            fontWeight: "500",
+            textDecoration: "none",
+            paddingBottom: "15px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
+          メッセージ
+        </Link>
+
+        {/* 契約一覧 */}
+        <Link
+          href={contractListPath}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          style={{
+            color: "#ff6d00",
+            fontSize: "12px",
+            fontFamily: "Noto Sans JP",
+            fontWeight: "500",
+            textDecoration: "none",
+            paddingBottom: "15px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
+          契約一覧
+        </Link>
+
+        {/* パッケージ予約 */}
+        <Link
+          href="/order/package_reservate"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          style={{
+            color: "#ff6d00",
+            fontSize: "12px",
+            fontFamily: "Noto Sans JP",
+            fontWeight: "500",
+            textDecoration: "none",
+            paddingBottom: "15px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
+          パッケージ予約
+        </Link>
+
+        {/* お気に入り */}
+        <Link
+          href={favoritePath}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          style={{
+            color: "#ff6d00",
+            fontSize: "12px",
+            fontFamily: "Noto Sans JP",
+            fontWeight: "500",
+            textDecoration: "none",
+            paddingBottom: "15px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
+          お気に入り
+        </Link>
+
+        {/* 通知 */}
+        <div
+          onClick={onClose}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingBottom: "15px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            width: "100%",
+            cursor: "pointer",
+          }}
+        >
+          <img
+            src={notificationBell.src}
+            alt="通知"
+            style={{
+              width: "25px",
+              height: "25px",
+            }}
+          />
+        </div>
 
         {/* マイページ */}
         <div

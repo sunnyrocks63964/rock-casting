@@ -12,6 +12,7 @@ const LoginedNavBar = () => {
     const [messageListPath, setMessageListPath] = useState("/order/message_list");
     const [contractListPath, setContractListPath] = useState("/order/contracts");
     const [userId, setUserId] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
 
     // 現在のユーザー情報を取得
     const { data: userData } = trpc.auth.getCurrentUser.useQuery(
@@ -21,6 +22,17 @@ const LoginedNavBar = () => {
             retry: false,
         }
     );
+
+    // モバイル判定
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     // ユーザーIDを取得
     useEffect(() => {
@@ -72,6 +84,11 @@ const LoginedNavBar = () => {
 
     // お気に入りページのパスを決定
     const favoritePath = isCaster ? "/caster/favorite" : "/order/favorite";
+
+    // モバイルの場合は非表示
+    if (isMobile) {
+        return null;
+    }
 
     return (
         <div
