@@ -314,7 +314,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {isOrderer && (
           <Link
             href="/order/add_project"
-            target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
             style={{
@@ -337,7 +336,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {isOrderer && (
           <Link
             href="/top/order"
-            target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
             style={{
@@ -359,7 +357,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {/* メッセージ */}
         <Link
           href={messageListPath}
-          target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
           style={{
@@ -380,7 +377,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {/* 契約一覧 */}
         <Link
           href={contractListPath}
-          target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
           style={{
@@ -401,7 +397,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {/* パッケージ予約 */}
         <Link
           href="/order/package_reservate"
-          target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
           style={{
@@ -422,7 +417,6 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
         {/* お気に入り */}
         <Link
           href={favoritePath}
-          target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
           style={{
