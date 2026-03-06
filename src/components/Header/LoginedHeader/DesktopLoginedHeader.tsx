@@ -3,18 +3,11 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { RocknRoll_One } from "next/font/google";
 import { trpc } from "@/lib/trpc/client";
 import { supabase } from "@/lib/supabase";
-import userPicture from "./images/user_picture.png";
+import userPicture from "../images/user_picture.png";
 
-const rocknrollOne = RocknRoll_One({
-    weight: "400",
-    subsets: ["latin"],
-});
-
-
-const LoginedHeader = () => {
+const DesktopLoginedHeader = () => {
     const router = useRouter();
     const pathname = usePathname();
     const [userId, setUserId] = useState<string | null>(null);
@@ -87,18 +80,6 @@ const LoginedHeader = () => {
         return "/order/mypage";
     };
 
-    // トップページへの遷移先を決定（パスベースの判定）
-    const getTopPath = (): string => {
-        if (pathname.startsWith("/caster") || pathname.startsWith("/top/caster")) {
-            return "/top/caster";
-        }
-        if (pathname.startsWith("/order") || pathname.startsWith("/top/order")) {
-            return "/top/order";
-        }
-        // デフォルト
-        return "/top/order";
-    };
-
     // 表示する画像を決定（メイン画像があればそれを使用、なければデフォルト画像）
     const casterMainProfileImage = casterProfileData && "mainProfileImage" in casterProfileData 
         ? (casterProfileData.mainProfileImage as string | null | undefined)
@@ -130,40 +111,7 @@ const LoginedHeader = () => {
     };
 
     return (
-        <header
-            style={{
-                backgroundColor: "#060606",
-                padding: "clamp(12px, 1.2vw, 20px) clamp(20px, 4vw, 60px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-            }}
-        >
-            {/* ロゴ */}
-            <Link
-                href={getTopPath()}
-                className={rocknrollOne.className}
-                style={{
-                    fontSize: "24px",
-                    color: "white",
-                    textDecoration: "none",
-                    transition: "color 0.3s ease",
-                    whiteSpace: "nowrap",
-                    textAlign: "center",
-                    lineHeight: "normal",
-                }}
-                onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.color = "#d1d5db";
-                }}
-                onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.color = "white";
-                }}
-            >
-                ROCK CASTING
-            </Link>
-
+        <>
             {/* ナビゲーション */}
             <nav
                 style={{
@@ -331,9 +279,8 @@ const LoginedHeader = () => {
                     ログアウト
                 </button>
             </div>
-        </header>
+        </>
     );
 };
 
-export default LoginedHeader;
-
+export default DesktopLoginedHeader;
