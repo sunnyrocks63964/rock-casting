@@ -7,6 +7,8 @@ import { Input, Select, InputNumber, Button, message, Checkbox, Space } from "an
 import dayjs from "dayjs";
 import JobTypeSelector, { type JobTypeSelectorData } from "@/components/JobTypeSelector";
 import { type JobType } from "@/components/TopOrder/JobTypeFilterDetail";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
+import { casterWorkAreasToWorkAreaData } from "@/lib/utils/workAreaUtils";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -94,6 +96,11 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
     const [activeTab, setActiveTab] = useState("profile");
     const [jobTypeData, setJobTypeData] = useState<JobTypeSelectorData>({
         selectedJobTypes: [],
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
     const [formData, setFormData] = useState({
         fullName: "",
@@ -208,12 +215,34 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
 
                 setJobTypeData({ selectedJobTypes });
             }
+
+            // 活動エリアデータをWorkAreaData形式に変換
+            if (profileData.workAreas || profileData.travelAreas) {
+                const workAreaDataFromDb = casterWorkAreasToWorkAreaData(
+                    profileData.workAreas || [],
+                    profileData.travelAreas || [],
+                    profileData.onlineAvailable || false
+                );
+                setWorkAreaData(workAreaDataFromDb);
+            } else {
+                setWorkAreaData({
+                    workAreas: [],
+                    travelAreas: [],
+                    onlineAvailable: profileData.onlineAvailable || false,
+                });
+            }
         }
     }, [profileData]);
 
     // フォーム変更ハンドラ
     const handleFormChange = (field: string, value: unknown) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        setHasChanges(true);
+    };
+
+    // 活動エリア変更ハンドラ
+    const handleWorkAreaChange = (data: WorkAreaData) => {
+        setWorkAreaData(data);
         setHasChanges(true);
     };
 
@@ -245,6 +274,11 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
                 maxBudget: formData.maxBudget || undefined,
             },
             jobTypeData: jobTypeData.selectedJobTypes.length > 0 ? jobTypeData : undefined,
+            workAreaData: {
+                workAreas: workAreaData.workAreas,
+                travelAreas: workAreaData.travelAreas,
+                onlineAvailable: workAreaData.onlineAvailable,
+            },
         });
     };
 
@@ -1113,6 +1147,25 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
                                             円
                                         </span>
                                     </div>
+                                </div>
+
+                                {/* 活動エリア */}
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "bold",
+                                            marginBottom: "10px",
+                                            fontSize: "16px",
+                                            color: "#000",
+                                        }}
+                                    >
+                                        活動エリア
+                                    </label>
+                                    <WorkAreaSelector
+                                        value={workAreaData}
+                                        onChange={handleWorkAreaChange}
+                                    />
                                 </div>
                             </div>
                         </div>

@@ -1,9 +1,11 @@
 /**
  * 希望活動エリアの変換ユーティリティ
  * WorkAreaDataと文字列配列の相互変換
+ * CasterWorkArea/CasterTravelAreaとWorkAreaDataの相互変換
  */
 
 import type { WorkAreaData, SelectedArea } from "@/components/WorkAreaSelector";
+import type { CasterWorkArea, CasterTravelArea } from "@prisma/client";
 
 /**
  * SelectedAreaを文字列に変換
@@ -76,5 +78,42 @@ export function stringArrayToWorkAreaData(stringArray: string[]): WorkAreaData {
     workAreas,
     travelAreas: [], // OrdererProfileでは出張対応エリアは使用しない
     onlineAvailable: false, // OrdererProfileではオンライン対応は使用しない
+  };
+}
+
+/**
+ * CasterWorkAreaとCasterTravelAreaをWorkAreaDataに変換
+ * CasterProfileから読み込む形式
+ */
+export function casterWorkAreasToWorkAreaData(
+  workAreas: Array<CasterWorkArea & { prefecture: { code: number } | null; tokyoWard: { code: number } | null }>,
+  travelAreas: Array<CasterTravelArea & { prefecture: { code: number } | null; tokyoWard: { code: number } | null }>,
+  onlineAvailable: boolean
+): WorkAreaData {
+  const workAreasData: SelectedArea[] = [];
+  const travelAreasData: SelectedArea[] = [];
+
+  workAreas.forEach((area) => {
+    if (area.prefecture) {
+      workAreasData.push({
+        prefectureCode: area.prefecture.code,
+        tokyoWardCode: area.tokyoWard?.code,
+      });
+    }
+  });
+
+  travelAreas.forEach((area) => {
+    if (area.prefecture) {
+      travelAreasData.push({
+        prefectureCode: area.prefecture.code,
+        tokyoWardCode: area.tokyoWard?.code,
+      });
+    }
+  });
+
+  return {
+    workAreas: workAreasData,
+    travelAreas: travelAreasData,
+    onlineAvailable,
   };
 }
