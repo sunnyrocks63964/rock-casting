@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Button, message, Modal } from "antd";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
+import { stringArrayToWorkAreaData, workAreaDataToStringArray } from "@/lib/utils/workAreaUtils";
 
 interface MobileOrdererMyPageProps {
     userId: string;
@@ -37,6 +39,11 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
         industry: "",
         websiteUrl: [] as string[],
         residence: "",
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
 
     // スクロール用のref
@@ -92,6 +99,7 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 industry?: string | null;
                 websiteUrl?: string[];
                 residence?: string | null;
+                desiredWorkAreas?: string[];
             };
             
             setFormData({
@@ -101,6 +109,18 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 websiteUrl: profile.websiteUrl || [],
                 residence: profile.residence || "",
             });
+            
+            // 希望活動エリアを読み込む
+            if (profile.desiredWorkAreas && profile.desiredWorkAreas.length > 0) {
+                const workAreaDataFromDb = stringArrayToWorkAreaData(profile.desiredWorkAreas);
+                setWorkAreaData(workAreaDataFromDb);
+            } else {
+                setWorkAreaData({
+                    workAreas: [],
+                    travelAreas: [],
+                    onlineAvailable: false,
+                });
+            }
         }
     }, [profileData]);
 
@@ -110,8 +130,16 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
         setHasChanges(true);
     };
 
+    // 希望活動エリア変更ハンドラ
+    const handleWorkAreaChange = (data: WorkAreaData) => {
+        setWorkAreaData(data);
+        setHasChanges(true);
+    };
+
     // 保存ハンドラ
     const handleSave = () => {
+        const desiredWorkAreasStringArray = workAreaDataToStringArray(workAreaData);
+        
         updateProfileMutation.mutate({
             userId,
             data: {
@@ -120,6 +148,7 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 industry: formData.industry || undefined,
                 websiteUrl: formData.websiteUrl.length > 0 ? formData.websiteUrl : undefined,
                 residence: formData.residence || undefined,
+                desiredWorkAreas: desiredWorkAreasStringArray.length > 0 ? desiredWorkAreasStringArray : undefined,
             },
         });
     };
@@ -476,6 +505,26 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                                 追加
                             </Button>
                         </div>
+                    </div>
+
+                    {/* 希望活動エリア */}
+                    <div style={{ marginBottom: "24px" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                fontWeight: "bold",
+                                marginBottom: "8px",
+                                fontSize: "14px",
+                                color: "#000",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            希望活動エリア
+                        </label>
+                        <WorkAreaSelector
+                            value={workAreaData}
+                            onChange={handleWorkAreaChange}
+                        />
                     </div>
 
                     {/* 保存ボタン */}
