@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Button, message, Modal } from "antd";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
+import { stringArrayToWorkAreaData, workAreaDataToStringArray } from "@/lib/utils/workAreaUtils";
 
 const { TextArea } = Input;
 
@@ -39,6 +41,11 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
         industry: "",
         websiteUrl: [] as string[],
         residence: "",
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
 
     // スクロール用のref
@@ -94,6 +101,7 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 industry?: string | null;
                 websiteUrl?: string[];
                 residence?: string | null;
+                desiredWorkAreas?: string[];
             };
             
             setFormData({
@@ -103,6 +111,18 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 websiteUrl: profile.websiteUrl || [],
                 residence: profile.residence || "",
             });
+            
+            // 希望活動エリアを読み込む
+            if (profile.desiredWorkAreas && profile.desiredWorkAreas.length > 0) {
+                const workAreaDataFromDb = stringArrayToWorkAreaData(profile.desiredWorkAreas);
+                setWorkAreaData(workAreaDataFromDb);
+            } else {
+                setWorkAreaData({
+                    workAreas: [],
+                    travelAreas: [],
+                    onlineAvailable: false,
+                });
+            }
         }
     }, [profileData]);
 
@@ -112,8 +132,16 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
         setHasChanges(true);
     };
 
+    // 希望活動エリア変更ハンドラ
+    const handleWorkAreaChange = (data: WorkAreaData) => {
+        setWorkAreaData(data);
+        setHasChanges(true);
+    };
+
     // 保存ハンドラ
     const handleSave = () => {
+        const desiredWorkAreasStringArray = workAreaDataToStringArray(workAreaData);
+        
         updateProfileMutation.mutate({
             userId,
             data: {
@@ -122,6 +150,7 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 industry: formData.industry || undefined,
                 websiteUrl: formData.websiteUrl.length > 0 ? formData.websiteUrl : undefined,
                 residence: formData.residence || undefined,
+                desiredWorkAreas: desiredWorkAreasStringArray.length > 0 ? desiredWorkAreasStringArray : undefined,
             },
         });
     };
@@ -481,6 +510,25 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                                             追加
                                         </Button>
                                     </div>
+                                </div>
+
+                                {/* 希望活動エリア */}
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "bold",
+                                            marginBottom: "10px",
+                                            fontSize: "16px",
+                                            color: "#000",
+                                        }}
+                                    >
+                                        希望活動エリア
+                                    </label>
+                                    <WorkAreaSelector
+                                        value={workAreaData}
+                                        onChange={handleWorkAreaChange}
+                                    />
                                 </div>
                             </div>
                         </div>
