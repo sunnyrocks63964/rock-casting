@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Button, message, Modal } from "antd";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
 
 interface MobileOrdererMyPageProps {
     userId: string;
@@ -37,6 +38,11 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
         industry: "",
         websiteUrl: [] as string[],
         residence: "",
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
 
     // スクロール用のref
@@ -92,6 +98,10 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 industry?: string | null;
                 websiteUrl?: string[];
                 residence?: string | null;
+                desireWorkAreas?: Array<{
+                    prefecture: { code: number };
+                    tokyoWard?: { code: number } | null;
+                }>;
             };
             
             setFormData({
@@ -100,6 +110,18 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 industry: profile.industry || "",
                 websiteUrl: profile.websiteUrl || [],
                 residence: profile.residence || "",
+            });
+
+            // 希望活動エリアデータをWorkAreaData形式に変換
+            const workAreas = profile.desireWorkAreas?.map((area) => ({
+                prefectureCode: area.prefecture.code,
+                tokyoWardCode: area.tokyoWard?.code,
+            })) ?? [];
+
+            setWorkAreaData({
+                workAreas,
+                travelAreas: [],
+                onlineAvailable: false,
             });
         }
     }, [profileData]);
@@ -120,6 +142,9 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                 industry: formData.industry || undefined,
                 websiteUrl: formData.websiteUrl.length > 0 ? formData.websiteUrl : undefined,
                 residence: formData.residence || undefined,
+            },
+            workAreaData: {
+                workAreas: workAreaData.workAreas,
             },
         });
     };
@@ -476,6 +501,29 @@ const MobileOrdererMyPage: React.FC<MobileOrdererMyPageProps> = ({ userId }) => 
                                 追加
                             </Button>
                         </div>
+                    </div>
+
+                    {/* 希望エリア */}
+                    <div style={{ marginBottom: "24px" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                fontWeight: "bold",
+                                marginBottom: "8px",
+                                fontSize: "14px",
+                                color: "#000",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            希望エリア
+                        </label>
+                        <WorkAreaSelector
+                            value={workAreaData}
+                            onChange={(data) => {
+                                setWorkAreaData(data);
+                                setHasChanges(true);
+                            }}
+                        />
                     </div>
 
                     {/* 保存ボタン */}

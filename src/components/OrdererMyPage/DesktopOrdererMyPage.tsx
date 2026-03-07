@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Button, message, Modal } from "antd";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
 
 const { TextArea } = Input;
 
@@ -39,6 +40,11 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
         industry: "",
         websiteUrl: [] as string[],
         residence: "",
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
 
     // スクロール用のref
@@ -94,6 +100,10 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 industry?: string | null;
                 websiteUrl?: string[];
                 residence?: string | null;
+                desireWorkAreas?: Array<{
+                    prefecture: { code: number };
+                    tokyoWard?: { code: number } | null;
+                }>;
             };
             
             setFormData({
@@ -102,6 +112,18 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 industry: profile.industry || "",
                 websiteUrl: profile.websiteUrl || [],
                 residence: profile.residence || "",
+            });
+
+            // 希望活動エリアデータをWorkAreaData形式に変換
+            const workAreas = profile.desireWorkAreas?.map((area) => ({
+                prefectureCode: area.prefecture.code,
+                tokyoWardCode: area.tokyoWard?.code,
+            })) ?? [];
+
+            setWorkAreaData({
+                workAreas,
+                travelAreas: [],
+                onlineAvailable: false,
             });
         }
     }, [profileData]);
@@ -122,6 +144,9 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                 industry: formData.industry || undefined,
                 websiteUrl: formData.websiteUrl.length > 0 ? formData.websiteUrl : undefined,
                 residence: formData.residence || undefined,
+            },
+            workAreaData: {
+                workAreas: workAreaData.workAreas,
             },
         });
     };
@@ -481,6 +506,28 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
                                             追加
                                         </Button>
                                     </div>
+                                </div>
+
+                                {/* 希望エリア */}
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "bold",
+                                            marginBottom: "10px",
+                                            fontSize: "16px",
+                                            color: "#000",
+                                        }}
+                                    >
+                                        希望エリア
+                                    </label>
+                                    <WorkAreaSelector
+                                        value={workAreaData}
+                                        onChange={(data) => {
+                                            setWorkAreaData(data);
+                                            setHasChanges(true);
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>

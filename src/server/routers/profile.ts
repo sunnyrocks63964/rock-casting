@@ -12,7 +12,7 @@ import {
   OrdererProfileUpdateSchema,
 } from "@/lib/validations/userSchema";
 import { WorkAreaDataSchema } from "@/lib/validations/authSchema";
-import { createWorkAreas } from "./workAreas";
+import { createWorkAreas, createOrderDesireWorkAreas } from "./workAreas";
 import type { JobTypeSelectorData } from "@/components/JobTypeSelector";
 import Stripe from "stripe";
 
@@ -286,6 +286,13 @@ export const profileRouter = createTRPCRouter({
                 createdAt: true,
               },
             },
+            desireWorkAreas: {
+              include: {
+                prefecture: true,
+                city: true,
+                tokyoWard: true,
+              },
+            },
           },
         });
 
@@ -317,10 +324,20 @@ export const profileRouter = createTRPCRouter({
       z.object({
         userId: z.string().uuid(),
         data: OrdererProfileUpdateSchema,
+        workAreaData: z
+          .object({
+            workAreas: z.array(
+              z.object({
+                prefectureCode: z.number(),
+                tokyoWardCode: z.number().optional(),
+              })
+            ),
+          })
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { userId, data } = input;
+      const { userId, data, workAreaData } = input;
 
       try {
         // プロフィールの存在確認
@@ -335,23 +352,49 @@ export const profileRouter = createTRPCRouter({
           });
         }
 
-        // プロフィール更新
-        const updatedProfile = await ctx.prisma.ordererProfile.update({
-          where: { userId },
-          data,
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
+        // トランザクションでプロフィール更新と希望活動エリア更新を実行
+        const result = await ctx.prisma.$transaction(
+          async (tx) => {
+            // プロフィール更新
+            const updatedProfile = await tx.ordererProfile.update({
+              where: { userId },
+              data,
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                  },
+                },
               },
-            },
+            });
+
+            // 希望活動エリアデータが提供されている場合、既存のエリアを削除して新規作成
+            if (workAreaData) {
+              // 既存の希望活動エリアを削除
+              await tx.orderDesireWorkArea.deleteMany({
+                where: { ordererProfileId: existingProfile.id },
+              });
+
+              // 新しいエリアを作成
+              await createOrderDesireWorkAreas({
+                prisma: tx,
+                ordererProfileId: existingProfile.id,
+                workAreas: workAreaData.workAreas,
+              });
+            }
+
+            return updatedProfile;
           },
-        });
+          {
+            maxWait: 10000, // 10秒
+            timeout: 60000, // 60秒
+          }
+        );
 
         return {
           success: true,
-          profile: updatedProfile,
+          profile: result,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
