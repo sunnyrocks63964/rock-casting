@@ -1211,62 +1211,51 @@ const MobileCasterMyPage: React.FC<MobileCasterMyPageProps> = ({ userId }) => {
                         border: "1px solid #000",
                         borderRadius: "10px",
                         padding: "16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "16px",
                         backgroundColor: "#fff",
                     }}
                 >
-                    {/* プレビュー画像 */}
-                    <div
-                        style={{
-                            width: "100%",
-                            aspectRatio: "3/2",
-                            borderRadius: "10px",
-                            backgroundColor: "#f0f0f0",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {formData.mainProfileImage ? (
-                            <img
-                                src={formData.mainProfileImage}
-                                alt="プレビュー"
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    height: "100%",
-                                    color: "#999",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                画像なし
-                            </div>
-                        )}
-                    </div>
+                    {/* キャスト情報 */}
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+                        {/* プレビュー画像 */}
+                        <div
+                            style={{
+                                width: "140px",
+                                height: "93px",
+                                borderRadius: "10px",
+                                backgroundColor: "#f0f0f0",
+                                overflow: "hidden",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {formData.mainProfileImage ? (
+                                <img
+                                    src={formData.mainProfileImage}
+                                    alt="プロフィール画像"
+                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                            ) : (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        height: "100%",
+                                        color: "#999",
+                                    }}
+                                >
+                                    画像なし
+                                </div>
+                            )}
+                        </div>
 
-                    {/* プレビュー情報 */}
-                    <div>
-                        {/* 名前と職種 */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                        {/* プレビュー情報 */}
+                        <div style={{ flex: 1 }}>
                             <div
                                 style={{
-                                    fontSize: "18px",
-                                    fontWeight: "700",
+                                    fontSize: "16px",
+                                    marginBottom: "4px",
                                     color: "#000",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                {formData.fullName || "名前未設定"}
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: "14px",
-                                    color: "#000",
+                                    textAlign: "center",
                                     fontFamily: "'Noto Sans JP', sans-serif",
                                 }}
                             >
@@ -1276,118 +1265,89 @@ const MobileCasterMyPage: React.FC<MobileCasterMyPageProps> = ({ userId }) => {
                                           .join("、")
                                     : "職種未設定"}
                             </div>
-                        </div>
-                        {/* 自己紹介 */}
-                        <div
-                            style={{
-                                fontSize: "14px",
-                                color: "#333",
-                                marginBottom: "10px",
-                                lineHeight: "1.5",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                            }}
-                        >
-                            {formData.bio || "自己紹介未設定"}
-                        </div>
-                        {/* 基本情報 */}
-                        <div
-                            style={{
-                                fontSize: "14px",
-                                color: "#333",
-                                fontFamily: "'Noto Sans JP', sans-serif",
-                            }}
-                        >
-                            {formData.residence?.split(/[都道府県]/)[0] || "地域未設定"}/
-                            {formData.birthYear
-                                ? `${currentYear - formData.birthYear}歳`
-                                : "年齢未設定"}
-                            /
-                            {formData.gender === "female"
-                                ? "女性"
-                                : formData.gender === "male"
-                                ? "男性"
-                                : "性別未設定"}
-                            /{formData.height ? `${formData.height}cm` : "身長未設定"}
+                            <div
+                                style={{
+                                    fontSize: "20px",
+                                    fontWeight: "bold",
+                                    marginBottom: "8px",
+                                    color: "#000",
+                                    textAlign: "center",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                }}
+                            >
+                                {formData.fullName || "名前未設定"}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: "12px",
+                                    color: "#333",
+                                    textAlign: "center",
+                                    fontFamily: "'Noto Sans JP', sans-serif",
+                                }}
+                            >
+                                {formData.residence?.split(/[都道府県]/)[0] || "地域未設定"}/
+                                {formData.birthYear
+                                    ? `${currentYear - formData.birthYear}歳`
+                                    : "年齢未設定"}
+                                /
+                                {formData.gender === "female"
+                                    ? "女性"
+                                    : formData.gender === "male"
+                                    ? "男性"
+                                    : "性別未設定"}
+                                /{formData.height ? `${formData.height}cm` : "身長未設定"}
+                            </div>
                         </div>
                     </div>
 
-                    {/* 区切り線 */}
+                    {/* 紹介文 */}
                     <div
                         style={{
-                            width: "100%",
-                            height: "1px",
-                            backgroundColor: "#E0E0E0",
+                            fontSize: "16px",
+                            color: "#333",
+                            marginBottom: "12px",
+                            fontFamily: "'Noto Sans JP', sans-serif",
                         }}
-                    />
+                    >
+                        {formData.bio || "自己紹介未設定"}
+                    </div>
 
-                    {/* 報酬情報とアクションボタン */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        {/* 固定報酬制タグと報酬額 */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                            <div
-                                style={{
-                                    backgroundColor: "#D38D8D",
-                                    color: "#fff",
-                                    borderRadius: "20px",
-                                    padding: "4px 12px",
-                                    fontSize: "12px",
-                                    fontWeight: "700",
-                                    width: "fit-content",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                固定報酬制
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: "16px",
-                                    color: "#000",
-                                    fontWeight: "700",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                {formData.minBudget && formData.maxBudget
-                                    ? `${formData.minBudget.toLocaleString()}円~${formData.maxBudget.toLocaleString()}円`
-                                    : formData.minBudget
-                                    ? `${formData.minBudget.toLocaleString()}円~`
-                                    : formData.maxBudget
-                                    ? `~${formData.maxBudget.toLocaleString()}円`
-                                    : "報酬額未設定"}
-                            </div>
-                        </div>
-
-                        {/* アクションボタン */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
-                            <Button
-                                type="primary"
-                                danger
-                                onClick={() => {
-                                    window.location.href = `/cast/detail?userId=${userId}`;
-                                }}
-                                style={{
-                                    borderRadius: "90px",
-                                    height: "40px",
-                                    fontSize: "14px",
-                                    fontWeight: "700",
-                                    width: "100%",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                詳細を確認
-                            </Button>
-                            <Button
-                                style={{
-                                    borderRadius: "90px",
-                                    height: "40px",
-                                    fontSize: "12px",
-                                    border: "1px solid #000",
-                                    width: "100%",
-                                    fontFamily: "'Noto Sans JP', sans-serif",
-                                }}
-                            >
-                                お気に入りに追加
-                            </Button>
-                        </div>
+                    {/* アクションボタン */}
+                    <div style={{ display: "flex", gap: "17px", justifyContent: "center" }}>
+                        <button
+                            onClick={() => {
+                                window.location.href = `/cast/detail?userId=${userId}`;
+                            }}
+                            style={{
+                                backgroundColor: "#d70202",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "90px",
+                                height: "31px",
+                                fontSize: "10px",
+                                fontWeight: "bold",
+                                padding: "0 20px",
+                                cursor: "pointer",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            詳細を確認
+                        </button>
+                        <button
+                            style={{
+                                backgroundColor: "white",
+                                color: "black",
+                                border: "1px solid black",
+                                borderRadius: "90px",
+                                height: "31px",
+                                fontSize: "10px",
+                                padding: "0 20px",
+                                cursor: "pointer",
+                                fontFamily: "'Noto Sans JP', sans-serif",
+                            }}
+                        >
+                            お気に入りに追加
+                        </button>
                     </div>
                 </div>
             </div>
