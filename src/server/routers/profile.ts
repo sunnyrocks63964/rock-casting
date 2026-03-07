@@ -644,10 +644,11 @@ export const profileRouter = createTRPCRouter({
             availableDays: z.array(z.string()).optional(),
           })
           .optional(),
+        ordererId: z.string().uuid().optional(),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { page, limit, searchKeyword, jobTypeFilters, basicInfoFilters } = input;
+      const { page, limit, searchKeyword, jobTypeFilters, basicInfoFilters, ordererId } = input;
 
       try {
         const skip = (page - 1) * limit;
@@ -893,8 +894,38 @@ export const profileRouter = createTRPCRouter({
           }
         }
 
+        // 発注者の希望活動エリアを取得（ordererIdが提供されている場合）
+        let ordererDesireWorkAreas: Array<{
+          prefectureId: string;
+          cityId: string | null;
+          tokyoWardId: string | null;
+        }> = [];
+
+        if (ordererId) {
+          const ordererProfile = await ctx.prisma.ordererProfile.findUnique({
+            where: { userId: ordererId },
+            include: {
+              desireWorkAreas: {
+                include: {
+                  prefecture: true,
+                  city: true,
+                  tokyoWard: true,
+                },
+              },
+            },
+          });
+
+          if (ordererProfile) {
+            ordererDesireWorkAreas = ordererProfile.desireWorkAreas.map((area) => ({
+              prefectureId: area.prefectureId,
+              cityId: area.cityId,
+              tokyoWardId: area.tokyoWardId,
+            }));
+          }
+        }
+
         // キャスト一覧を取得
-        const [casters, total] = await Promise.all([
+        const [allCasters, total] = await Promise.all([
           ctx.prisma.user.findMany({
             where,
             include: {
@@ -915,19 +946,98 @@ export const profileRouter = createTRPCRouter({
                 },
               },
             },
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: "desc",
-            },
           }),
           ctx.prisma.user.count({
             where,
           }),
         ]);
 
+        const castersWithProfile = allCasters.filter((user) => user.casterProfile !== null);
+
+        // エリア一致判定関数
+        const isWorkAreaMatched = (
+          casterWorkAreas: Array<{
+            prefectureId: string;
+            cityId: string | null;
+            tokyoWardId: string | null;
+          }>
+        ): boolean => {
+          if (ordererDesireWorkAreas.length === 0) {
+            return false;
+          }
+
+          for (const ordererArea of ordererDesireWorkAreas) {
+            for (const casterArea of casterWorkAreas) {
+              // 都道府県が一致するかチェック
+              if (ordererArea.prefectureId !== casterArea.prefectureId) {
+                continue;
+              }
+
+              // 都道府県が一致した場合、より詳細な一致をチェック
+              // 市区町村が両方指定されている場合は一致をチェック
+              if (ordererArea.cityId && casterArea.cityId) {
+                if (ordererArea.cityId === casterArea.cityId) {
+                  return true;
+                }
+                continue;
+              }
+
+              // 東京23区が両方指定されている場合は一致をチェック
+              if (ordererArea.tokyoWardId && casterArea.tokyoWardId) {
+                if (ordererArea.tokyoWardId === casterArea.tokyoWardId) {
+                  return true;
+                }
+                continue;
+              }
+
+              // 都道府県のみの一致（市区町村や東京23区が指定されていない場合）
+              // または、キャスト側が都道府県全体を指定している場合
+              return true;
+            }
+          }
+
+          return false;
+        };
+
+        // エリア一致でソート（一致するキャストを優先、残りは登録降順）
+        const sortedCasters = castersWithProfile.sort((a, b) => {
+          if (!a.casterProfile || !b.casterProfile) {
+            return 0;
+          }
+
+          const aWorkAreas = a.casterProfile.workAreas.map((area) => ({
+            prefectureId: area.prefectureId,
+            cityId: area.cityId,
+            tokyoWardId: area.tokyoWardId,
+          }));
+          const bWorkAreas = b.casterProfile.workAreas.map((area) => ({
+            prefectureId: area.prefectureId,
+            cityId: area.cityId,
+            tokyoWardId: area.tokyoWardId,
+          }));
+
+          const aMatched = isWorkAreaMatched(aWorkAreas);
+          const bMatched = isWorkAreaMatched(bWorkAreas);
+
+          // エリア一致のキャストを優先
+          if (aMatched && !bMatched) {
+            return -1;
+          }
+          if (!aMatched && bMatched) {
+            return 1;
+          }
+
+          // 両方一致または両方不一致の場合は登録降順
+          const aCreatedAt = a.createdAt.getTime();
+          const bCreatedAt = b.createdAt.getTime();
+          return bCreatedAt - aCreatedAt;
+        });
+
+        // ページネーション適用
+        const paginatedCasters = sortedCasters.slice(skip, skip + limit);
+
         return {
-          casters: casters.filter((user) => user.casterProfile !== null),
+          casters: paginatedCasters,
           total,
           page,
           limit,
