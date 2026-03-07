@@ -115,6 +115,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/usage_guide"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -126,6 +127,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/top#casts"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -137,6 +139,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/receive-work"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -148,6 +151,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/order-work"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -159,6 +163,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/interview_schedule"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -170,6 +175,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/login"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -181,6 +187,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/reset-password"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -215,6 +222,7 @@ const MobileFooter = () => {
           >
             <Link
               href="/terms_of_service"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -226,6 +234,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/external_transmission"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -237,6 +246,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/trademark_patent"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -248,6 +258,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/commercial_law"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -259,6 +270,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/privacy_policy"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -283,6 +295,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/security_policy"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -294,6 +307,7 @@ const MobileFooter = () => {
             </Link>
             <Link
               href="/service_environment"
+              target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",
                 fontSize: "11px",
@@ -333,6 +347,7 @@ const MobileFooter = () => {
         <div>
           <Link
             href="/usage_guide"
+            target="_blank"
             style={{
               display: "block",
               backgroundColor: "#ff6d00",
