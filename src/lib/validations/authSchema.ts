@@ -40,7 +40,7 @@ const SelectedAreaSchema = z.object({
   tokyoWardCode: z.number().int().min(1).max(23).optional(),
 });
 
-const WorkAreaDataSchema = z.object({
+export const WorkAreaDataSchema = z.object({
   workAreas: z.array(SelectedAreaSchema).default([]),
   travelAreas: z.array(SelectedAreaSchema).default([]),
   onlineAvailable: z.boolean().default(false),

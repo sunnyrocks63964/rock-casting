@@ -25,12 +25,49 @@ export async function createWorkAreas({
   travelAreas: Array<{ prefectureCode: number; tokyoWardCode?: number }>;
 }) {
   try {
-    // 稼働エリアを作成
+    // 必要な都道府県コードと東京23区コードを収集
+    const prefectureCodes = new Set<number>();
+    const tokyoWardCodes = new Set<number>();
+    
     for (const area of workAreas) {
-      const prefecture = await prisma.prefecture.findUnique({
-        where: { code: area.prefectureCode },
-      });
+      prefectureCodes.add(area.prefectureCode);
+      if (area.tokyoWardCode !== undefined) {
+        tokyoWardCodes.add(area.tokyoWardCode);
+      }
+    }
+    
+    for (const area of travelAreas) {
+      prefectureCodes.add(area.prefectureCode);
+      if (area.tokyoWardCode !== undefined) {
+        tokyoWardCodes.add(area.tokyoWardCode);
+      }
+    }
 
+    // 都道府県と東京23区を一括取得
+    const [prefectures, tokyoWards] = await Promise.all([
+      prisma.prefecture.findMany({
+        where: { code: { in: Array.from(prefectureCodes) } },
+      }),
+      tokyoWardCodes.size > 0
+        ? prisma.tokyoWard.findMany({
+            where: { code: { in: Array.from(tokyoWardCodes) } },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    // マップを作成して高速検索
+    const prefectureMap = new Map(prefectures.map((p) => [p.code, p]));
+    const tokyoWardMap = new Map(tokyoWards.map((w) => [w.code, w]));
+
+    // 稼働エリアのデータを準備
+    const workAreasToCreate: Array<{
+      casterProfileId: string;
+      prefectureId: string;
+      tokyoWardId?: string;
+    }> = [];
+
+    for (const area of workAreas) {
+      const prefecture = prefectureMap.get(area.prefectureCode);
       if (!prefecture) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -48,31 +85,28 @@ export async function createWorkAreas({
       };
 
       if (area.tokyoWardCode !== undefined) {
-        const tokyoWard = await prisma.tokyoWard.findUnique({
-          where: { code: area.tokyoWardCode },
-        });
-
+        const tokyoWard = tokyoWardMap.get(area.tokyoWardCode);
         if (!tokyoWard) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
           });
         }
-
         workAreaData.tokyoWardId = tokyoWard.id;
       }
 
-      await prisma.casterWorkArea.create({
-        data: workAreaData,
-      });
+      workAreasToCreate.push(workAreaData);
     }
 
-    // 出張対応エリアを作成
-    for (const area of travelAreas) {
-      const prefecture = await prisma.prefecture.findUnique({
-        where: { code: area.prefectureCode },
-      });
+    // 出張対応エリアのデータを準備
+    const travelAreasToCreate: Array<{
+      casterProfileId: string;
+      prefectureId: string;
+      tokyoWardId?: string;
+    }> = [];
 
+    for (const area of travelAreas) {
+      const prefecture = prefectureMap.get(area.prefectureCode);
       if (!prefecture) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -90,22 +124,29 @@ export async function createWorkAreas({
       };
 
       if (area.tokyoWardCode !== undefined) {
-        const tokyoWard = await prisma.tokyoWard.findUnique({
-          where: { code: area.tokyoWardCode },
-        });
-
+        const tokyoWard = tokyoWardMap.get(area.tokyoWardCode);
         if (!tokyoWard) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: `東京23区コード ${area.tokyoWardCode} が見つかりません`,
           });
         }
-
         travelAreaData.tokyoWardId = tokyoWard.id;
       }
 
-      await prisma.casterTravelArea.create({
-        data: travelAreaData,
+      travelAreasToCreate.push(travelAreaData);
+    }
+
+    // バッチでエリアを作成
+    if (workAreasToCreate.length > 0) {
+      await prisma.casterWorkArea.createMany({
+        data: workAreasToCreate,
+      });
+    }
+
+    if (travelAreasToCreate.length > 0) {
+      await prisma.casterTravelArea.createMany({
+        data: travelAreasToCreate,
       });
     }
   } catch (error) {

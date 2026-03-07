@@ -11,6 +11,8 @@ import {
   CasterProfileUpdateSchema,
   OrdererProfileUpdateSchema,
 } from "@/lib/validations/userSchema";
+import { WorkAreaDataSchema } from "@/lib/validations/authSchema";
+import { createWorkAreas } from "./workAreas";
 import type { JobTypeSelectorData } from "@/components/JobTypeSelector";
 import Stripe from "stripe";
 
@@ -49,6 +51,13 @@ export const profileRouter = createTRPCRouter({
               },
             },
             workAreas: {
+              include: {
+                prefecture: true,
+                city: true,
+                tokyoWard: true,
+              },
+            },
+            travelAreas: {
               include: {
                 prefecture: true,
                 city: true,
@@ -101,10 +110,11 @@ export const profileRouter = createTRPCRouter({
             ),
           })
           .optional(),
+        workAreaData: WorkAreaDataSchema.optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { userId, data, jobTypeData } = input;
+      const { userId, data, jobTypeData, workAreaData } = input;
 
       try {
         // プロフィールの存在確認
@@ -120,13 +130,21 @@ export const profileRouter = createTRPCRouter({
         }
 
         // トランザクションでプロフィール更新と職種更新を実行
-        // タイムアウトを30秒に設定（デフォルトは5秒）
+        // タイムアウトを60秒に設定（workAreaDataの処理が追加されたため延長）
         const result = await ctx.prisma.$transaction(
           async (tx) => {
-            // プロフィール更新
+            // プロフィール更新（onlineAvailableはworkAreaDataから取得）
+            const profileUpdateData: Prisma.CasterProfileUpdateInput = {
+              ...data,
+            };
+            
+            if (workAreaData?.onlineAvailable !== undefined) {
+              profileUpdateData.onlineAvailable = workAreaData.onlineAvailable;
+            }
+
             const updatedProfile = await tx.casterProfile.update({
               where: { userId },
-              data,
+              data: profileUpdateData,
               include: {
                 user: {
                   select: {
@@ -136,6 +154,25 @@ export const profileRouter = createTRPCRouter({
                 },
               },
             });
+
+            // 活動エリアデータが提供されている場合、既存のエリアを削除して新規作成
+            if (workAreaData) {
+              // 既存の稼働エリアと出張対応エリアを削除
+              await tx.casterWorkArea.deleteMany({
+                where: { casterProfileId: existingProfile.id },
+              });
+              await tx.casterTravelArea.deleteMany({
+                where: { casterProfileId: existingProfile.id },
+              });
+
+              // 新しいエリアを作成
+              await createWorkAreas({
+                prisma: tx,
+                casterProfileId: existingProfile.id,
+                workAreas: workAreaData.workAreas,
+                travelAreas: workAreaData.travelAreas,
+              });
+            }
 
             // 職種データが提供されている場合、既存の職種を削除して新規作成
             if (jobTypeData) {
@@ -205,8 +242,8 @@ export const profileRouter = createTRPCRouter({
             return updatedProfile;
           },
           {
-            maxWait: 10000, // 10秒待機
-            timeout: 30000, // 30秒タイムアウト
+            maxWait: 20000, // 20秒待機
+            timeout: 60000, // 60秒タイムアウト
           }
         );
 

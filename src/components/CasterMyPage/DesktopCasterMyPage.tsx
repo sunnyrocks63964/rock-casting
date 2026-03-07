@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc/client";
 import { Input, Select, InputNumber, Button, message, Checkbox, Space } from "antd";
 import dayjs from "dayjs";
 import JobTypeSelector, { type JobTypeSelectorData } from "@/components/JobTypeSelector";
+import WorkAreaSelector, { type WorkAreaData } from "@/components/WorkAreaSelector";
 import { type JobType } from "@/components/TopOrder/JobTypeFilterDetail";
 
 const { TextArea } = Input;
@@ -94,6 +95,11 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
     const [activeTab, setActiveTab] = useState("profile");
     const [jobTypeData, setJobTypeData] = useState<JobTypeSelectorData>({
         selectedJobTypes: [],
+    });
+    const [workAreaData, setWorkAreaData] = useState<WorkAreaData>({
+        workAreas: [],
+        travelAreas: [],
+        onlineAvailable: false,
     });
     const [formData, setFormData] = useState({
         fullName: "",
@@ -208,6 +214,23 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
 
                 setJobTypeData({ selectedJobTypes });
             }
+
+            // 活動エリアデータをWorkAreaData形式に変換
+            const workAreas = profileData.workAreas?.map((area) => ({
+                prefectureCode: area.prefecture.code,
+                tokyoWardCode: area.tokyoWard?.code,
+            })) ?? [];
+            
+            const travelAreas = profileData.travelAreas?.map((area) => ({
+                prefectureCode: area.prefecture.code,
+                tokyoWardCode: area.tokyoWard?.code,
+            })) ?? [];
+
+            setWorkAreaData({
+                workAreas,
+                travelAreas,
+                onlineAvailable: profile.onlineAvailable ?? false,
+            });
         }
     }, [profileData]);
 
@@ -245,6 +268,7 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
                 maxBudget: formData.maxBudget || undefined,
             },
             jobTypeData: jobTypeData.selectedJobTypes.length > 0 ? jobTypeData : undefined,
+            workAreaData: workAreaData.workAreas.length > 0 || workAreaData.travelAreas.length > 0 || workAreaData.onlineAvailable ? workAreaData : undefined,
         });
     };
 
@@ -562,6 +586,28 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
                                         value={jobTypeData}
                                         onChange={(data) => {
                                             setJobTypeData(data);
+                                            setHasChanges(true);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* 活動エリア */}
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "bold",
+                                            marginBottom: "20px",
+                                            fontSize: "16px",
+                                            color: "#000",
+                                        }}
+                                    >
+                                        活動エリア
+                                    </label>
+                                    <WorkAreaSelector
+                                        value={workAreaData}
+                                        onChange={(data) => {
+                                            setWorkAreaData(data);
                                             setHasChanges(true);
                                         }}
                                     />
