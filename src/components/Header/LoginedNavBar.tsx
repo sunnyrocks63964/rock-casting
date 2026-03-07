@@ -209,31 +209,33 @@ const LoginedNavBar = () => {
             >
                 契約一覧
             </Link>
-            <Link
-                href="/order/package_reservate"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                    color: pathname === "/order/package_reservate" ? "#fff" : "white",
-                    textDecoration: "none",
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    fontFamily: "'Noto Sans JP', sans-serif",
-                    lineHeight: "normal",
-                    textAlign: "center",
-                    transition: "opacity 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.opacity = "1";
-                }}
-            >
-                パッケージ予約
-            </Link>
+            {isOrderer && (
+                <Link
+                    href="/order/package_reservate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: pathname === "/order/package_reservate" ? "#fff" : "white",
+                        textDecoration: "none",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        fontFamily: "'Noto Sans JP', sans-serif",
+                        lineHeight: "normal",
+                        textAlign: "center",
+                        transition: "opacity 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.opacity = "1";
+                    }}
+                >
+                    パッケージ予約
+                </Link>
+            )}
             <Link
                 href={favoritePath}
                 target="_blank"

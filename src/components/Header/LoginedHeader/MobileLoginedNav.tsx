@@ -394,25 +394,27 @@ const MobileLoginedNav = ({ isOpen, onClose }: MobileLoginedNavProps) => {
           契約一覧
         </Link>
 
-        {/* パッケージ予約 */}
-        <Link
-          href="/order/package_reservate"
-          rel="noopener noreferrer"
-          onClick={onClose}
-          style={{
-            color: "#ff6d00",
-            fontSize: "12px",
-            fontFamily: "Noto Sans JP",
-            fontWeight: "500",
-            textDecoration: "none",
-            paddingBottom: "15px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
-            textAlign: "center",
-            width: "100%",
-          }}
-        >
-          パッケージ予約
-        </Link>
+        {/* パッケージ予約（isOrdererの場合のみ） */}
+        {isOrderer && (
+          <Link
+            href="/order/package_reservate"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            style={{
+              color: "#ff6d00",
+              fontSize: "12px",
+              fontFamily: "Noto Sans JP",
+              fontWeight: "500",
+              textDecoration: "none",
+              paddingBottom: "15px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
+            パッケージ予約
+          </Link>
+        )}
 
         {/* お気に入り */}
         <Link
