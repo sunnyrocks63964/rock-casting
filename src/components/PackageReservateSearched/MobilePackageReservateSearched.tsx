@@ -472,7 +472,6 @@ const MobilePackageReservateSearched = ({
                                                     </div>
 
                                                     {/* キャスト情報 */}
-                                                    <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
                                                         {/* 画像 */}
                                                         <div
                                                             style={{
@@ -529,7 +528,6 @@ const MobilePackageReservateSearched = ({
                                                                 {jobTypeNames || "職種未設定"}
                                                             </div>
                                                         </div>
-                                                    </div>
 
                                                     {/* 自己紹介タイトル */}
                                                     <div
