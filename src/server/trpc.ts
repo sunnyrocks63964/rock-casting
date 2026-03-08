@@ -13,9 +13,14 @@ import prisma from "@/lib/prisma";
  * 各リクエストで利用可能なデータ
  */
 export const createTRPCContext = async (opts: { req: NextRequest }) => {
+  // 認証トークンを取得
+  const authHeader = opts.req.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
   return {
     req: opts.req,
     prisma,
+    token,
   };
 };
 
@@ -27,6 +32,7 @@ export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    const isProduction = process.env.NODE_ENV === "production";
     let message = shape.message;
     
     // Zodエラーの場合、最初のエラーメッセージを取得
@@ -51,13 +57,24 @@ const t = initTRPC.context<Context>().create({
       }
     }
     
+    // 本番環境では詳細なエラー情報を隠す
+    const errorCode = error instanceof TRPCError ? error.code : null;
+    const safeMessage = isProduction && errorCode === "INTERNAL_SERVER_ERROR"
+      ? "サーバーエラーが発生しました。しばらくしてから再度お試しください。"
+      : message;
+    
     return {
       ...shape,
-      message,
+      message: safeMessage,
       data: {
         ...shape.data,
+        // 本番環境ではZodエラーの詳細を隠す
         zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+          error.cause instanceof ZodError && !isProduction
+            ? error.cause.flatten()
+            : null,
+        // 本番環境ではスタックトレースを隠す
+        stack: isProduction ? undefined : shape.data.stack,
       },
     };
   },
@@ -70,15 +87,67 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
 /**
- * 認証が必要なプロシージャ（将来実装）
+ * 認証が必要なプロシージャ
+ * Supabase認証トークンを検証し、ユーザー情報をコンテキストに追加
  */
 export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
-  // TODO: Supabase認証チェックをここに実装
-  // 現在はスキップ
-  return next({
-    ctx: {
-      ...ctx,
-    },
-  });
+  const { token } = ctx;
+
+  if (!token) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "認証が必要です。ログインしてください。",
+    });
+  }
+
+  try {
+    // Supabaseでトークンを検証
+    const { getServerSupabaseClient } = await import("@/lib/supabase");
+    const supabase = getServerSupabaseClient();
+    
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "認証トークンが無効です。再度ログインしてください。",
+      });
+    }
+
+    // ユーザー情報をPrismaから取得
+    const dbUser = await ctx.prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        casterProfile: true,
+        ordererProfile: true,
+      },
+    });
+
+    if (!dbUser) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "ユーザーが見つかりません。",
+      });
+    }
+
+    // 認証済みユーザー情報をコンテキストに追加
+    return next({
+      ctx: {
+        ...ctx,
+        user: dbUser,
+        userId: user.id,
+      },
+    });
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      throw error;
+    }
+
+    console.error("認証エラー:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "認証処理中にエラーが発生しました。",
+    });
+  }
 });
 
