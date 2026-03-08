@@ -7,14 +7,64 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+// 環境変数の検証
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!stripeSecretKey || !webhookSecret) {
+  throw new Error("Stripe環境変数が設定されていません");
+}
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2026-01-28.clover",
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+/**
+ * StripeのIPアドレス範囲（本番環境での追加セキュリティチェック用）
+ * 参考: https://stripe.com/docs/ips
+ */
+const STRIPE_IP_RANGES = [
+  "54.187.174.169",
+  "54.187.205.235",
+  "54.187.216.72",
+  "54.241.31.99",
+  "54.241.31.102",
+  "54.241.34.107",
+];
+
+/**
+ * IPアドレスがStripeのものかチェック（本番環境のみ）
+ * 注意: Vercelなどのプロキシ経由の場合、このチェックは正確でない可能性があります
+ */
+function isStripeIp(ip: string | null): boolean {
+  if (!ip || process.env.NODE_ENV !== "production") {
+    return true; // 開発環境ではスキップ
+  }
+
+  return STRIPE_IP_RANGES.some((range) => ip.startsWith(range));
+}
 
 export async function POST(req: NextRequest) {
   try {
+    // 環境変数の再確認
+    if (!webhookSecret) {
+      console.error("Stripe Webhook Secretが設定されていません");
+      return NextResponse.json(
+        { error: "Configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // IPアドレスのチェック（本番環境のみ）
+    const forwarded = req.headers.get("x-forwarded-for");
+    const realIp = req.headers.get("x-real-ip");
+    const clientIp = forwarded?.split(",")[0]?.trim() || realIp || null;
+
+    if (!isStripeIp(clientIp)) {
+      console.warn(`⚠️  Suspicious webhook request from IP: ${clientIp}`);
+      // 本番環境ではIPチェックに失敗した場合も署名検証で弾かれるため、警告のみ
+    }
+
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
 
@@ -24,13 +74,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Webhookイベントを検証
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    } catch (err) {
+      console.error("Stripe署名検証エラー:", err);
+      return NextResponse.json(
+        { error: "Invalid signature" },
+        { status: 400 }
+      );
+    }
 
-    console.log("Webhook event received:", event.type);
+    // イベントタイプのログ（本番環境では簡潔に）
+    const isProduction = process.env.NODE_ENV === "production";
+    if (isProduction) {
+      console.log(`Webhook: ${event.type} (${event.id})`);
+    } else {
+      console.log("Webhook event received:", event.type, event.id);
+    }
 
     // イベントタイプに応じて処理
     switch (event.type) {
@@ -58,11 +119,19 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Webhook error:", error);
+    const isProduction = process.env.NODE_ENV === "production";
     
-    if (error instanceof Error) {
+    // エラーログ（本番環境では詳細を制限）
+    if (isProduction) {
+      console.error("Webhook error:", error instanceof Error ? error.message : "Unknown error");
+    } else {
+      console.error("Webhook error:", error);
+    }
+    
+    // クライアントには詳細なエラー情報を返さない（セキュリティ）
+    if (error instanceof Error && error.message.includes("signature")) {
       return NextResponse.json(
-        { error: error.message },
+        { error: "Invalid signature" },
         { status: 400 }
       );
     }

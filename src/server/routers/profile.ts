@@ -11,6 +11,8 @@ import {
   CasterProfileUpdateSchema,
   OrdererProfileUpdateSchema,
 } from "@/lib/validations/userSchema";
+import { WorkAreaDataSchema } from "@/lib/validations/authSchema";
+import { createWorkAreas, createOrderDesireWorkAreas } from "./workAreas";
 import type { JobTypeSelectorData } from "@/components/JobTypeSelector";
 import Stripe from "stripe";
 
@@ -49,6 +51,13 @@ export const profileRouter = createTRPCRouter({
               },
             },
             workAreas: {
+              include: {
+                prefecture: true,
+                city: true,
+                tokyoWard: true,
+              },
+            },
+            travelAreas: {
               include: {
                 prefecture: true,
                 city: true,
@@ -101,10 +110,11 @@ export const profileRouter = createTRPCRouter({
             ),
           })
           .optional(),
+        workAreaData: WorkAreaDataSchema.optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { userId, data, jobTypeData } = input;
+      const { userId, data, jobTypeData, workAreaData } = input;
 
       try {
         // プロフィールの存在確認
@@ -120,13 +130,21 @@ export const profileRouter = createTRPCRouter({
         }
 
         // トランザクションでプロフィール更新と職種更新を実行
-        // タイムアウトを30秒に設定（デフォルトは5秒）
+        // タイムアウトを60秒に設定（workAreaDataの処理が追加されたため延長）
         const result = await ctx.prisma.$transaction(
           async (tx) => {
-            // プロフィール更新
+            // プロフィール更新（onlineAvailableはworkAreaDataから取得）
+            const profileUpdateData: Prisma.CasterProfileUpdateInput = {
+              ...data,
+            };
+            
+            if (workAreaData?.onlineAvailable !== undefined) {
+              profileUpdateData.onlineAvailable = workAreaData.onlineAvailable;
+            }
+
             const updatedProfile = await tx.casterProfile.update({
               where: { userId },
-              data,
+              data: profileUpdateData,
               include: {
                 user: {
                   select: {
@@ -136,6 +154,25 @@ export const profileRouter = createTRPCRouter({
                 },
               },
             });
+
+            // 活動エリアデータが提供されている場合、既存のエリアを削除して新規作成
+            if (workAreaData) {
+              // 既存の稼働エリアと出張対応エリアを削除
+              await tx.casterWorkArea.deleteMany({
+                where: { casterProfileId: existingProfile.id },
+              });
+              await tx.casterTravelArea.deleteMany({
+                where: { casterProfileId: existingProfile.id },
+              });
+
+              // 新しいエリアを作成
+              await createWorkAreas({
+                prisma: tx,
+                casterProfileId: existingProfile.id,
+                workAreas: workAreaData.workAreas,
+                travelAreas: workAreaData.travelAreas,
+              });
+            }
 
             // 職種データが提供されている場合、既存の職種を削除して新規作成
             if (jobTypeData) {
@@ -205,8 +242,8 @@ export const profileRouter = createTRPCRouter({
             return updatedProfile;
           },
           {
-            maxWait: 10000, // 10秒待機
-            timeout: 30000, // 30秒タイムアウト
+            maxWait: 20000, // 20秒待機
+            timeout: 60000, // 60秒タイムアウト
           }
         );
 
@@ -249,6 +286,13 @@ export const profileRouter = createTRPCRouter({
                 createdAt: true,
               },
             },
+            desireWorkAreas: {
+              include: {
+                prefecture: true,
+                city: true,
+                tokyoWard: true,
+              },
+            },
           },
         });
 
@@ -280,10 +324,20 @@ export const profileRouter = createTRPCRouter({
       z.object({
         userId: z.string().uuid(),
         data: OrdererProfileUpdateSchema,
+        workAreaData: z
+          .object({
+            workAreas: z.array(
+              z.object({
+                prefectureCode: z.number(),
+                tokyoWardCode: z.number().optional(),
+              })
+            ),
+          })
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { userId, data } = input;
+      const { userId, data, workAreaData } = input;
 
       try {
         // プロフィールの存在確認
@@ -298,23 +352,49 @@ export const profileRouter = createTRPCRouter({
           });
         }
 
-        // プロフィール更新
-        const updatedProfile = await ctx.prisma.ordererProfile.update({
-          where: { userId },
-          data,
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
+        // トランザクションでプロフィール更新と希望活動エリア更新を実行
+        const result = await ctx.prisma.$transaction(
+          async (tx) => {
+            // プロフィール更新
+            const updatedProfile = await tx.ordererProfile.update({
+              where: { userId },
+              data,
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                  },
+                },
               },
-            },
+            });
+
+            // 希望活動エリアデータが提供されている場合、既存のエリアを削除して新規作成
+            if (workAreaData) {
+              // 既存の希望活動エリアを削除
+              await tx.orderDesireWorkArea.deleteMany({
+                where: { ordererProfileId: existingProfile.id },
+              });
+
+              // 新しいエリアを作成
+              await createOrderDesireWorkAreas({
+                prisma: tx,
+                ordererProfileId: existingProfile.id,
+                workAreas: workAreaData.workAreas,
+              });
+            }
+
+            return updatedProfile;
           },
-        });
+          {
+            maxWait: 10000, // 10秒
+            timeout: 60000, // 60秒
+          }
+        );
 
         return {
           success: true,
-          profile: updatedProfile,
+          profile: result,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -564,10 +644,11 @@ export const profileRouter = createTRPCRouter({
             availableDays: z.array(z.string()).optional(),
           })
           .optional(),
+        ordererId: z.string().uuid().optional(),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { page, limit, searchKeyword, jobTypeFilters, basicInfoFilters } = input;
+      const { page, limit, searchKeyword, jobTypeFilters, basicInfoFilters, ordererId } = input;
 
       try {
         const skip = (page - 1) * limit;
@@ -813,8 +894,38 @@ export const profileRouter = createTRPCRouter({
           }
         }
 
+        // 発注者の希望活動エリアを取得（ordererIdが提供されている場合）
+        let ordererDesireWorkAreas: Array<{
+          prefectureId: string;
+          cityId: string | null;
+          tokyoWardId: string | null;
+        }> = [];
+
+        if (ordererId) {
+          const ordererProfile = await ctx.prisma.ordererProfile.findUnique({
+            where: { userId: ordererId },
+            include: {
+              desireWorkAreas: {
+                include: {
+                  prefecture: true,
+                  city: true,
+                  tokyoWard: true,
+                },
+              },
+            },
+          });
+
+          if (ordererProfile) {
+            ordererDesireWorkAreas = ordererProfile.desireWorkAreas.map((area) => ({
+              prefectureId: area.prefectureId,
+              cityId: area.cityId,
+              tokyoWardId: area.tokyoWardId,
+            }));
+          }
+        }
+
         // キャスト一覧を取得
-        const [casters, total] = await Promise.all([
+        const [allCasters, total] = await Promise.all([
           ctx.prisma.user.findMany({
             where,
             include: {
@@ -835,19 +946,98 @@ export const profileRouter = createTRPCRouter({
                 },
               },
             },
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: "desc",
-            },
           }),
           ctx.prisma.user.count({
             where,
           }),
         ]);
 
+        const castersWithProfile = allCasters.filter((user) => user.casterProfile !== null);
+
+        // エリア一致判定関数
+        const isWorkAreaMatched = (
+          casterWorkAreas: Array<{
+            prefectureId: string;
+            cityId: string | null;
+            tokyoWardId: string | null;
+          }>
+        ): boolean => {
+          if (ordererDesireWorkAreas.length === 0) {
+            return false;
+          }
+
+          for (const ordererArea of ordererDesireWorkAreas) {
+            for (const casterArea of casterWorkAreas) {
+              // 都道府県が一致するかチェック
+              if (ordererArea.prefectureId !== casterArea.prefectureId) {
+                continue;
+              }
+
+              // 都道府県が一致した場合、より詳細な一致をチェック
+              // 市区町村が両方指定されている場合は一致をチェック
+              if (ordererArea.cityId && casterArea.cityId) {
+                if (ordererArea.cityId === casterArea.cityId) {
+                  return true;
+                }
+                continue;
+              }
+
+              // 東京23区が両方指定されている場合は一致をチェック
+              if (ordererArea.tokyoWardId && casterArea.tokyoWardId) {
+                if (ordererArea.tokyoWardId === casterArea.tokyoWardId) {
+                  return true;
+                }
+                continue;
+              }
+
+              // 都道府県のみの一致（市区町村や東京23区が指定されていない場合）
+              // または、キャスト側が都道府県全体を指定している場合
+              return true;
+            }
+          }
+
+          return false;
+        };
+
+        // エリア一致でソート（一致するキャストを優先、残りは登録降順）
+        const sortedCasters = castersWithProfile.sort((a, b) => {
+          if (!a.casterProfile || !b.casterProfile) {
+            return 0;
+          }
+
+          const aWorkAreas = a.casterProfile.workAreas.map((area) => ({
+            prefectureId: area.prefectureId,
+            cityId: area.cityId,
+            tokyoWardId: area.tokyoWardId,
+          }));
+          const bWorkAreas = b.casterProfile.workAreas.map((area) => ({
+            prefectureId: area.prefectureId,
+            cityId: area.cityId,
+            tokyoWardId: area.tokyoWardId,
+          }));
+
+          const aMatched = isWorkAreaMatched(aWorkAreas);
+          const bMatched = isWorkAreaMatched(bWorkAreas);
+
+          // エリア一致のキャストを優先
+          if (aMatched && !bMatched) {
+            return -1;
+          }
+          if (!aMatched && bMatched) {
+            return 1;
+          }
+
+          // 両方一致または両方不一致の場合は登録降順
+          const aCreatedAt = a.createdAt.getTime();
+          const bCreatedAt = b.createdAt.getTime();
+          return bCreatedAt - aCreatedAt;
+        });
+
+        // ページネーション適用
+        const paginatedCasters = sortedCasters.slice(skip, skip + limit);
+
         return {
-          casters: casters.filter((user) => user.casterProfile !== null),
+          casters: paginatedCasters,
           total,
           page,
           limit,

@@ -105,6 +105,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[0].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[0]?.count ?? 0) > 0,
@@ -120,6 +121,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[1].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[1]?.count ?? 0) > 0,
@@ -135,6 +137,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[2].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[2]?.count ?? 0) > 0,
@@ -150,6 +153,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[3].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[3]?.count ?? 0) > 0,
@@ -165,6 +169,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[4].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[4]?.count ?? 0) > 0,
@@ -180,6 +185,7 @@ const DesktopPackageReservateSearched = ({
                       [professionQueriesConfig[5].jobType]: {},
                   }
                 : undefined,
+            ordererId: ordererId ?? undefined,
         },
         {
             enabled: isAuthorized && (professionQueriesConfig[5]?.count ?? 0) > 0,

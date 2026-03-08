@@ -32,10 +32,27 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
             ? `${window.location.origin}/api/trpc`
             : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/trpc`,
           transformer: superjson,
-          headers() {
-            return {
+          async headers() {
+            const headers: Record<string, string> = {
               "Content-Type": "application/json",
             };
+
+            // クライアントサイドでSupabaseセッションからトークンを取得
+            if (typeof window !== "undefined") {
+              try {
+                const { supabase } = await import("@/lib/supabase");
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (session?.access_token) {
+                  headers["Authorization"] = `Bearer ${session.access_token}`;
+                }
+              } catch (error) {
+                // エラーが発生してもリクエストは続行
+                console.error("認証トークンの取得に失敗:", error);
+              }
+            }
+
+            return headers;
           },
         }),
       ],
