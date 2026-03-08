@@ -100,12 +100,36 @@ export function middleware(request: NextRequest) {
     // Content Security Policy（環境に応じて調整）
     "Content-Security-Policy": (() => {
       const isProduction = process.env.NODE_ENV === "production";
+      const isVercelDev = process.env.VERCEL_ENV === "development" || process.env.VERCEL_ENV === "preview";
+      
+      // Next.jsが生成するインラインスクリプトのhash一覧
+      const nextJsHashes = [
+        "'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo='",
+        "'sha256-OSYsABjAoTdJBId8xAhS/uGJRTqwFxENkhPFODAMyoY='",
+        "'sha256-pnMCWOqBc/6fr0ulcv+NeBQGtzMHHwQA7OYmQyG4rtc='",
+        "'sha256-tZSPRudZaPs9uiS0qvpmxcPBsRZ35D3s+qQjrxvu4Xk='",
+        "'sha256-7Ne3mvvwxp9HWnb+s3j7tFoakHpseU16jQDJLko6DcE='",
+        "'sha256-KhPFbeaWl+j9Y3VzA9tdSoMDXoImOsk5YpaEK2FMXls='",
+        "'sha256-uyKQdw6ugSjH1Czufw9FYXsorwaFFQSfKeKyNHyYglY='",
+        "'sha256-oY/645YNniIz2j02YqDv54lUER2HbHWJaYCXOjS1SOk='",
+      ].join(" ");
+      
+      // script-srcの設定
+      let scriptSrc: string;
+      if (isProduction && !isVercelDev) {
+        // 本番環境: hashのみ許可（セキュリティ強化）
+        scriptSrc = `script-src 'self' ${nextJsHashes}`;
+      } else if (isVercelDev) {
+        // Vercel dev/preview環境: Vercel Liveを許可
+        scriptSrc = `script-src 'self' ${nextJsHashes} https://vercel.live`;
+      } else {
+        // ローカル開発環境
+        scriptSrc = "script-src 'self' 'unsafe-eval' 'unsafe-inline'";
+      }
+      
       const policies = [
         "default-src 'self'",
-        // 本番環境では'unsafe-eval'と'unsafe-inline'を削除（Next.jsのビルド最適化により不要）
-        isProduction
-          ? "script-src 'self'"
-          : "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+        scriptSrc,
         "style-src 'self' 'unsafe-inline'", // Ant Design用（必要）
         "img-src 'self' data: https:",
         "font-src 'self' data:",
