@@ -108,6 +108,8 @@ export function middleware(request: NextRequest) {
         "'sha256-OSYsABjAoTdJBId8xAhS/uGJRTqwFxENkhPFODAMyoY='",
         "'sha256-pnMCWOqBc/6fr0ulcv+NeBQGtzMHHwQA7OYmQyG4rtc='",
         "'sha256-tZSPRudZaPs9uiS0qvpmxcPBsRZ35D3s+qQjrxvu4Xk='",
+        "'sha256-CkBHnTECj46Av91ysFC3OZmBXWb9llYml1mhZan/Y2U='",
+        "'sha256-yd1yQTp2zIqYzyeHzAwzmSByA8dokFowGSRl39Ixml4='",
         "'sha256-7Ne3mvvwxp9HWnb+s3j7tFoakHpseU16jQDJLko6DcE='",
         "'sha256-KhPFbeaWl+j9Y3VzA9tdSoMDXoImOsk5YpaEK2FMXls='",
         "'sha256-uyKQdw6ugSjH1Czufw9FYXsorwaFFQSfKeKyNHyYglY='",
@@ -127,6 +129,11 @@ export function middleware(request: NextRequest) {
         scriptSrc = "script-src 'self' 'unsafe-eval' 'unsafe-inline'";
       }
       
+      // frame-srcの設定（Vercel dev/preview環境ではVercel Liveを許可）
+      const frameSrc = isVercelDev
+        ? "frame-src https://*.stripe.com https://vercel.live"
+        : "frame-src https://*.stripe.com";
+      
       const policies = [
         "default-src 'self'",
         scriptSrc,
@@ -134,7 +141,7 @@ export function middleware(request: NextRequest) {
         "img-src 'self' data: https:",
         "font-src 'self' data:",
         "connect-src 'self' https://*.supabase.co https://*.stripe.com",
-        "frame-src https://*.stripe.com",
+        frameSrc,
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
