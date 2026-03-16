@@ -180,7 +180,7 @@ export function middleware(request: NextRequest) {
       "https://rock-casting-tawny.vercel.app",
     ].filter(Boolean) as string[];
 
-    // 本番環境では特定のオリジンのみ許可
+    // 本番環境では特定のオリジンのみ許可する
     if (origin && allowedOrigins.includes(origin)) {
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set("Access-Control-Allow-Credentials", "true");
