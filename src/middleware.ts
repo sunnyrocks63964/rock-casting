@@ -101,17 +101,20 @@ export function middleware(request: NextRequest) {
     "Content-Security-Policy": (() => {
       const isProduction = process.env.NODE_ENV === "production";
       const isVercelDev = process.env.VERCEL_ENV === "development" || process.env.VERCEL_ENV === "preview";
+      const isLocalDev = !isProduction && !isVercelDev;
       
       // script-srcの設定
       // Next.jsはビルド時にインラインスクリプトを生成するため、'unsafe-inline'を許可する必要がある
-      // 'unsafe-eval'は許可しないことで、eval()による攻撃を防ぐ
       let scriptSrc: string;
       if (isVercelDev) {
         // Vercel dev/preview環境: Vercel Liveを許可
         scriptSrc = "script-src 'self' 'unsafe-inline' https://vercel.live";
+      } else if (isLocalDev) {
+        // ローカル開発環境: 'unsafe-eval'を許可（Next.jsの開発モードで必要）
+        // ホットリロードや一部のライブラリがeval()を使用するため
+        scriptSrc = "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
       } else {
-        // 本番環境・ローカル開発環境: 'unsafe-inline'を許可（Next.jsのインラインスクリプト用）
-        // 'unsafe-eval'は許可しない（セキュリティ強化）
+        // 本番環境: 'unsafe-eval'は許可しない（セキュリティ強化）
         scriptSrc = "script-src 'self' 'unsafe-inline'";
       }
       
@@ -177,7 +180,7 @@ export function middleware(request: NextRequest) {
       "https://rock-casting-tawny.vercel.app",
     ].filter(Boolean) as string[];
 
-    // 本番環境では特定のオリジンのみ許可
+    // 本番環境では特定のオリジンのみ許可する
     if (origin && allowedOrigins.includes(origin)) {
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set("Access-Control-Allow-Credentials", "true");
