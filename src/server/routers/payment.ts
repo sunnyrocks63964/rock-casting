@@ -145,8 +145,19 @@ export const paymentRouter = createTRPCRouter({
           contractProposal.thread.caster.ordererProfile?.fullName || 
           "受注者";
 
-        // Stripe Checkoutセッションを作成
-        const session = await stripe.checkout.sessions.create({
+        // 受注者のStripe Connectアカウント情報を取得
+        const casterProfile = contractProposal.thread.caster.casterProfile;
+        const casterStripeAccount = casterProfile
+          ? await ctx.prisma.casterStripeAccount.findUnique({
+              where: { casterProfileId: casterProfile.id },
+            })
+          : null;
+
+        // Stripe Connectアカウントがオンボーディング完了しているか確認
+        const useDestinationCharges = casterStripeAccount?.payoutsEnabled === true;
+
+        // Stripe Checkoutセッションの設定
+        const sessionConfig: Stripe.Checkout.SessionCreateParams = {
           payment_method_types: ["card"],
           line_items: [
             {
@@ -171,7 +182,21 @@ export const paymentRouter = createTRPCRouter({
             ordererId: contractProposal.thread.ordererId,
             casterId: contractProposal.thread.casterId,
           },
-        });
+        };
+
+        // Stripe Connectアカウントがオンボーディング完了している場合、Destination Chargesパターンを使用
+        // 手数料20%を自動的に差し引く
+        if (useDestinationCharges && casterStripeAccount) {
+          sessionConfig.payment_intent_data = {
+            application_fee_amount: platformFee,
+            transfer_data: {
+              destination: casterStripeAccount.stripeAccountId,
+            },
+          };
+        }
+
+        // Stripe Checkoutセッションを作成
+        const session = await stripe.checkout.sessions.create(sessionConfig);
 
         // CheckoutセッションIDをOrderPaymentに保存
         await ctx.prisma.orderPayment.update({
