@@ -66,5 +66,8 @@
     "@types/bcryptjs": "^3.0.0",
     "cross-env": "^7.0.3",
     "prisma": "^6.19.0"
+  },
+  "prisma": {
+    "seed": "node scripts/seed-master-data.js"
   }
 }
