@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // GitHub Actions(ubuntu / debian-openssl)で generate し Vercel(rhel-openssl)へ prebuilt デプロイするため両方のエンジンを生成する
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

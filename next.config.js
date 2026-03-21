@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Prisma をサーバーバンドルに取り込みすぎない（Vercel 本番での Query Engine 解決を安定させる）
+  serverExternalPackages: ['@prisma/client'],
+
+  // prebuilt / output file tracing 時に rhel 用エンジン等が .next 成果物から落ちないように含める
+  outputFileTracingIncludes: {
+    '/*': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+    ],
+  },
+
   images: {
     domains: ['localhost'],
     // 本番環境でのセキュリティ強化
