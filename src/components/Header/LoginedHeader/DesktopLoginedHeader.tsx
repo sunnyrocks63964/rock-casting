@@ -146,7 +146,7 @@ const DesktopLoginedHeader = () => {
                     料金
                 </Link>
                 <Link
-                    href="/top#casts"
+                    href="/#casts"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{

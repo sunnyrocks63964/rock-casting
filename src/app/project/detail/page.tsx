@@ -107,7 +107,7 @@ export default function ProjectDetailPage() {
 
         // キャスターまたは発注者のどちらかのプロファイルが必要
         if (!userData.hasCasterProfile && !userData.hasOrdererProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

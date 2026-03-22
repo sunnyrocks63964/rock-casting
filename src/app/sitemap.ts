@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getServerAppUrl();
 
   const publicPaths = [
-    { path: "/top", changeFrequency: "weekly" as const, priority: 1 },
+    { path: "/", changeFrequency: "weekly" as const, priority: 1 },
     { path: "/receive-work", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/order-work", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/usage_guide", changeFrequency: "monthly" as const, priority: 0.7 },
