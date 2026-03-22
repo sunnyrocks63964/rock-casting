@@ -63,7 +63,7 @@ export default function DesktopLogin() {
             } else if (data.user.hasOrdererProfile) {
                 router.push("/top/order");
             } else {
-                router.push("/top");
+                router.push("/");
             }
         },
         onError: (error) => {

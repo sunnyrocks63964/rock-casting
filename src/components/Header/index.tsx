@@ -51,7 +51,7 @@ const Header = () => {
         >
           {/* ロゴ */}
           <Link
-            href="/top"
+            href="/"
             className={rocknrollOne.className}
             style={{
               fontSize: "clamp(14px, 1.25vw, 24px)",

@@ -107,7 +107,7 @@ export default function OrderTopPage() {
         }
 
         if (!userData.hasOrdererProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

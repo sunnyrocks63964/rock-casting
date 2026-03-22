@@ -117,7 +117,7 @@ function CastDetailContent() {
         }
 
         if (!userData.hasOrdererProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

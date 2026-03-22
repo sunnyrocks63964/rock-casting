@@ -156,7 +156,7 @@ const DesktopFooter = () => {
                   会員登録
                 </Link>
                 <Link
-                  href="/top#casts"
+                  href="/#casts"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{

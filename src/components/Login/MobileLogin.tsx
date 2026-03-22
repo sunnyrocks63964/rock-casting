@@ -65,7 +65,7 @@ export default function MobileLogin() {
             } else if (data.user.hasOrdererProfile) {
                 router.push("/top/order");
             } else {
-                router.push("/top");
+                router.push("/");
             }
         },
         onError: (error) => {

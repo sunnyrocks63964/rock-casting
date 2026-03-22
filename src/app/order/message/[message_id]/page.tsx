@@ -121,7 +121,7 @@ function OrderMessageContent() {
         }
 
         if (!userData.hasOrdererProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

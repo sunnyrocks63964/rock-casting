@@ -126,7 +126,7 @@ const MobileFooter = () => {
               料金
             </Link>
             <Link
-              href="/top#casts"
+              href="/#casts"
               target="_blank"
               style={{
                 fontFamily: "Noto Sans JP",

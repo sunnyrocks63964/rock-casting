@@ -107,7 +107,7 @@ export default function CasterTopPage() {
         }
 
         if (!userData.hasCasterProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

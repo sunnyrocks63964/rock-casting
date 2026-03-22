@@ -121,7 +121,7 @@ function CasterMessageContent() {
         }
 
         if (!userData.hasCasterProfile) {
-            router.push("/top");
+            router.push("/");
             return;
         }
 

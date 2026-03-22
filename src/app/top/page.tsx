@@ -1,33 +1,9 @@
-"use client";
+import { permanentRedirect } from "next/navigation";
 
-import React from "react";
-import Header from "../../components/Header";
-import Hero from "../../components/Hero";
-import Service from "../../components/Service";
-import About from "../../components/About";
-import Cast from "../../components/Cast";
-import Function from "../../components/Function";
-import CTA from "../../components/CTA";
-import Footer from "../../components/Footer";
-import Voice from "../../components/Voice";
-import Flow from "../../components/Flow";
-import Faq from "../../components/Faq";
-
+/**
+ * /top はルートURL（/）へリダイレクト
+ * 正規URLを https://www.rock-casting.com/ に統一し、インデックス登録を促進
+ */
 export default function TopPage() {
-  return (
-    <main className="min-h-screen bg-black text-white">
-      <Header />
-      <Hero />
-      <Service />
-      <About />
-      <Cast />
-      <Function />
-      <CTA />
-      <Voice />
-      <Flow />
-      <Faq />
-      <CTA />
-      <Footer />
-    </main>
-  );
+  permanentRedirect("/");
 }
