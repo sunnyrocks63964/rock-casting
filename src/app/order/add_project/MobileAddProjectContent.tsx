@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useUser } from "@/contexts/UserContext";
 import { trpc } from "@/lib/trpc/client";
 import LoginedHeader from "@/components/Header/LoginedHeader";
 import LoginedNavBar from "@/components/Header/LoginedNavBar";
@@ -37,76 +37,26 @@ const DEFAULT_DETAIL_TEMPLATE = `【 概要 】
 
 function MobileAddProjectContent() {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
+    const { userId, isLoading, hasOrdererProfile } = useUser();
     const [form] = Form.useForm();
 
-    // 現在のユーザー情報を取得
-    const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
-        { userId: userId! },
-        {
-            enabled: !!userId,
-            retry: false,
-        }
-    );
-
-    // 案件登録のmutation
     const createProjectMutation = trpc.project.createProject.useMutation();
 
-    // 認証チェック
     useEffect(() => {
-        const checkAuth = async () => {
-            const {
-                data: { session },
-                error,
-            } = await supabase.auth.getSession();
+        if (isLoading) return;
+        if (!userId) { router.push("/login"); return; }
+        if (!hasOrdererProfile) { router.push("/top/caster"); return; }
+    }, [isLoading, userId, hasOrdererProfile, router]);
 
-            if (error || !session) {
-                router.push("/login");
-                return;
-            }
-
-            setUserId(session.user.id);
-        };
-
-        checkAuth();
-    }, [router]);
-
-    // ユーザーデータ取得後の権限チェック
-    useEffect(() => {
-        if (isLoadingUser) {
-            return;
-        }
-
-        if (userError) {
-            console.error("ユーザー情報取得エラー:", userError);
-            router.push("/login");
-            return;
-        }
-
-        if (userData) {
-            if (!userData.hasOrdererProfile) {
-                router.push("/top/caster");
-                return;
-            }
-            setIsAuthorized(true);
-            setIsLoading(false);
-        }
-    }, [userData, isLoadingUser, userError, router]);
-
-    // フォーム送信処理
     const handleSubmit = async (values: ProjectFormValues) => {
         if (!userId) {
             message.error("ユーザー情報が取得できませんでした");
             return;
         }
-
         if (values.minBudget > values.maxBudget) {
             message.error("最低報酬額は最高報酬額以下にしてください");
             return;
         }
-
         try {
             const result = await createProjectMutation.mutateAsync({
                 userId,
@@ -116,7 +66,6 @@ function MobileAddProjectContent() {
                 minBudget: values.minBudget,
                 maxBudget: values.maxBudget,
             });
-
             if (result.success) {
                 message.success("案件を登録しました");
                 router.push("/order/mypage");
@@ -127,42 +76,19 @@ function MobileAddProjectContent() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading || !userId || !hasOrdererProfile) {
         return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                }}
-            >
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
                 読み込み中...
             </div>
         );
     }
 
-    if (!isAuthorized || !userId) {
-        return null;
-    }
-
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                minHeight: "100vh",
-            }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <LoginedHeader />
             <LoginedNavBar />
-            <div
-                style={{
-                    flex: 1,
-                    backgroundColor: "#060606",
-                    padding: "20px 15px",
-                }}
-            >
+            <div style={{ flex: 1, backgroundColor: "#060606", padding: "20px 15px" }}>
                 <div style={{ maxWidth: "100%", margin: "0 auto" }}>
                     <h1
                         style={{
@@ -176,18 +102,8 @@ function MobileAddProjectContent() {
                     >
                         新しい仕事を依頼
                     </h1>
-
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        onFinish={handleSubmit}
-                        style={{ width: "100%" }}
-                    >
-                        <MobileProjectForm
-                            form={form}
-                            defaultDetailTemplate={DEFAULT_DETAIL_TEMPLATE}
-                        />
-                        {/* 送信ボタン */}
+                    <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ width: "100%" }}>
+                        <MobileProjectForm form={form} defaultDetailTemplate={DEFAULT_DETAIL_TEMPLATE} />
                         <div style={{ textAlign: "center", marginTop: "20px" }}>
                             <Button
                                 type="primary"
@@ -204,7 +120,7 @@ function MobileAddProjectContent() {
                                     width: "277px",
                                 }}
                             >
-                                まとめてキャスティングを行う
+                                案件登録する
                             </Button>
                         </div>
                     </Form>

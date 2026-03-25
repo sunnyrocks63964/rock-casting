@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 
@@ -11,7 +10,6 @@ export default function MobileLogin() {
     const [password, setPassword] = useState("");
     const [isHoveringButton, setIsHoveringButton] = useState(false);
     const [isFormValid, setIsFormValid] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // tRPC mutation
@@ -108,52 +106,11 @@ export default function MobileLogin() {
                 backgroundColor: "#060606",
                 minHeight: "100vh",
                 position: "relative",
+                paddingTop: "60px",
                 paddingBottom: "60px",
             }}
         >
-            {/* ヘッダー */}
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "24px 16px",
-                }}
-            >
-                <p
-                    style={{
-                        fontFamily: "'RocknRoll One', sans-serif",
-                        fontSize: "12px",
-                        color: "white",
-                        margin: 0,
-                    }}
-                >
-                    ROCK CASTING
-                </p>
-                <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    style={{
-                        width: "48px",
-                        height: "48px",
-                        backgroundColor: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: 0,
-                    }}
-                >
-                    <div style={{ width: "24px", height: "2px", backgroundColor: "black" }} />
-                    <div style={{ width: "24px", height: "2px", backgroundColor: "black" }} />
-                    <div style={{ width: "24px", height: "2px", backgroundColor: "black" }} />
-                </button>
-            </div>
-
-            {/* メインコンテンツ */}
+            {/* メインコンテンツ（ハンバーガーはページ共通の Header コンポーネントを使用） */}
             <div style={{ padding: "0 16px" }}>
                 {/* タイトル */}
                 <h1

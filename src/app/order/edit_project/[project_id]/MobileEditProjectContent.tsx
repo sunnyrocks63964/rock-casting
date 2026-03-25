@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useUser } from "@/contexts/UserContext";
 import { trpc } from "@/lib/trpc/client";
 import LoginedHeader from "@/components/Header/LoginedHeader";
 import LoginedNavBar from "@/components/Header/LoginedNavBar";
@@ -14,77 +14,26 @@ function MobileEditProjectContent() {
     const router = useRouter();
     const params = useParams();
     const projectId = params?.project_id as string;
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
+    const { userId, isLoading, hasOrdererProfile } = useUser();
     const [form] = Form.useForm();
 
-    // 案件データを取得
     const { data: projectData, isLoading: isLoadingProject, error: projectError } = trpc.project.getProjectById.useQuery(
         { projectId },
-        {
-            enabled: !!projectId,
-            retry: false,
-        }
+        { enabled: !!projectId, retry: false }
     );
 
-    // 現在のユーザー情報を取得
-    const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
-        { userId: userId! },
-        {
-            enabled: !!userId,
-            retry: false,
-        }
-    );
-
-    // 案件更新のmutation
     const updateProjectMutation = trpc.project.updateProject.useMutation();
 
-    // 認証チェック
+    // 認証・権限チェック
     useEffect(() => {
-        const checkAuth = async () => {
-            const {
-                data: { session },
-                error,
-            } = await supabase.auth.getSession();
+        if (isLoading) return;
+        if (!userId) { router.push("/login"); return; }
+        if (!hasOrdererProfile) { router.push("/top/caster"); return; }
+    }, [isLoading, userId, hasOrdererProfile, router]);
 
-            if (error || !session) {
-                router.push("/login");
-                return;
-            }
-
-            setUserId(session.user.id);
-        };
-
-        checkAuth();
-    }, [router]);
-
-    // ユーザーデータ取得後の権限チェック
+    // 案件オーナーチェック + フォーム初期化
     useEffect(() => {
-        if (isLoadingUser) {
-            return;
-        }
-
-        if (userError) {
-            console.error("ユーザー情報取得エラー:", userError);
-            router.push("/login");
-            return;
-        }
-
-        if (userData) {
-            if (!userData.hasOrdererProfile) {
-                router.push("/top/caster");
-                return;
-            }
-            setIsAuthorized(true);
-        }
-    }, [userData, isLoadingUser, userError, router]);
-
-    // 案件データ取得後の権限チェックとフォーム初期化
-    useEffect(() => {
-        if (isLoadingProject) {
-            return;
-        }
+        if (isLoadingProject || !projectData || !userId) return;
 
         if (projectError) {
             console.error("案件情報取得エラー:", projectError);
@@ -93,30 +42,30 @@ function MobileEditProjectContent() {
             return;
         }
 
-        if (projectData && userId) {
-            // 案件の所有者か確認
-            if (projectData.userId !== userId) {
-                message.error("この案件を編集する権限がありません");
-                router.push("/order/mypage");
-                return;
-            }
-
-            setIsLoading(false);
+        if (projectData.userId !== userId) {
+            message.error("この案件を編集する権限がありません");
+            router.push("/order/mypage");
+            return;
         }
-    }, [projectData, isLoadingProject, projectError, userId, router]);
 
-    // フォーム送信処理
+        form.setFieldsValue({
+            category: projectData.category,
+            title: projectData.title,
+            detail: projectData.detail,
+            minBudget: projectData.minBudget,
+            maxBudget: projectData.maxBudget,
+        });
+    }, [projectData, isLoadingProject, projectError, userId, form, router]);
+
     const handleSubmit = async (values: ProjectFormValues) => {
         if (!userId || !projectId) {
             message.error("ユーザー情報または案件情報が取得できませんでした");
             return;
         }
-
         if (values.minBudget > values.maxBudget) {
             message.error("最低報酬額は最高報酬額以下にしてください");
             return;
         }
-
         try {
             const result = await updateProjectMutation.mutateAsync({
                 projectId,
@@ -127,7 +76,6 @@ function MobileEditProjectContent() {
                 minBudget: values.minBudget,
                 maxBudget: values.maxBudget,
             });
-
             if (result.success) {
                 message.success("案件を更新しました");
                 router.push("/order/mypage");
@@ -138,42 +86,19 @@ function MobileEditProjectContent() {
         }
     };
 
-    if (isLoading || isLoadingProject || isLoadingUser) {
+    if (isLoading || !userId || !hasOrdererProfile || isLoadingProject || !projectData) {
         return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                }}
-            >
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
                 読み込み中...
             </div>
         );
     }
 
-    if (!isAuthorized || !userId || !projectData) {
-        return null;
-    }
-
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                minHeight: "100vh",
-            }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <LoginedHeader />
             <LoginedNavBar />
-            <div
-                style={{
-                    flex: 1,
-                    backgroundColor: "#060606",
-                    padding: "20px 15px",
-                }}
-            >
+            <div style={{ flex: 1, backgroundColor: "#060606", padding: "20px 15px" }}>
                 <div style={{ maxWidth: "100%", margin: "0 auto" }}>
                     <h1
                         style={{
@@ -187,28 +112,17 @@ function MobileEditProjectContent() {
                     >
                         案件を編集
                     </h1>
-
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        onFinish={handleSubmit}
-                        style={{ width: "100%" }}
-                    >
+                    <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ width: "100%" }}>
                         <MobileProjectForm
                             form={form}
-                            initialValues={
-                                projectData
-                                    ? {
-                                          category: projectData.category,
-                                          title: projectData.title,
-                                          detail: projectData.detail,
-                                          minBudget: projectData.minBudget,
-                                          maxBudget: projectData.maxBudget,
-                                      }
-                                    : undefined
-                            }
+                            initialValues={{
+                                category: projectData.category,
+                                title: projectData.title,
+                                detail: projectData.detail,
+                                minBudget: projectData.minBudget,
+                                maxBudget: projectData.maxBudget,
+                            }}
                         />
-                        {/* 送信ボタン */}
                         <div style={{ textAlign: "center", marginTop: "20px" }}>
                             <Button
                                 type="primary"
