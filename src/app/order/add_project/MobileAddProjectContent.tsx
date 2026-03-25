@@ -204,7 +204,7 @@ function MobileAddProjectContent() {
                                     width: "277px",
                                 }}
                             >
-                                まとめてキャスティングを行う
+                                案件登録する
                             </Button>
                         </div>
                     </Form>
