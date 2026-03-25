@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { trpc } from "@/lib/trpc/client";
+import { useUser } from "@/contexts/UserContext";
 import LoginedHeader from "@/components/Header/LoginedHeader";
 import LoginedNavBar from "@/components/Header/LoginedNavBar";
 import TopCaster from "@/components/TopCaster";
@@ -11,112 +10,15 @@ import Footer from "@/components/Footer";
 
 export default function CasterTopPage() {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
-
-
-    // 現在のユーザー情報を取得
-    const { data: userData, isLoading: isLoadingUser, error: userError } = trpc.auth.getCurrentUser.useQuery(
-        { userId: userId! },
-        {
-            enabled: !!userId,
-            retry: false,
-        }
-    );
-
-    // 認証チェック
-    useEffect(() => {
-        let isMounted = true;
-        let retryCount = 0;
-        const maxRetries = 5;
-        const retryDelay = 200;
-
-        const checkAuth = async () => {
-            try {
-                const { data: { session }, error } = await supabase.auth.getSession();
-
-                if (error) {
-                    console.error("セッション取得エラー:", error);
-                    if (isMounted) {
-                        router.push("/login");
-                    }
-                    return;
-                }
-
-                if (!session?.user) {
-                    if (retryCount < maxRetries && isMounted) {
-                        retryCount++;
-                        setTimeout(() => {
-                            if (isMounted) {
-                                checkAuth();
-                            }
-                        }, retryDelay);
-                    } else if (isMounted) {
-                        router.push("/login");
-                    }
-                    return;
-                }
-
-                if (isMounted) {
-                    setUserId(session.user.id);
-                }
-            } catch (error) {
-                console.error("認証チェックエラー:", error);
-                if (isMounted) {
-                    router.push("/login");
-                }
-            }
-        };
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (!isMounted) return;
-
-            if (event === 'SIGNED_IN' && session?.user) {
-                setUserId(session.user.id);
-            } else if (event === 'SIGNED_OUT' || (!session && event === 'TOKEN_REFRESHED')) {
-                router.push("/login");
-            }
-        });
-
-        checkAuth();
-
-        return () => {
-            isMounted = false;
-            subscription.unsubscribe();
-        };
-    }, [router]);
+    const { userId, isLoading, hasCasterProfile } = useUser();
 
     useEffect(() => {
-        if (isLoadingUser) {
-            return;
-        }
+        if (isLoading) return;
+        if (!userId) { router.push("/login"); return; }
+        if (!hasCasterProfile) { router.push("/"); return; }
+    }, [isLoading, userId, hasCasterProfile, router]);
 
-        if (userError) {
-            console.error("ユーザー情報取得エラー:", userError);
-            router.push("/login");
-            return;
-        }
-
-        if (!userData) {
-            if (userId) {
-                console.error("ユーザー情報が取得できませんでした");
-                router.push("/login");
-            }
-            return;
-        }
-
-        if (!userData.hasCasterProfile) {
-            router.push("/");
-            return;
-        }
-
-        setIsAuthorized(true);
-        setIsLoading(false);
-    }, [userData, isLoadingUser, userError, userId, router]);
-
-
-    if (isLoading || !isAuthorized) {
+    if (isLoading || !userId || !hasCasterProfile) {
         return (
             <main
                 style={{
@@ -128,13 +30,7 @@ export default function CasterTopPage() {
                     justifyContent: "center",
                 }}
             >
-                <div
-                    style={{
-                        fontFamily: "'Noto Sans JP', sans-serif",
-                        fontSize: "16px",
-                        color: "white",
-                    }}
-                >
+                <div style={{ fontFamily: "'Noto Sans JP', sans-serif", fontSize: "16px", color: "white" }}>
                     読み込み中...
                 </div>
             </main>
@@ -142,22 +38,8 @@ export default function CasterTopPage() {
     }
 
     return (
-        <main
-            style={{
-                minHeight: "100vh",
-                backgroundColor: "#060606",
-                color: "white",
-            }}
-        >
-            <div
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 10,
-                }}
-            >
+        <main style={{ minHeight: "100vh", backgroundColor: "#060606", color: "white" }}>
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10 }}>
                 <LoginedHeader />
                 <LoginedNavBar />
             </div>
@@ -166,4 +48,3 @@ export default function CasterTopPage() {
         </main>
     );
 }
-
