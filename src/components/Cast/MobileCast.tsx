@@ -25,14 +25,12 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
   };
 
   return (
-    <section
-      id="casts"
+    <div
       style={{
         padding: "0",
         backgroundColor: "white",
         minHeight: "428px",
         paddingBottom: "2rem",
-        scrollMarginTop: "80px",
       }}
     >
       <div
@@ -246,7 +244,7 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
           })}
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
