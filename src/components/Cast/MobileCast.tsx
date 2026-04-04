@@ -193,9 +193,11 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
                             width: "100px",
                             height: "140px",
                             flexShrink: 0,
+                            backgroundColor: "#f3f4f6",
                             backgroundImage: `url(${cast.image})`,
-                            backgroundSize: "cover",
+                            backgroundSize: "contain",
                             backgroundPosition: "center",
+                            backgroundRepeat: "no-repeat",
                             borderRadius: "10px 0 0 10px",
                           }}
                         />

@@ -144,8 +144,9 @@ const DesktopCast = ({
                 <div
                   style={{
                     height: "12rem",
+                    backgroundColor: "#f3f4f6",
                     backgroundImage: `url(${cast.image})`,
-                    backgroundSize: "cover",
+                    backgroundSize: "contain",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
                   }}

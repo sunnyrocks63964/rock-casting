@@ -7,6 +7,7 @@ export interface CastSourceRow {
   description: string;
 }
 
+/** プロフィール画像: photographers / models / artists / creators 各フォルダの {name}.png（castData で参照） */
 export const CAST_SOURCE_ROWS: CastSourceRow[] = [
   {
     id: 1,
