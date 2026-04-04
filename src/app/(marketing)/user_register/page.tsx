@@ -1,8 +1,4 @@
-"use client";
-
 import React from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import UserRegister from "@/components/UserRegister";
 
 export default function UserRegisterPage() {
@@ -13,9 +9,7 @@ export default function UserRegisterPage() {
         minHeight: "100vh",
       }}
     >
-      <Header />
       <UserRegister />
-      <Footer />
     </main>
   );
 }
