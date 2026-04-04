@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import CastDescriptionWithTooltip from "./CastDescriptionWithTooltip";
 
 interface Tab {
   id: string;
@@ -7,6 +8,7 @@ interface Tab {
 
 interface Cast {
   id: number;
+  category: string;
   name: string;
   description: string;
   image: string;
@@ -78,6 +80,7 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
           {tabs.map((tab, index) => {
             const isExpanded = expandedTab === tab.id;
             const isFirst = index === 0;
+            const tabCasts = casts.filter((cast) => cast.category === tab.id);
 
             return (
               <div key={tab.id}>
@@ -172,7 +175,7 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
                       gap: "1rem",
                     }}
                   >
-                    {casts.slice(0, 5).map((cast) => (
+                    {tabCasts.map((cast) => (
                       <div
                         key={cast.id}
                         style={{
@@ -219,8 +222,9 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
                           >
                             {cast.name}
                           </h3>
-                          <p
-                            style={{
+                          <CastDescriptionWithTooltip
+                            description={cast.description}
+                            paragraphStyle={{
                               fontFamily: "Noto Sans JP",
                               fontSize: "14px",
                               color: "black",
@@ -230,10 +234,9 @@ const MobileCast = ({ tabs, casts }: MobileCastProps) => {
                               WebkitLineClamp: 4,
                               WebkitBoxOrient: "vertical",
                               overflow: "hidden",
+                              minHeight: 0,
                             }}
-                          >
-                            {cast.description}
-                          </p>
+                          />
                         </div>
                       </div>
                     ))}

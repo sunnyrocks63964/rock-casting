@@ -1,5 +1,6 @@
 import React from "react";
 import castBg from "./images/cast_bg.png";
+import CastDescriptionWithTooltip from "./CastDescriptionWithTooltip";
 
 interface Tab {
   id: string;
@@ -94,14 +95,12 @@ const DesktopCast = ({
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== tab.id) {
-                  const target = e.target as HTMLElement;
-                  target.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+                  e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (activeTab !== tab.id) {
-                  const target = e.target as HTMLElement;
-                  target.style.backgroundColor = "#808080";
+                  e.currentTarget.style.backgroundColor = "#808080";
                 }
               }}
             >
@@ -166,8 +165,9 @@ const DesktopCast = ({
                   >
                     {cast.name}
                   </h3>
-                  <p
-                    style={{
+                  <CastDescriptionWithTooltip
+                    description={cast.description}
+                    paragraphStyle={{
                       fontSize: "0.875rem",
                       color: "#4b5563",
                       lineHeight: "1.625",
@@ -175,10 +175,9 @@ const DesktopCast = ({
                       WebkitLineClamp: 4,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
+                      margin: 0,
                     }}
-                  >
-                    {cast.description}
-                  </p>
+                  />
                 </div>
               </div>
             ))}
