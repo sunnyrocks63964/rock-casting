@@ -27,8 +27,7 @@ const DesktopCast = ({
   onTabChange,
 }: DesktopCastProps) => {
   return (
-    <section
-      id="casts"
+    <div
       style={{
         padding: "5rem 0",
         backgroundColor: "white",
@@ -193,7 +192,7 @@ const DesktopCast = ({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

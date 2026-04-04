@@ -40,7 +40,6 @@ const ProjectDetail = () => {
     const { mutate: createThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
             window.open(`/caster/message/${data.threadId}`, "_blank");
-            setIsCreatingThread(false);
         },
         onError: (error) => {
             console.error("スレッド作成エラー:", error);

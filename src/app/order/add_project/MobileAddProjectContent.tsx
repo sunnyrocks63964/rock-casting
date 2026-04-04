@@ -68,7 +68,7 @@ function MobileAddProjectContent() {
             });
             if (result.success) {
                 message.success("案件を登録しました");
-                router.push("/order/mypage");
+                router.push("/order/mypage#recruiting-projects");
             }
         } catch (error) {
             console.error("案件登録エラー:", error);

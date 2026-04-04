@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import { FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import { type AppRouter } from "@/server/routers/_app";
@@ -25,12 +24,14 @@ interface DesktopCastDetailProps {
 }
 
 const DesktopCastDetail = ({ castProfile, ordererUserId }: DesktopCastDetailProps) => {
-    const router = useRouter();
-    const { mutate: createThread, isPending: isCreatingThread } = trpc.message.createThread.useMutation({
+    const [isScoutLockedUntilNavigate, setIsScoutLockedUntilNavigate] = React.useState(false);
+
+    const { mutate: createThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
             window.open(`/order/message/${data.threadId}`, "_blank");
         },
         onError: (error) => {
+            setIsScoutLockedUntilNavigate(false);
             console.error("スレッド作成エラー:", error);
             alert("スカウトに失敗しました: " + error.message);
         },
@@ -646,14 +647,15 @@ const DesktopCastDetail = ({ castProfile, ordererUserId }: DesktopCastDetailProp
                                             alert("キャスト情報が取得できませんでした");
                                             return;
                                         }
+                                        setIsScoutLockedUntilNavigate(true);
                                         createThread({
                                             ordererId: ordererUserId,
                                             casterId: castProfile.user.id,
                                         });
                                     }}
-                                    disabled={isCreatingThread}
+                                    disabled={isScoutLockedUntilNavigate}
                                     style={{
-                                        backgroundColor: isCreatingThread ? "#999" : "#d70202",
+                                        backgroundColor: isScoutLockedUntilNavigate ? "#999" : "#d70202",
                                         color: "white",
                                         border: "none",
                                         borderRadius: "90px",
@@ -661,12 +663,12 @@ const DesktopCastDetail = ({ castProfile, ordererUserId }: DesktopCastDetailProp
                                         fontSize: "14px",
                                         fontWeight: "700",
                                         fontFamily: "'Noto Sans JP', sans-serif",
-                                        cursor: isCreatingThread ? "not-allowed" : "pointer",
+                                        cursor: isScoutLockedUntilNavigate ? "not-allowed" : "pointer",
                                         width: "262px",
                                         height: "40px",
                                     }}
                                 >
-                                    {isCreatingThread ? "処理中..." : "キャストをスカウトする"}
+                                    {isScoutLockedUntilNavigate ? "処理中..." : "キャストをスカウトする"}
                                 </button>
                                 <button
                                     onClick={handleAddFavorite}

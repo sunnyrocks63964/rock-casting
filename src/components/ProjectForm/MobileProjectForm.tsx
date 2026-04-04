@@ -1,10 +1,30 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Form, Input, Radio, InputNumber, Select } from "antd";
+import { Form, Input, Radio, Select } from "antd";
 
 const { TextArea } = Input;
 const { Option } = Select;
+
+/** iOS Safari では InputNumber の formatter 再描画と相性が悪く数字が重複することがあるため、数値は Input + getValueFromEvent で扱う */
+const budgetNumberFromInputEvent = (
+    event: React.ChangeEvent<HTMLInputElement>
+): number | undefined => {
+    const digitsOnly = event.target.value.replace(/\D/g, "");
+    if (digitsOnly === "") {
+        return undefined;
+    }
+    const parsed = Number(digitsOnly);
+    return Number.isNaN(parsed) ? undefined : parsed;
+};
+
+const mobileBudgetInputStyle: React.CSSProperties = {
+    width: "110px",
+    height: "31px",
+    fontSize: "16px",
+    borderRadius: "3px",
+    border: "1px solid black",
+};
 
 export type JobCategory = "photographer" | "model" | "artist" | "creator";
 
@@ -290,18 +310,15 @@ const MobileProjectForm: React.FC<MobileProjectFormProps> = ({
                                 { type: "number", min: 0, message: "0以上の数値を入力してください" },
                             ]}
                             style={{ marginBottom: 0 }}
+                            getValueFromEvent={budgetNumberFromInputEvent}
                         >
-                            <InputNumber
+                            <Input
                                 placeholder="0"
-                                style={{
-                                    width: "110px",
-                                    height: "27px",
-                                    fontSize: "16px",
-                                    borderRadius: "3px",
-                                    border: "1px solid black",
-                                }}
-                                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                parser={(value) => (value ? value.replace(/\$\s?|(,*)/g, "") : "")}
+                                inputMode="numeric"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                style={mobileBudgetInputStyle}
                             />
                         </Form.Item>
                         <span
@@ -329,18 +346,15 @@ const MobileProjectForm: React.FC<MobileProjectFormProps> = ({
                                 { type: "number", min: 0, message: "0以上の数値を入力してください" },
                             ]}
                             style={{ marginBottom: 0 }}
+                            getValueFromEvent={budgetNumberFromInputEvent}
                         >
-                            <InputNumber
+                            <Input
                                 placeholder="0"
-                                style={{
-                                    width: "110px",
-                                    height: "27px",
-                                    fontSize: "16px",
-                                    borderRadius: "3px",
-                                    border: "1px solid black",
-                                }}
-                                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                parser={(value) => (value ? value.replace(/\$\s?|(,*)/g, "") : "")}
+                                inputMode="numeric"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                style={mobileBudgetInputStyle}
                             />
                         </Form.Item>
                         <span

@@ -128,6 +128,18 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
         }
     }, [profileData]);
 
+    // URLハッシュ（案件登録後の遷移など）で「募集中案件の確認」へスクロール
+    useEffect(() => {
+        if (isLoading) return;
+        if (typeof window === "undefined") return;
+        if (window.location.hash !== "#recruiting-projects") return;
+        setActiveTab("projects");
+        const timeoutId = window.setTimeout(() => {
+            projectsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+        return () => window.clearTimeout(timeoutId);
+    }, [isLoading]);
+
     // フォーム変更ハンドラ
     const handleFormChange = (field: string, value: unknown) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -677,6 +689,7 @@ const DesktopOrdererMyPage: React.FC<DesktopOrdererMyPageProps> = ({ userId }) =
 
                 {/* 募集中案件の確認セクション */}
                 <div
+                    id="recruiting-projects"
                     ref={projectsSectionRef}
                     style={{
                         marginBottom: "40px",
