@@ -257,7 +257,7 @@ const MobileCasterFavoriteOrderProject = ({ casterId }: MobileCasterFavoriteOrde
                                     >
                                         <button
                                             onClick={() =>
-                                                window.open(`/project/detail?id=${project.id}`, "_blank")
+                                                router.push(`/project/detail?id=${project.id}`)
                                             }
                                             style={{
                                                 backgroundColor: "#d70202",

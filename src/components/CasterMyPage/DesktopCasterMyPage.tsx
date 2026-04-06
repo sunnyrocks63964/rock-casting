@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Input, Select, InputNumber, Button, message, Checkbox, Space } from "antd";
 import dayjs from "dayjs";
@@ -24,6 +24,7 @@ interface DesktopCasterMyPageProps {
 }
 
 const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => {
+    const router = useRouter();
     const searchParams = useSearchParams();
 
     // データ取得
@@ -1445,7 +1446,7 @@ const DesktopCasterMyPage: React.FC<DesktopCasterMyPageProps> = ({ userId }) => 
                             <Button
                                 type="primary"
                                 danger
-                                onClick={() => window.open(`/cast/detail?userId=${userId}`, "_blank")}
+                                onClick={() => router.push(`/cast/detail?userId=${userId}`)}
                                 style={{
                                     borderRadius: "90px",
                                     height: "31px",
