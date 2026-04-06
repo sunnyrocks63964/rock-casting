@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { FaUser, FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { inferRouterOutputs } from "@trpc/server";
 import { type AppRouter } from "@/server/routers/_app";
@@ -24,11 +25,12 @@ interface MobileCastDetailProps {
 }
 
 const MobileCastDetail = ({ castProfile, ordererUserId }: MobileCastDetailProps) => {
+    const router = useRouter();
     const [isScoutLockedUntilNavigate, setIsScoutLockedUntilNavigate] = React.useState(false);
 
     const { mutate: createThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
-            window.open(`/order/message/${data.threadId}`, "_blank");
+            router.push(`/order/message/${data.threadId}`);
         },
         onError: (error) => {
             setIsScoutLockedUntilNavigate(false);

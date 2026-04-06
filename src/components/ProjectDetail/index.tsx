@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { trpc } from "@/lib/trpc/client";
 import { supabase } from "@/lib/supabase";
 
 const ProjectDetail = () => {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const projectId = searchParams.get("id");
     const [userId, setUserId] = useState<string | null>(null);
@@ -39,7 +40,7 @@ const ProjectDetail = () => {
     // メッセージスレッド作成のmutation
     const { mutate: createThread } = trpc.message.createThread.useMutation({
         onSuccess: (data) => {
-            window.open(`/caster/message/${data.threadId}`, "_blank");
+            router.push(`/caster/message/${data.threadId}`);
         },
         onError: (error) => {
             console.error("スレッド作成エラー:", error);

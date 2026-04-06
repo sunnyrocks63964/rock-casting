@@ -105,8 +105,6 @@ const LoginedNavBar = () => {
             {isOrderer && (
                 <Link
                     href="/order/add_project"
-                    target="_blank"
-                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -133,8 +131,6 @@ const LoginedNavBar = () => {
             {isOrderer && (
                 <Link
                     href="/top/order"
-                    target="_blank"
-                    rel="noopener noreferrer"
                     style={{
                         color: "white",
                         textDecoration: "none",
@@ -160,8 +156,6 @@ const LoginedNavBar = () => {
             )}
             <Link
                 href={messageListPath}
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",
@@ -186,8 +180,6 @@ const LoginedNavBar = () => {
             </Link>
             <Link
                 href={contractListPath}
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",
@@ -212,8 +204,6 @@ const LoginedNavBar = () => {
             {isOrderer && (
                 <Link
                     href="/order/package_reservate"
-                    target="_blank"
-                    rel="noopener noreferrer"
                     style={{
                         color: pathname === "/order/package_reservate" ? "#fff" : "white",
                         textDecoration: "none",
@@ -238,8 +228,6 @@ const LoginedNavBar = () => {
             )}
             <Link
                 href={favoritePath}
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                     color: "white",
                     textDecoration: "none",

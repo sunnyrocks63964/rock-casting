@@ -1252,7 +1252,7 @@ const DesktopTopOrder = () => {
                                     {/* アクションボタン */}
                                     <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
                                         <button
-                                            onClick={() => window.open(`/cast/detail?userId=${user.id}`, "_blank")}
+                                            onClick={() => router.push(`/cast/detail?userId=${user.id}`)}
                                             style={{
                                                 backgroundColor: "#d70202",
                                                 color: "white",

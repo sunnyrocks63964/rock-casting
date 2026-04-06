@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo } from "react";
 import cast01 from "./images/cast_01.png";
+import { buildCastDisplayItems } from "./castData";
 import DesktopCast from "./DesktopCast";
 import MobileCast from "./MobileCast";
 
@@ -43,13 +44,9 @@ const Cast = () => {
     { id: "creator", label: "クリエイター" },
   ];
 
-  const casts = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    name: `名前名前`,
-    description:
-      "モデル歴14年のフリーモデル。室内から外まで対応します。年間200本以上を撮影いたします。広告の仕事を上達継続していい、広告やポートレイト",
-    image: cast01.src,
-  }));
+  const allCasts = useMemo(() => buildCastDisplayItems(cast01.src), []);
+
+  const desktopCasts = allCasts.filter((cast) => cast.category === activeTab);
 
   return (
     <section
@@ -61,13 +58,13 @@ const Cast = () => {
       {isMobile ? (
         <MobileCast
           tabs={tabs}
-          casts={casts}
+          casts={allCasts}
         />
       ) : (
         <DesktopCast
           activeTab={activeTab}
           tabs={tabs}
-          casts={casts}
+          casts={desktopCasts}
           onTabChange={setActiveTab}
         />
       )}
